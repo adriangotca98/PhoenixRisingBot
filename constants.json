@@ -1,0 +1,104 @@
+{
+    "Fire": {
+        "admin": "Fire Admin",
+        "leader": "Fire Leader",
+        "member": "Phoenix Fire",
+        "color": "0xfb492f"
+    },
+    "Sol": {
+        "admin": "Sol Admin",
+        "leader": "Sol Leader",
+        "member": "Aeternum Sol",
+        "color": "0xe38d17"
+    },
+    "Dust": {
+        "admin": "Dust Admin",
+        "leader": "Dust Leader",
+        "member": "From The Dust",
+        "color": "0xe2af0f"
+    },
+    "Risen": {
+        "admin": "Risen Admin",
+        "leader": "Risen Leader",
+        "member": "Phoenix Risen",
+        "color": "0xcc1717"
+    },
+    "Dragon": {
+        "admin": "Dragon Admin",
+        "leader": "Dragon Leader",
+        "member": "Phoenix Dragon",
+        "color": "0xc34545"
+    },
+    "Helios": {
+        "admin": "Helios Admin",
+        "leader": "Helios Leader",
+        "member": "Phoenix Helios",
+        "color": "0xd45fe2"
+    },
+    "Bootes": {
+        "admin": "Bootes Admin",
+        "leader": "Bootes Leader",
+        "member": "Bootes Void",
+        "color": "0x9d692e"
+    },
+    "Vulcan": {
+        "admin": "Vulcan Admin",
+        "leader": "Vulcan Leader",
+        "member": "Phoenix Vulcan",
+        "color": "0xe7d100"
+    },
+    "Ice": {
+        "admin": "Ice Admin",
+        "leader": "Ice Leader",
+        "member": "Phoenix Ice",
+        "color": "0x99ffff"
+    },
+    "Reborn": {
+        "admin": "Reborn Admin",
+        "leader": "Reborn Leader",
+        "member": "Phoenix Reborn",
+        "color": "0x377dff"
+    },
+    "Ashes": {
+        "admin": "Ashes Admin",
+        "leader": "Ashes Leader",
+        "member": "From The Ashes",
+        "color": "0x07cb0f"
+    },
+    "Nova": {
+        "admin": "Nova Admin",
+        "leader": "Nova Leader",
+        "member": "Phoenix Nova",
+        "color": "0x745ccd"
+    },
+    "Nebula": {
+        "admin": "Nebula Admin",
+        "leader": "Nebula Leader",
+        "member": "Phoenix Nebula",
+        "color": "0x808080"
+    },
+    "Kraken": {
+        "admin": "Kraken Admin",
+        "leader": "Kraken Leader",
+        "member": "Phoenix Kraken",
+        "color": "0x006994"
+    },
+    "Ignis": {
+        "admin": "Ignis Admin",
+        "leader": "Ignis Leader",
+        "member": "Aeternum Ignis",
+        "color": "0x23a28e"
+    },
+    "Titan": {
+        "admin": "Titan Admin",
+        "leader": "Titan Leader",
+        "member": "Phoenix Titan",
+        "color": "0x0fa8f1"
+    },
+    "AustralAsia": {
+        "admin": "Astra Admin",
+        "leader": "Astra Leader",
+        "member": "Phoenix Astra",
+        "color": "0xe109eb"
+    }
+}
