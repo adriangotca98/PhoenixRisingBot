@@ -34,156 +34,156 @@ async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
 
-@bot.command()
+@bot.command(name='i_sol')
 async def solInit(ctx):
     message = await ctx.send("Members for Aeternum Sol")
     rolesPerCrewAndColor['Sol']['messageId'] = message.id
 
-@bot.command()
+@bot.command(name='i_ignis')
 async def ignisInit(ctx):
     message = await ctx.send("Members for Aeternum Ignis")
     rolesPerCrewAndColor['Ignis']['messageId'] = message.id
 
-@bot.command()
+@bot.command(name='i_dust')
 async def dustInit(ctx):
     message = await ctx.send("Members for From The Dust")
     rolesPerCrewAndColor['Dust']['messageId'] = message.id
 
-@bot.command()
+@bot.command(name='i_ashes')
 async def ashesInit(ctx):
     message = await ctx.send("Members for From The Ashes")
     rolesPerCrewAndColor['Ashes']['messageId'] = message.id
 
-@bot.command()
+@bot.command(name='i_reborn')
 async def RebornInit(ctx):
     message = await ctx.send("Members for Phoenix Reborn")
     rolesPerCrewAndColor['Reborn']['messageId'] = message.id
 
-@bot.command()
+@bot.command(name='i_risen')
 async def RisenInit(ctx):
     message = await ctx.send("Members for Phoenix Risen")
     rolesPerCrewAndColor['Risen']['messageId'] = message.id
 
-@bot.command()
+@bot.command(name='i_helios')
 async def heliosInit(ctx):
     message = await ctx.send("Members for Phoenix Helios")
     rolesPerCrewAndColor['Helios']['messageId'] = message.id
 
-@bot.command()
+@bot.command(name='i_nova')
 async def novaInit(ctx):
     message = await ctx.send("Members for Phoenix Nova")
     rolesPerCrewAndColor['Nova']['messageId'] = message.id
 
-@bot.command()
+@bot.command(name='i_vulcan')
 async def vulcanInit(ctx):
     message = await ctx.send("Members for Phoenix Vulcan")
     rolesPerCrewAndColor['Vulcan']['messageId'] = message.id
 
-@bot.command()
+@bot.command(name='i_nebula')
 async def nebulaInit(ctx):
     message = await ctx.send("Members for Phoenix Nebula")
     rolesPerCrewAndColor['Nebula']['messageId'] = message.id
 
-@bot.command()
+@bot.command(name='i_titan')
 async def titanInit(ctx):
     message = await ctx.send("Members for Phoenix Titan")
     rolesPerCrewAndColor['Sol']['messageId'] = message.id
 
-@bot.command()
+@bot.command(name='i_bootes')
 async def bootesInit(ctx):
     message = await ctx.send("Members for Bootes Void")
     rolesPerCrewAndColor['Bootes']['messageId'] = message.id
 
-@bot.command()
+@bot.command(name='i_ice')
 async def iceInit(ctx):
     message = await ctx.send("Members for Phoenix Ice")
     rolesPerCrewAndColor['Ice']['messageId'] = message.id
 
-@bot.command()
+@bot.command(name='i_fire')
 async def fireInit(ctx):
     message = await ctx.send("Members for Phoenix Fire")
     rolesPerCrewAndColor['Fire']['messageId'] = message.id
 
-@bot.command()
+@bot.command(name='i_dragon')
 async def dragonInit(ctx):
     message = await ctx.send("Members for Phoenix Dragon")
     rolesPerCrewAndColor['Dragon']['messageId'] = message.id
 
-@bot.command()
+@bot.command(name='i_astra')
 async def australasiaInit(ctx):
     message = await ctx.send("Members for Phoenix AustralAsia")
     rolesPerCrewAndColor['AustralAsia']['messageId'] = message.id
 
-@bot.command()
+@bot.command(name='i_kraken')
 async def krakenInit(ctx):
     message = await ctx.send("Members for Phoenix Kraken")
     rolesPerCrewAndColor['Kraken']['messageId'] = message.id
 
-@bot.command()
+@bot.command(name='m_fire')
 async def firePlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['Fire'], "Phoenix Fire")
 
-@bot.command()
+@bot.command(name='m_sol')
 async def solPlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['Sol'], 'Aeternum Sol')
 
-@bot.command()
+@bot.command(name='m_dust')
 async def dustPlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['Dust'], "From The Dust")
 
-@bot.command()
+@bot.command(name='m_risen')
 async def risenPlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['Risen'], "Phoenix Risen")
 
-@bot.command()
+@bot.command(name='m_dragon')
 async def dragonPlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['Dragon'], "Phoenix Dragon")
 
-@bot.command()
+@bot.command(name='m_helios')
 async def heliosPlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['Helios'], "Phoenix Helios")
 
-@bot.command()
+@bot.command(name='m_vulcan')
 async def vulcanPlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['Vulcan'], "Phoenix Vulcan")
 
-@bot.command()
+@bot.command(name='m_bootes')
 async def bootesPlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['Bootes'], "Bootes Void")
 
-@bot.command()
+@bot.command(name='m_ice')
 async def icePlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['Ice'], "Phoenix Ice")
 
-@bot.command()
+@bot.command(name='m_ignis')
 async def ignisPlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['Ignis'], "Aeternum Ignis")
 
-@bot.command()
+@bot.command(name='m_ashes')
 async def ashesPlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['Ashes'], "From The Ashes")
 
-@bot.command()
+@bot.command(name='m_nebula')
 async def nebulaPlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['Nebula'], "Phoenix Nebula")
 
-@bot.command()
+@bot.command(name='m_nova')
 async def novaPlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['Nova'], "Phoenix Nova")
 
-@bot.command()
+@bot.command(name='m_reborn')
 async def rebornPlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['Reborn'], "Phoenix Reborn")
 
-@bot.command()
+@bot.command(name='m_titan')
 async def titanPlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['Titan'], "Phoenix Titan")
 
-@bot.command()
+@bot.command(name='m_kraken')
 async def krakenPlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['Kraken'], "Phoenix Kraken")
 
-@bot.command()
+@bot.command(name='m_astra')
 async def australasiaPlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['AustralAsia'], "Phoenix AustralAsia")
 
