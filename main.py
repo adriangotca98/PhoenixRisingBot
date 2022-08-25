@@ -5,9 +5,7 @@ import discord
 from discord.ext import commands
 import json
 
-description = '''An example bot to showcase the discord.ext.commands extension
-module.
-There are a number of utility commands being showcased here.'''
+description = '''Phoenix Rising family bot, Fawkes.'''
 
 intents = discord.Intents.default()
 intents.members = True
