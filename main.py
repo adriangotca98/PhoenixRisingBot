@@ -36,88 +36,71 @@ async def on_ready():
 
 @bot.command(name='i_sol')
 async def solInit(ctx):
-    message = await ctx.send("**__Members for AETERNUM SOL__**")
-    rolesPerCrewAndColor['Sol']['messageId'] = message.id
+    await sendInitMessage(ctx,'AETERNUM SOL','Sol')
 
 @bot.command(name='i_ignis')
 async def ignisInit(ctx):
-    message = await ctx.send("**__Members for AETERNUM IGNIS__**")
-    rolesPerCrewAndColor['Ignis']['messageId'] = message.id
+    await sendInitMessage(ctx,'AETERNUM IGNIS','Ignis')
 
 @bot.command(name='i_dust')
 async def dustInit(ctx):
-    message = await ctx.send("**__Members for FROM THE DUST__**")
-    rolesPerCrewAndColor['Dust']['messageId'] = message.id
+    await sendInitMessage(ctx,'FROM THE DUST','Dust')
 
 @bot.command(name='i_ashes')
 async def ashesInit(ctx):
-    message = await ctx.send("**__Members for FROM THE ASHES__**")
-    rolesPerCrewAndColor['Ashes']['messageId'] = message.id
+    await sendInitMessage(ctx,'FROM THE ASHES','Ashes')
 
 @bot.command(name='i_reborn')
 async def RebornInit(ctx):
-    message = await ctx.send("**__Members for PHOENIX REBORN__**")
-    rolesPerCrewAndColor['Reborn']['messageId'] = message.id
+    await sendInitMessage(ctx,'PHOENIX REBORN','Reborn')
 
 @bot.command(name='i_risen')
 async def RisenInit(ctx):
-    message = await ctx.send("**__Members for PHOENIX RISEN__**")
-    rolesPerCrewAndColor['Risen']['messageId'] = message.id
+    await sendInitMessage(ctx,'PHOENIX RISEN','Risen')
 
 @bot.command(name='i_helios')
 async def heliosInit(ctx):
-    message = await ctx.send("**__Members for PHOENIX HELIOS__**")
-    rolesPerCrewAndColor['Helios']['messageId'] = message.id
+    await sendInitMessage(ctx,'PHOENIX HELIOS','Helios')
 
 @bot.command(name='i_nova')
 async def novaInit(ctx):
-    message = await ctx.send("**__Members for PHOENIX NOVA__**")
-    rolesPerCrewAndColor['Nova']['messageId'] = message.id
+    await sendInitMessage(ctx,'PHOENIX NOVA','Nova')
 
 @bot.command(name='i_vulcan')
 async def vulcanInit(ctx):
-    message = await ctx.send("**__Members for PHOENIX VULCAN__**")
-    rolesPerCrewAndColor['Vulcan']['messageId'] = message.id
+    await sendInitMessage(ctx,'PHOENIX VULCAN','Vulcan')
 
 @bot.command(name='i_nebula')
 async def nebulaInit(ctx):
-    message = await ctx.send("**__Members for PHOENIX NEBULA__**")
-    rolesPerCrewAndColor['Nebula']['messageId'] = message.id
+    await sendInitMessage(ctx,'PHOENIX NEBULA','Nebula')
 
 @bot.command(name='i_titan')
 async def titanInit(ctx):
-    message = await ctx.send("**__Members for PHOENIX TITAN__**")
-    rolesPerCrewAndColor['Sol']['messageId'] = message.id
+    await sendInitMessage(ctx,'PHOENIX TITAN','Titan')
 
 @bot.command(name='i_bootes')
 async def bootesInit(ctx):
-    message = await ctx.send("**__Members for BOOTES VOID__**")
-    rolesPerCrewAndColor['Bootes']['messageId'] = message.id
+    await sendInitMessage(ctx,'BOOTES VOID','Bootes')
 
 @bot.command(name='i_ice')
 async def iceInit(ctx):
-    message = await ctx.send("**__Members for PHOENIX ICE__**")
-    rolesPerCrewAndColor['Ice']['messageId'] = message.id
+    await sendInitMessage(ctx,'PHOENIX ICE','Ice')
 
 @bot.command(name='i_fire')
 async def fireInit(ctx):
-    message = await ctx.send("**__Members for PHOENIX FIRE__**")
-    rolesPerCrewAndColor['Fire']['messageId'] = message.id
+    await sendInitMessage(ctx,'PHOENIX FIRE','Fire')
 
 @bot.command(name='i_dragon')
 async def dragonInit(ctx):
-    message = await ctx.send("**__Members for PHOENIX DRAGON__**")
-    rolesPerCrewAndColor['Dragon']['messageId'] = message.id
+    await sendInitMessage(ctx,'PHOENIX DRAGON','Dragon')
 
 @bot.command(name='i_astra')
 async def australasiaInit(ctx):
-    message = await ctx.send("**__Members for PHOENIX AUSTRALASIA__**")
-    rolesPerCrewAndColor['AustralAsia']['messageId'] = message.id
+    await sendInitMessage(ctx,'PHOENIX AUSTRALASIA','Astra')
 
 @bot.command(name='i_kraken')
 async def krakenInit(ctx):
-    message = await ctx.send("__Members for PHOENIX KRAKEN__")
-    rolesPerCrewAndColor['Kraken']['messageId'] = message.id
+    await sendInitMessage(ctx,'PHOENIX KRAKEN','Kraken')
 
 @bot.command(name='m_fire')
 async def firePlayers(ctx):
@@ -187,6 +170,11 @@ async def krakenPlayers(ctx):
 async def australasiaPlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['AustralAsia'], "Phoenix AustralAsia")
 
+async def sendInitMessage(ctx, crewNameCaps, crewName):
+    message = await ctx.send("**__Members for "+crewNameCaps+"__**")
+    rolesPerCrewAndColor[crewName]['messageId'] = message.id
+    await ctx.message.delete()
+
 async def getPlayersResponse(ctx, rolesAndColor, crewName: str):
     memberRoleName = rolesAndColor['member']
     adminRoleName = rolesAndColor['admin']
@@ -210,7 +198,7 @@ async def getPlayersResponse(ctx, rolesAndColor, crewName: str):
         if memberRoleName in roleNames:
             response.append(memberStruct)
     response.sort(key = sortFunction)
-    
+
     stringResponse = '**__Members of '+crewName.upper()+"__**\n"
     number = 1
     for member in response:
@@ -224,6 +212,7 @@ async def getPlayersResponse(ctx, rolesAndColor, crewName: str):
     
     message = await ctx.fetch_message(rolesAndColor['messageId'])
     await message.edit(content = stringResponse)
+    await ctx.message.delete()
 
 
 bot.run(os.environ.get("DISCORD_BOT_TOKEN"))
