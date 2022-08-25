@@ -37,6 +37,91 @@ async def on_ready():
     print('------')
 
 @bot.command()
+async def solInit(ctx):
+    message = await ctx.send("Members for Aeternum Sol")
+    rolesPerCrewAndColor['Sol']['messageId'] = message.id
+
+@bot.command()
+async def ignisInit(ctx):
+    message = await ctx.send("Members for Aeternum Ignis")
+    rolesPerCrewAndColor['Ignis']['messageId'] = message.id
+
+@bot.command()
+async def dustInit(ctx):
+    message = await ctx.send("Members for From The Dust")
+    rolesPerCrewAndColor['Dust']['messageId'] = message.id
+
+@bot.command()
+async def ashesInit(ctx):
+    message = await ctx.send("Members for From The Ashes")
+    rolesPerCrewAndColor['Ashes']['messageId'] = message.id
+
+@bot.command()
+async def RebornInit(ctx):
+    message = await ctx.send("Members for Phoenix Reborn")
+    rolesPerCrewAndColor['Reborn']['messageId'] = message.id
+
+@bot.command()
+async def RisenInit(ctx):
+    message = await ctx.send("Members for Phoenix Risen")
+    rolesPerCrewAndColor['Risen']['messageId'] = message.id
+
+@bot.command()
+async def heliosInit(ctx):
+    message = await ctx.send("Members for Phoenix Helios")
+    rolesPerCrewAndColor['Helios']['messageId'] = message.id
+
+@bot.command()
+async def novaInit(ctx):
+    message = await ctx.send("Members for Phoenix Nova")
+    rolesPerCrewAndColor['Nova']['messageId'] = message.id
+
+@bot.command()
+async def vulcanInit(ctx):
+    message = await ctx.send("Members for Phoenix Vulcan")
+    rolesPerCrewAndColor['Vulcan']['messageId'] = message.id
+
+@bot.command()
+async def nebulaInit(ctx):
+    message = await ctx.send("Members for Phoenix Nebula")
+    rolesPerCrewAndColor['Nebula']['messageId'] = message.id
+
+@bot.command()
+async def titanInit(ctx):
+    message = await ctx.send("Members for Phoenix Titan")
+    rolesPerCrewAndColor['Sol']['messageId'] = message.id
+
+@bot.command()
+async def bootesInit(ctx):
+    message = await ctx.send("Members for Bootes Void")
+    rolesPerCrewAndColor['Bootes']['messageId'] = message.id
+
+@bot.command()
+async def iceInit(ctx):
+    message = await ctx.send("Members for Phoenix Ice")
+    rolesPerCrewAndColor['Ice']['messageId'] = message.id
+
+@bot.command()
+async def fireInit(ctx):
+    message = await ctx.send("Members for Phoenix Fire")
+    rolesPerCrewAndColor['Fire']['messageId'] = message.id
+
+@bot.command()
+async def dragonInit(ctx):
+    message = await ctx.send("Members for Phoenix Dragon")
+    rolesPerCrewAndColor['Dragon']['messageId'] = message.id
+
+@bot.command()
+async def australasiaInit(ctx):
+    message = await ctx.send("Members for Phoenix AustralAsia")
+    rolesPerCrewAndColor['AustralAsia']['messageId'] = message.id
+
+@bot.command()
+async def krakenInit(ctx):
+    message = await ctx.send("Members for Phoenix Kraken")
+    rolesPerCrewAndColor['Kraken']['messageId'] = message.id
+
+@bot.command()
 async def firePlayers(ctx):
     await getPlayersResponse(ctx, rolesPerCrewAndColor['Fire'], "Phoenix Fire")
 
@@ -128,18 +213,22 @@ async def getPlayersResponse(ctx, rolesAndColor, crewName):
             response.append(memberStruct)
     response.sort(key = sortFunction)
     
-    stringResponse = ''
+    stringResponse = 'Members of '+crewName+"\n"
+    number = 1
     for member in response:
-        stringResponse+="<@"+str(member.id)+">"
+        stringResponse+=str(number) + ". <@!"+str(member.id)+">"
         if member.leader:
             stringResponse+=" -> Leader"
         elif member.admin:
             stringResponse+=" -> Admin"
         stringResponse+='\n'
-            
+        number+=1
+    
+    message = await ctx.fetch_message(rolesAndColor['messageId'])
+    await message.edit(content = stringResponse)
     embed = discord.Embed(color=int(rolesAndColor['color'],base=16),title = "Members of "+crewName, description=stringResponse)
     
-    await ctx.send(embeds=[embed],allowed_mentions = discord.AllowedMentions(replied_user=False))
+    # await ctx.send(stringResponse,allowed_mentions = discord.AllowedMentions(replied_user=False))
 
 
 bot.run(os.environ.get("DISCORD_BOT_TOKEN"))
