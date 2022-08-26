@@ -164,18 +164,18 @@ async def add(ctx):
     for guild in bot.guilds:
         print(guild.id)
 
-@bot.command(name='kick')
-async def kick(ctx, user, *args):
-    reason = ' '.join(args)
-    await main.kickOrBanOrUnban(ctx, user, 'kick', bot, reason = reason)
+# @bot.command(name='kick')
+# async def kick(ctx, user, *args):
+#     reason = ' '.join(args)
+#     await main.kickOrBanOrUnban(ctx, user, 'kick', bot, reason = reason)
 
-@bot.command(name='ban')
-async def ban(ctx, user, *args):
-    reason = ' '.join(args)
-    await main.kickOrBanOrUnban(ctx, user, 'ban', bot, reason=reason)
+# @bot.command(name='ban')
+# async def ban(ctx, user, *args):
+#     reason = ' '.join(args)
+#     await main.kickOrBanOrUnban(ctx, user, 'ban', bot, reason=reason)
 
-@bot.command(name='unban')
-async def unban(ctx, user):
-    await main.kickOrBanOrUnban(ctx, user, 'unban', bot)
+# @bot.command(name='unban')
+# async def unban(ctx, user):
+#     await main.kickOrBanOrUnban(ctx, user, 'unban', bot)
 
 bot.run(os.environ.get("DISCORD_BOT_TOKEN"))

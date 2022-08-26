@@ -6,10 +6,10 @@ import re
 
 f = open("./constants.json")
 rolesPerCrewAndColor = json.load(f)
-serveringServerId = os.environ.get("SERVERING_SERVER_ID")
-risingServerId = os.environ.get("RISING_SERVER_ID")
-knowingServerId = os.environ.get("KNOWING_SERVER_ID")
-racingServerId = os.environ.get("RACING_SERVER_ID")
+serveringServerId = int(os.environ.get("SERVERING_SERVER_ID"))
+risingServerId = int(os.environ.get("RISING_SERVER_ID"))
+knowingServerId = int(os.environ.get("KNOWING_SERVER_ID"))
+racingServerId = int(os.environ.get("RACING_SERVER_ID"))
 
 
 class Member:
@@ -70,11 +70,14 @@ async def sendInitMessage(ctx, crewNameCaps, crewName):
 
 async def kickOrBanOrUnban(ctx, user: str, op: str, bot: commands.Bot, **kwargs):
     userId = int(re.findall(r'\d+', user)[0])
+    userObj = await bot.fetch_user(userId)
+    print(ctx.bot_permissions.kick_members)
     for guild in bot.guilds:
         if guild.id in [racingServerId, serveringServerId, risingServerId, knowingServerId]:
+            print("Doing "+op+" for user: "+userObj.name+" in the server named: "+guild.name)
             if op=='kick':
-                await guild.kick(bot.fetch_user(userId), reason=kwargs['reason'])
+                await guild.kick(userObj, reason=kwargs['reason'])
             elif op == 'ban':
-                await guild.ban(bot.fetch_user(userId))
+                await guild.ban(userObj)
             elif op == 'unban':
-                await guild.unban(bot.fetch_user(userId), reason=kwargs['reason'])
+                await guild.unban(userObj, reason=kwargs['reason'])
