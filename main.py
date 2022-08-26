@@ -1,8 +1,16 @@
 import discord
+from discord.ext import commands
 import json
+import os
+import re
 
 f = open("./constants.json")
 rolesPerCrewAndColor = json.load(f)
+serveringServerId = os.environ.get("SERVERING_SERVER_ID")
+risingServerId = os.environ.get("RISING_SERVER_ID")
+knowingServerId = os.environ.get("KNOWING_SERVER_ID")
+racingServerId = os.environ.get("RACING_SERVER_ID")
+
 
 class Member:
     def __init__(self, admin: bool, leader: bool, id: int, name: str):
@@ -55,9 +63,16 @@ async def getPlayersResponse(ctx, rolesAndColor, crewName: str):
     
     message = await ctx.fetch_message(rolesAndColor['messageId'])
     await message.edit(content = stringResponse)
-    await ctx.message.delete()
 
 async def sendInitMessage(ctx, crewNameCaps, crewName):
     message = await ctx.send("**__Members for "+crewNameCaps+"__**")
     rolesPerCrewAndColor[crewName]['messageId'] = message.id
-    await ctx.message.delete()
+
+async def kickOrBan(ctx, user: str, op: str, bot: commands.Bot):
+    userId = int(re.findall(r'\d+', user)[0])
+    for guild in bot.guilds:
+        if guild.id in [racingServerId, serveringServerId, risingServerId, knowingServerId]:
+            if op=='kick':
+                await guild.kick(bot.fetch_user(userId))
+            else:
+                await guild.ban(bot.fetch_user(userId))

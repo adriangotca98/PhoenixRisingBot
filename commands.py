@@ -4,6 +4,7 @@ import os
 import discord
 from discord.ext import commands
 import main
+import re
 
 description = '''Phoenix Rising family bot, Fawkes.'''
 
@@ -12,6 +13,10 @@ intents.members = True
 intents.message_content = True
 
 bot = commands.Bot(command_prefix='?', description=description, intents=intents)
+
+@bot.event
+async def on_command(ctx):
+    await ctx.message.delete()
 
 @bot.event
 async def on_ready():
@@ -153,5 +158,18 @@ async def krakenPlayers(ctx):
 @bot.command(name='astram')
 async def australasiaPlayers(ctx):
     await main.getPlayersResponse(ctx, main.rolesPerCrewAndColor['AustralAsia'], "Phoenix AustralAsia")
+
+@bot.command(name='add')
+async def add(ctx):
+    for guild in bot.guilds:
+        print(guild.id)
+
+@bot.command(name='kick')
+async def kick(ctx, user):
+    main.kickOrBan(ctx, user, 'kick', bot)
+
+@bot.command(name='ban')
+async def ban(ctx, user):
+    main.kickOrBan(ctx, user, 'ban', bot)
 
 bot.run(os.environ.get("DISCORD_BOT_TOKEN"))
