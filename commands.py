@@ -28,87 +28,87 @@ async def on_command_error(ctx, error):
         await ctx.send("<@"+str(ctx.author.id)+">, you're not authorized to use this command! Only leadership can use this. Thank you :) ")
     return
 
-@bot.command(name='isolm')
+@bot.command(name='solmm')
 @commands.has_role("Phoenix Family Leadership")
 async def solInit(ctx):
     await main.sendInitMessage(ctx,'AETERNUM SOL','Sol')
 
-@bot.command(name='iignism')
+@bot.command(name='ignismm')
 @commands.has_role("Phoenix Family Leadership")
 async def ignisInit(ctx):
     await main.sendInitMessage(ctx,'AETERNUM IGNIS','Ignis')
 
-@bot.command(name='idustm')
+@bot.command(name='dustmm')
 @commands.has_role("Phoenix Family Leadership")
 async def dustInit(ctx):
     await main.sendInitMessage(ctx,'FROM THE DUST','Dust')
 
-@bot.command(name='iashesm')
+@bot.command(name='ashesmm')
 @commands.has_role("Phoenix Family Leadership")
 async def ashesInit(ctx):
     await main.sendInitMessage(ctx,'FROM THE ASHES','Ashes')
 
-@bot.command(name='irebornm')
+@bot.command(name='rebornmm')
 @commands.has_role("Phoenix Family Leadership")
 async def RebornInit(ctx):
     await main.sendInitMessage(ctx,'PHOENIX REBORN','Reborn')
 
-@bot.command(name='irisenm')
+@bot.command(name='risenmm')
 @commands.has_role("Phoenix Family Leadership")
 async def RisenInit(ctx):
     await main.sendInitMessage(ctx,'PHOENIX RISEN','Risen')
 
-@bot.command(name='iheliosm')
+@bot.command(name='heliosmm')
 @commands.has_role("Phoenix Family Leadership")
 async def heliosInit(ctx):
     await main.sendInitMessage(ctx,'PHOENIX HELIOS','Helios')
 
-@bot.command(name='inovam')
+@bot.command(name='novamm')
 @commands.has_role("Phoenix Family Leadership")
 async def novaInit(ctx):
     await main.sendInitMessage(ctx,'PHOENIX NOVA','Nova')
 
-@bot.command(name='ivulcanm')
+@bot.command(name='vulcanmm')
 @commands.has_role("Phoenix Family Leadership")
 async def vulcanInit(ctx):
     await main.sendInitMessage(ctx,'PHOENIX VULCAN','Vulcan')
 
-@bot.command(name='inebulam')
+@bot.command(name='nebulamm')
 @commands.has_role("Phoenix Family Leadership")
 async def nebulaInit(ctx):
     await main.sendInitMessage(ctx,'PHOENIX NEBULA','Nebula')
 
-@bot.command(name='ititanm')
+@bot.command(name='titanmm')
 @commands.has_role("Phoenix Family Leadership")
 async def titanInit(ctx):
     await main.sendInitMessage(ctx,'PHOENIX TITAN','Titan')
 
-@bot.command(name='ibootesm')
+@bot.command(name='bootesmm')
 @commands.has_role("Phoenix Family Leadership")
 async def bootesInit(ctx):
     await main.sendInitMessage(ctx,'BOOTES VOID','Bootes')
 
-@bot.command(name='iicem')
+@bot.command(name='icemm')
 @commands.has_role("Phoenix Family Leadership")
 async def iceInit(ctx):
     await main.sendInitMessage(ctx,'PHOENIX ICE','Ice')
 
-@bot.command(name='ifirem')
+@bot.command(name='firemm')
 @commands.has_role("Phoenix Family Leadership")
 async def fireInit(ctx):
     await main.sendInitMessage(ctx,'PHOENIX FIRE','Fire')
 
-@bot.command(name='idragonm')
+@bot.command(name='dragonmm')
 @commands.has_role("Phoenix Family Leadership")
 async def dragonInit(ctx):
     await main.sendInitMessage(ctx,'PHOENIX DRAGON','Dragon')
 
-@bot.command(name='iastram')
+@bot.command(name='astramm')
 @commands.has_role("Phoenix Family Leadership")
 async def australasiaInit(ctx):
     await main.sendInitMessage(ctx,'PHOENIX AUSTRALASIA','Astra')
 
-@bot.command(name='ikraken')
+@bot.command(name='krakenmm')
 @commands.has_role("Phoenix Family Leadership")
 async def krakenInit(ctx):
     await main.sendInitMessage(ctx,'PHOENIX KRAKEN','Kraken')
