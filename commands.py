@@ -4,8 +4,6 @@ import os
 import discord
 from discord.ext import commands
 import main
-import json
-import re
 
 description = '''Phoenix Rising family bot, Fawkes.'''
 
