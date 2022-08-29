@@ -207,21 +207,21 @@ async def add(ctx):
     print(ctx.permissions.kick_members)
     print(ctx.permissions.ban_members)
 
-# @bot.command(name='kick')
-# @commands.has_permissions(kick_members=True)
-# async def kick(ctx, user, *args):
-#     reason = ' '.join(args)
-#     await main.kickOrBanOrUnban(ctx, user, 'kick', bot, reason = reason)
+@bot.command(name='kick')
+@commands.has_permissions(kick_members=True)
+async def kick(ctx, user, *args):
+    reason = ' '.join(args)
+    await main.kickOrBanOrUnban(ctx, user, 'kick', bot, reason = reason)
 
-# @bot.command(name='ban')
-# @commands.has_permissions(ban_members=True)
-# async def ban(ctx, user, *args):
-#     reason = ' '.join(args)
-#     await main.kickOrBanOrUnban(ctx, user, 'ban', bot, reason=reason)
+@bot.command(name='ban')
+@commands.has_permissions(ban_members=True)
+async def ban(ctx, user, *args):
+    reason = ' '.join(args)
+    await main.kickOrBanOrUnban(ctx, user, 'ban', bot, reason=reason)
 
-# @bot.command(name='unban')
-# @commands.has_permissions(ban_members=True)
-# async def unban(ctx, user):
-#     await main.kickOrBanOrUnban(ctx, user, 'unban', bot)
+@bot.command(name='unban')
+@commands.has_permissions(ban_members=True)
+async def unban(ctx, user):
+    await main.kickOrBanOrUnban(ctx, user, 'unban', bot)
 
 bot.run(os.environ.get("DISCORD_BOT_TOKEN"))
