@@ -69,9 +69,16 @@ async def sendInitMessage(ctx, crewNameCaps, crewName):
     rolesPerCrewAndColor[crewName]['messageId'] = message.id
 
 async def kickOrBanOrUnban(ctx, user: str, op: str, bot: commands.Bot, **kwargs):
+    if op=='kick':
+        if ctx.permissions.kick_members == False:
+            await ctx.send("<@"+str(ctx.author.id)+">, you're not authorized to kick members! Contact an admin/leader for this.")
+            return
+    elif op == 'ban' or op == 'unban':
+        if ctx.permissions.ban_members == False:
+            await ctx.send("<@"+str(ctx.author.id)+">, you're not authorized to ban/unban members! Contact an admin/leader for this.")
+            return
     userId = int(re.findall(r'\d+', user)[0])
     userObj = await bot.fetch_user(userId)
-    print(ctx.bot_permissions.kick_members)
     for guild in bot.guilds:
         if guild.id in [racingServerId, serveringServerId, risingServerId, knowingServerId]:
             print("Doing "+op+" for user: "+userObj.name+" in the server named: "+guild.name)

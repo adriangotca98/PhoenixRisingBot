@@ -4,6 +4,7 @@ import os
 import discord
 from discord.ext import commands
 import main
+import json
 import re
 
 description = '''Phoenix Rising family bot, Fawkes.'''
@@ -12,7 +13,7 @@ intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
 
-bot = commands.Bot(command_prefix='?', description=description, intents=intents)
+bot = commands.Bot(command_prefix='!', description=description, intents=intents)
 
 @bot.event
 async def on_command(ctx):
@@ -161,8 +162,9 @@ async def australasiaPlayers(ctx):
 
 @bot.command(name='add')
 async def add(ctx):
-    for guild in bot.guilds:
-        print(guild.id)
+    print(ctx.author.id)
+    print(ctx.permissions.kick_members)
+    print(ctx.permissions.ban_members)
 
 # @bot.command(name='kick')
 # async def kick(ctx, user, *args):
