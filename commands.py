@@ -209,17 +209,17 @@ async def add(ctx):
 @commands.has_permissions(kick_members=True)
 async def kick(ctx, user, *args):
     reason = ' '.join(args)
-    await main.kickOrBanOrUnban(ctx, user, 'kick', bot, reason = reason)
+    await main.kickOrBanOrUnban(user, 'kick', bot, reason = reason)
 
 @bot.command(name='ban')
 @commands.has_permissions(ban_members=True)
 async def ban(ctx, user, *args):
     reason = ' '.join(args)
-    await main.kickOrBanOrUnban(ctx, user, 'ban', bot, reason=reason)
+    await main.kickOrBanOrUnban(user, 'ban', bot, reason=reason)
 
 @bot.command(name='unban')
 @commands.has_permissions(ban_members=True)
 async def unban(ctx, user):
-    await main.kickOrBanOrUnban(ctx, user, 'unban', bot)
+    await main.kickOrBanOrUnban(user, 'unban', bot)
 
 bot.run(os.environ.get("DISCORD_BOT_TOKEN"))

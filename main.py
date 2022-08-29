@@ -6,6 +6,7 @@ import re
 
 f = open("./constants.json")
 rolesPerCrewAndColor = json.load(f)
+f.close()
 serveringServerId = int(os.environ.get("SERVERING_SERVER_ID"))
 risingServerId = int(os.environ.get("RISING_SERVER_ID"))
 knowingServerId = int(os.environ.get("KNOWING_SERVER_ID"))
@@ -64,11 +65,17 @@ async def getPlayersResponse(ctx, rolesAndColor, crewName: str):
     message = await ctx.fetch_message(rolesAndColor['messageId'])
     await message.edit(content = stringResponse)
 
-async def sendInitMessage(ctx, crewNameCaps, crewName):
+async def sendInitMessage(ctx: commands.Context, crewNameCaps, crewName):
     message = await ctx.send("**__Members for "+crewNameCaps+"__**")
+    if 'messageId' in rolesPerCrewAndColor[crewName].keys():
+        messageToDelete = await ctx.fetch_message(rolesPerCrewAndColor[crewName]['messageId'])
+        await messageToDelete.delete()
     rolesPerCrewAndColor[crewName]['messageId'] = message.id
+    file = open('./constants.json','w')
+    json.dump(rolesPerCrewAndColor,file,indent=4)
+    file.close()
 
-async def kickOrBanOrUnban(ctx, user: str, op: str, bot: commands.Bot, **kwargs):
+async def kickOrBanOrUnban(user: str, op: str, bot: commands.Bot, **kwargs):
     userId = int(re.findall(r'\d+', user)[0])
     userObj = await bot.fetch_user(userId)
     for guild in bot.guilds:
