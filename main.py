@@ -45,9 +45,13 @@ def computeScoreFromChannelName(name: str):
 def getScoreWithSeparator(intScore):
     scoreWithSeparator = ''
     while intScore > 0:
-        scoreWithSeparator = '’'+str(intScore%1000)+scoreWithSeparator
+        number = str(intScore%1000)
+        while len(number)<3:
+            number = '0'+number
+        scoreWithSeparator = '’'+number+scoreWithSeparator
         intScore//=1000
-    scoreWithSeparator = scoreWithSeparator[1:]
+    while scoreWithSeparator[0]=='0' or scoreWithSeparator[0]=='’':
+        scoreWithSeparator = scoreWithSeparator[1:]
     return scoreWithSeparator
     
 
@@ -55,16 +59,24 @@ async def setScore(ctx: commands.Context, crewName: str, score: str):
     crewName = crewName.capitalize()
     channel: discord.channel.CategoryChannel = await ctx.bot.fetch_channel(crewData[crewName]['leaderboard_id'])
     channelName = channel.name
-    newChannelName = channelName.strip("0123456789’") + getScoreWithSeparator(int(score))
+    newChannelName = channelName.strip("0123456789'`’") + getScoreWithSeparator(int(score))
     await channel.edit(name=newChannelName)
     scores[crewName] = int(score)
-    await reorderChannels(ctx, scores)
+    await reorderChannels(ctx, scores, crewName)
 
-async def reorderChannels(ctx: commands.Context, scores: dict):
+async def reorderChannels(ctx: commands.Context, scores: dict, crewName: str):
     sortedScores = dict(sorted(scores.items(), key=lambda item: item[1],reverse=True))
+    if list(sortedScores.keys())[0] == crewName:
+        channel: discord.abc.GuildChannel = await ctx.bot.fetch_channel(crewData[crewName]['leaderboard_id'])
+        await channel.move(beginning=True)
+        return
     for key in sortedScores:
-        channel: discord.abc.GuildChannel = await ctx.bot.fetch_channel(crewData[key]['leaderboard_id'])
-        await channel.move(end=True)
+        if key == crewName:
+            channel: discord.abc.GuildChannel = await ctx.bot.fetch_channel(crewData[key]['leaderboard_id'])
+            channelAbove: discord.abc.GuildChannel = await ctx.bot.fetch_channel(crewData[lastKey]['leaderboard_id'])
+            await channel.move(after=channelAbove)
+            return
+        lastKey = key
 
 async def getPlayersResponse(ctx, rolesAndColor, crewName: str):
     memberRoleName = rolesAndColor['member']

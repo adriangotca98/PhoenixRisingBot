@@ -24,9 +24,12 @@ async def on_ready():
     print('------')
 
 @bot.event
-async def on_command_error(ctx, error):
+async def on_command_error(ctx: commands.Context, error):
     if isinstance(error, commands.errors.MissingRole) or isinstance(error, commands.errors.MissingPermissions):
         await ctx.send("<@"+str(ctx.author.id)+">, you're not authorized to use this command! Only leadership can use this. Thank you :) ")
+        return
+    await ctx.send(f"An unexpected error has occured. <@308561593858392065>, please have a look in the code. Command run: {ctx.command.name}")
+    raise error
 
 @bot.command(name='solmm')
 @commands.has_role("Phoenix Family Leadership")
@@ -196,7 +199,7 @@ async def krakenPlayers(ctx):
 @bot.command(name='astram')
 @commands.has_role("Phoenix Family Leadership")
 async def australasiaPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.crewData['AustralAsia'], "Phoenix AustralAsia")
+    await main.getPlayersResponse(ctx, main.crewData['Astra'], "Phoenix AustralAsia")
 
 @bot.command(name='score')
 #@commands.has_role("Phoenix Family Leadership")
