@@ -28,6 +28,8 @@ async def on_command_error(ctx: commands.Context, error):
     if isinstance(error, commands.errors.MissingRole) or isinstance(error, commands.errors.MissingPermissions):
         await ctx.send("<@"+str(ctx.author.id)+">, you're not authorized to use this command! Only leadership can use this. Thank you :) ")
         return
+    if isinstance(error, commands.CommandNotFound):
+        return
     await ctx.send(f"An unexpected error has occured. <@308561593858392065>, please have a look in the code. Command run: {ctx.command.name}")
     raise error
 
