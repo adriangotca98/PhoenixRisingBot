@@ -5,7 +5,8 @@ import os
 import re
 
 f = open("./constants.json")
-rolesPerCrewAndColor = json.load(f)
+crewData = json.load(f)
+scores = {}
 f.close()
 serveringServerId = int(os.environ.get("SERVERING_SERVER_ID"))
 risingServerId = int(os.environ.get("RISING_SERVER_ID"))
@@ -26,6 +27,44 @@ def sortFunction(member: Member):
     if member.admin:
         return '1 '+member.name
     return "2 "+member.name
+
+async def init(bot: commands.Bot):
+    for crew in crewData:
+        if 'leaderboard_id' in crewData[crew]:
+            channelId = crewData[crew]['leaderboard_id']
+            channel = await bot.fetch_channel(channelId)
+            scores[crew] = computeScoreFromChannelName(channel.name)
+
+def computeScoreFromChannelName(name: str):
+    number = ''
+    for char in name:
+        if char.isnumeric():
+            number+=char
+    return int(number)
+
+def getScoreWithSeparator(intScore):
+    scoreWithSeparator = ''
+    while intScore > 0:
+        scoreWithSeparator = '’'+str(intScore%1000)+scoreWithSeparator
+        intScore//=1000
+    scoreWithSeparator = scoreWithSeparator[1:]
+    return scoreWithSeparator
+    
+
+async def setScore(ctx: commands.Context, crewName: str, score: str):
+    crewName = crewName.capitalize()
+    channel: discord.channel.CategoryChannel = await ctx.bot.fetch_channel(crewData[crewName]['leaderboard_id'])
+    channelName = channel.name
+    newChannelName = channelName.strip("0123456789’") + getScoreWithSeparator(int(score))
+    await channel.edit(name=newChannelName)
+    scores[crewName] = int(score)
+    await reorderChannels(ctx, scores)
+
+async def reorderChannels(ctx: commands.Context, scores: dict):
+    sortedScores = dict(sorted(scores.items(), key=lambda item: item[1],reverse=True))
+    for key in sortedScores:
+        channel: discord.abc.GuildChannel = await ctx.bot.fetch_channel(crewData[key]['leaderboard_id'])
+        await channel.move(end=True)
 
 async def getPlayersResponse(ctx, rolesAndColor, crewName: str):
     memberRoleName = rolesAndColor['member']
@@ -67,12 +106,12 @@ async def getPlayersResponse(ctx, rolesAndColor, crewName: str):
 
 async def sendInitMessage(ctx: commands.Context, crewNameCaps, crewName):
     message = await ctx.send("**__Members for "+crewNameCaps+"__**")
-    if 'messageId' in rolesPerCrewAndColor[crewName].keys():
-        messageToDelete = await ctx.fetch_message(rolesPerCrewAndColor[crewName]['messageId'])
+    if 'messageId' in crewData[crewName].keys():
+        messageToDelete = await ctx.fetch_message(crewData[crewName]['messageId'])
         await messageToDelete.delete()
-    rolesPerCrewAndColor[crewName]['messageId'] = message.id
+    crewData[crewName]['messageId'] = message.id
     file = open('./constants.json','w')
-    json.dump(rolesPerCrewAndColor,file,indent=4)
+    json.dump(crewData,file,indent=4)
     file.close()
 
 async def kickOrBanOrUnban(user: str, op: str, bot: commands.Bot, **kwargs):

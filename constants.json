@@ -2,86 +2,103 @@
     "Fire": {
         "admin": "Fire Admin",
         "leader": "Fire Leader",
-        "member": "Phoenix Fire"
+        "member": "Phoenix Fire",
+        "leaderboard_id": 824648219849261066
     },
     "Sol": {
         "admin": "Sol Admin",
         "leader": "Sol Leader",
-        "member": "Aeternum Sol"
+        "member": "Aeternum Sol",
+        "leaderboard_id": 771719879707197440
     },
     "Dust": {
         "admin": "Dust Admin",
         "leader": "Dust Leader",
-        "member": "From The Dust"
+        "member": "From The Dust",
+        "leaderboard_id": 763558321688150066
     },
     "Risen": {
         "admin": "Risen Admin",
         "leader": "Risen Leader",
-        "member": "Phoenix Risen"
+        "member": "Phoenix Risen",
+        "leaderboard_id": 763556216735268914
     },
     "Dragon": {
         "admin": "Dragon Admin",
         "leader": "Dragon Leader",
-        "member": "Phoenix Dragon"
+        "member": "Phoenix Dragon",
+        "leaderboard_id": 961565678983331850
     },
     "Helios": {
         "admin": "Helios Admin",
         "leader": "Helios Leader",
-        "member": "Phoenix Helios"
+        "member": "Phoenix Helios",
+        "leaderboard_id": 802838722159706132
     },
     "Bootes": {
         "admin": "Bootes Admin",
         "leader": "Bootes Leader",
-        "member": "Bootes Void"
+        "member": "Bootes Void",
+        "leaderboard_id": 903300682688368740
     },
     "Vulcan": {
         "admin": "Vulcan Admin",
         "leader": "Vulcan Leader",
-        "member": "Phoenix Vulcan"
+        "member": "Phoenix Vulcan",
+        "leaderboard_id": 837333041168777257
     },
     "Ice": {
         "admin": "Ice Admin",
         "leader": "Ice Leader",
-        "member": "Phoenix Ice"
+        "member": "Phoenix Ice",
+        "leaderboard_id": 796669143680155659
     },
     "Reborn": {
         "admin": "Reborn Admin",
         "leader": "Reborn Leader",
-        "member": "Phoenix Reborn"
+        "member": "Phoenix Reborn",
+        "leaderboard_id" : 763556520037318726
     },
     "Ashes": {
         "admin": "Ashes Admin",
         "leader": "Ashes Leader",
-        "member": "From The Ashes"
+        "member": "From The Ashes",
+        "leaderboard_id": 763558354076827679
     },
     "Nova": {
         "admin": "Nova Admin",
         "leader": "Nova Leader",
-        "member": "Phoenix Nova"
+        "member": "Phoenix Nova",
+        "leaderboard_id": 787631676738109440
     },
     "Nebula": {
         "admin": "Nebula Admin",
         "leader": "Nebula Leader",
-        "member": "Phoenix Nebula"
+        "member": "Phoenix Nebula",
+        "leaderboard_id": 902546886894952558
     },
     "Kraken": {
         "admin": "Kraken Admin",
         "leader": "Kraken Leader",
-        "member": "Phoenix Kraken"
+        "member": "Phoenix Kraken",
+        "leaderboard_id": 979337995532533790
     },
     "Ignis": {
         "admin": "Ignis Admin",
         "leader": "Ignis Leader",
-        "member": "Aeternum Ignis"
+        "member": "Aeternum Ignis",
+        "leaderboard_id": 771719791169241129
     },
     "Titan": {
         "admin": "Titan Admin",
         "leader": "Titan Leader",
-        "member": "Phoenix Titan"
+        "member": "Phoenix Titan",
+        "leaderboard_id": 832098824965062686
     },
     "AustralAsia": {
         "admin": "Astra Admin",
         "leader": "Astra Leader",
-        "member": "Phoenix Astra"
+        "member": "Phoenix Astra",
+        "leaderboard_id": 980368636726358047
     }
 }

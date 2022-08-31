@@ -19,6 +19,7 @@ async def on_command(ctx):
 
 @bot.event
 async def on_ready():
+    await main.init(bot)
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
 
@@ -26,7 +27,6 @@ async def on_ready():
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.MissingRole) or isinstance(error, commands.errors.MissingPermissions):
         await ctx.send("<@"+str(ctx.author.id)+">, you're not authorized to use this command! Only leadership can use this. Thank you :) ")
-    return
 
 @bot.command(name='solmm')
 @commands.has_role("Phoenix Family Leadership")
@@ -116,92 +116,98 @@ async def krakenInit(ctx):
 @bot.command(name='firem')
 @commands.has_role("Phoenix Family Leadership")
 async def firePlayers(ctx):
-    await main.getPlayersResponse(ctx, main.rolesPerCrewAndColor['Fire'], "Phoenix Fire")
+    await main.getPlayersResponse(ctx, main.crewData['Fire'], "Phoenix Fire")
 
 @bot.command(name='solm')
 @commands.has_role("Phoenix Family Leadership")
 async def solPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.rolesPerCrewAndColor['Sol'], 'Aeternum Sol')
+    await main.getPlayersResponse(ctx, main.crewData['Sol'], 'Aeternum Sol')
 
 @bot.command(name='dustm')
 @commands.has_role("Phoenix Family Leadership")
 async def dustPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.rolesPerCrewAndColor['Dust'], "From The Dust")
+    await main.getPlayersResponse(ctx, main.crewData['Dust'], "From The Dust")
 
 @bot.command(name='risenm')
 @commands.has_role("Phoenix Family Leadership")
 async def risenPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.rolesPerCrewAndColor['Risen'], "Phoenix Risen")
+    await main.getPlayersResponse(ctx, main.crewData['Risen'], "Phoenix Risen")
 
 @bot.command(name='dragonm')
 @commands.has_role("Phoenix Family Leadership")
 async def dragonPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.rolesPerCrewAndColor['Dragon'], "Phoenix Dragon")
+    await main.getPlayersResponse(ctx, main.crewData['Dragon'], "Phoenix Dragon")
 
 @bot.command(name='heliosm')
 @commands.has_role("Phoenix Family Leadership")
 async def heliosPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.rolesPerCrewAndColor['Helios'], "Phoenix Helios")
+    await main.getPlayersResponse(ctx, main.crewData['Helios'], "Phoenix Helios")
 
 @bot.command(name='vulcanm')
 @commands.has_role("Phoenix Family Leadership")
 async def vulcanPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.rolesPerCrewAndColor['Vulcan'], "Phoenix Vulcan")
+    await main.getPlayersResponse(ctx, main.crewData['Vulcan'], "Phoenix Vulcan")
 
 @bot.command(name='bootesm')
 @commands.has_role("Phoenix Family Leadership")
 async def bootesPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.rolesPerCrewAndColor['Bootes'], "Bootes Void")
+    await main.getPlayersResponse(ctx, main.crewData['Bootes'], "Bootes Void")
 
 @bot.command(name='icem')
 @commands.has_role("Phoenix Family Leadership")
 async def icePlayers(ctx):
-    await main.getPlayersResponse(ctx, main.rolesPerCrewAndColor['Ice'], "Phoenix Ice")
+    await main.getPlayersResponse(ctx, main.crewData['Ice'], "Phoenix Ice")
 
 @bot.command(name='ignism')
 @commands.has_role("Phoenix Family Leadership")
 async def ignisPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.rolesPerCrewAndColor['Ignis'], "Aeternum Ignis")
+    await main.getPlayersResponse(ctx, main.crewData['Ignis'], "Aeternum Ignis")
 
 @bot.command(name='ashesm')
 @commands.has_role("Phoenix Family Leadership")
 async def ashesPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.rolesPerCrewAndColor['Ashes'], "From The Ashes")
+    await main.getPlayersResponse(ctx, main.crewData['Ashes'], "From The Ashes")
 
 @bot.command(name='nebulam')
 @commands.has_role("Phoenix Family Leadership")
 async def nebulaPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.rolesPerCrewAndColor['Nebula'], "Phoenix Nebula")
+    await main.getPlayersResponse(ctx, main.crewData['Nebula'], "Phoenix Nebula")
 
 @bot.command(name='novam')
 @commands.has_role("Phoenix Family Leadership")
 async def novaPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.rolesPerCrewAndColor['Nova'], "Phoenix Nova")
+    await main.getPlayersResponse(ctx, main.crewData['Nova'], "Phoenix Nova")
 
 @bot.command(name='rebornm')
 @commands.has_role("Phoenix Family Leadership")
 async def rebornPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.rolesPerCrewAndColor['Reborn'], "Phoenix Reborn")
+    await main.getPlayersResponse(ctx, main.crewData['Reborn'], "Phoenix Reborn")
 
 @bot.command(name='titanm')
 @commands.has_role("Phoenix Family Leadership")
 async def titanPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.rolesPerCrewAndColor['Titan'], "Phoenix Titan")
+    await main.getPlayersResponse(ctx, main.crewData['Titan'], "Phoenix Titan")
 
 @bot.command(name='krakenm')
 @commands.has_role("Phoenix Family Leadership")
 async def krakenPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.rolesPerCrewAndColor['Kraken'], "Phoenix Kraken")
+    await main.getPlayersResponse(ctx, main.crewData['Kraken'], "Phoenix Kraken")
 
-@bot.command(name='astram',)
+@bot.command(name='astram')
 @commands.has_role("Phoenix Family Leadership")
 async def australasiaPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.rolesPerCrewAndColor['AustralAsia'], "Phoenix AustralAsia")
+    await main.getPlayersResponse(ctx, main.crewData['AustralAsia'], "Phoenix AustralAsia")
+
+@bot.command(name='score')
+#@commands.has_role("Phoenix Family Leadership")
+async def setScoreForCrew(ctx: commands.Context, crewName: str, score: str):
+    print(crewName, score)
+    await main.setScore(ctx, crewName, score)
 
 @bot.command(name='add')
 @commands.has_role("Phoenix Family Leadership")
-async def add(ctx):
-    print(ctx.author.id)
+async def add(ctx: commands.Context):
+    print(ctx.channel.category)
     print(ctx.permissions.kick_members)
     print(ctx.permissions.ban_members)
 
