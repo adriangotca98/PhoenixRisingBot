@@ -5,13 +5,13 @@ import os
 import re
 
 f = open("./constants.json")
-crewData = json.load(f)
+constants = json.load(f)
 scores = {}
 f.close()
-serveringServerId = int(os.environ.get("SERVERING_SERVER_ID"))
-risingServerId = int(os.environ.get("RISING_SERVER_ID"))
-knowingServerId = int(os.environ.get("KNOWING_SERVER_ID"))
-racingServerId = int(os.environ.get("RACING_SERVER_ID"))
+serveringServerId = constants['servers']['servering']
+risingServerId = constants['servers']['rising']
+knowingServerId = constants['servers']['knowing']
+racingServerId = constants['servers']['racing']
 
 
 class Member:
@@ -29,9 +29,9 @@ def sortFunction(member: Member):
     return "2 "+member.name
 
 async def init(bot: commands.Bot):
-    for crew in crewData:
-        if 'leaderboard_id' in crewData[crew]:
-            channelId = crewData[crew]['leaderboard_id']
+    for crew in constants:
+        if 'leaderboard_id' in constants[crew]:
+            channelId = constants[crew]['leaderboard_id']
             channel = await bot.fetch_channel(channelId)
             scores[crew] = computeScoreFromChannelName(channel.name)
 
@@ -57,7 +57,7 @@ def getScoreWithSeparator(intScore):
 
 async def setScore(ctx: commands.Context, crewName: str, score: str):
     crewName = crewName.capitalize()
-    channel: discord.channel.CategoryChannel = await ctx.bot.fetch_channel(crewData[crewName]['leaderboard_id'])
+    channel: discord.channel.CategoryChannel = await ctx.bot.fetch_channel(constants[crewName]['leaderboard_id'])
     channelName = channel.name
     newChannelName = channelName.strip("0123456789'`’") + getScoreWithSeparator(int(score))
     await channel.edit(name=newChannelName)
@@ -67,13 +67,13 @@ async def setScore(ctx: commands.Context, crewName: str, score: str):
 async def reorderChannels(ctx: commands.Context, scores: dict, crewName: str):
     sortedScores = dict(sorted(scores.items(), key=lambda item: item[1],reverse=True))
     if list(sortedScores.keys())[0] == crewName:
-        channel: discord.abc.GuildChannel = await ctx.bot.fetch_channel(crewData[crewName]['leaderboard_id'])
+        channel: discord.abc.GuildChannel = await ctx.bot.fetch_channel(constants[crewName]['leaderboard_id'])
         await channel.move(beginning=True)
         return
     for key in sortedScores:
         if key == crewName:
-            channel: discord.abc.GuildChannel = await ctx.bot.fetch_channel(crewData[key]['leaderboard_id'])
-            channelAbove: discord.abc.GuildChannel = await ctx.bot.fetch_channel(crewData[lastKey]['leaderboard_id'])
+            channel: discord.abc.GuildChannel = await ctx.bot.fetch_channel(constants[key]['leaderboard_id'])
+            channelAbove: discord.abc.GuildChannel = await ctx.bot.fetch_channel(constants[lastKey]['leaderboard_id'])
             await channel.move(after=channelAbove)
             return
         lastKey = key
@@ -118,12 +118,12 @@ async def getPlayersResponse(ctx, rolesAndColor, crewName: str):
 
 async def sendInitMessage(ctx: commands.Context, crewNameCaps, crewName):
     message = await ctx.send("**__Members for "+crewNameCaps+"__**")
-    if 'messageId' in crewData[crewName].keys():
-        messageToDelete = await ctx.fetch_message(crewData[crewName]['messageId'])
+    if 'messageId' in constants[crewName].keys():
+        messageToDelete = await ctx.fetch_message(constants[crewName]['messageId'])
         await messageToDelete.delete()
-    crewData[crewName]['messageId'] = message.id
+    constants[crewName]['messageId'] = message.id
     file = open('./constants.json','w')
-    json.dump(crewData,file,indent=4)
+    json.dump(constants,file,indent=4)
     file.close()
 
 async def kickOrBanOrUnban(user: str, op: str, bot: commands.Bot, **kwargs):

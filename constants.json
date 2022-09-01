@@ -1,4 +1,10 @@
 {
+    "servers": {
+        "knowing": 795081678736850958,
+        "servering": 934419135486636083,
+        "racing": 795083251474890753,
+        "rising": 741425933931774142
+    },
     "Fire": {
         "admin": "Fire Admin",
         "leader": "Fire Leader",
