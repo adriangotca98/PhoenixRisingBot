@@ -132,9 +132,10 @@ async def kickOrBanOrUnban(user: str, op: str, bot: commands.Bot, **kwargs):
     for guild in bot.guilds:
         if guild.id in [racingServerId, serveringServerId, risingServerId, knowingServerId]:
             print("Doing "+op+" for user: "+userObj.name+" in the server named: "+guild.name)
+            reason = kwargs['reason'] if 'reason' in kwargs else None
             if op=='kick':
-                await guild.kick(userObj, reason=kwargs['reason'])
+                await guild.kick(userObj, reason=reason)
             elif op == 'ban':
-                await guild.ban(userObj, reason=kwargs['reason'],delete_message_days=0)
+                await guild.ban(userObj, reason=reason, delete_message_days=0)
             elif op == 'unban':
-                await guild.unban(userObj, reason=kwargs['reason'])
+                await guild.unban(userObj, reason=reason)
