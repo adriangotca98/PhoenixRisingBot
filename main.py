@@ -119,8 +119,11 @@ async def getPlayersResponse(ctx, rolesAndColor, crewName: str):
 async def sendInitMessage(ctx: commands.Context, crewNameCaps, crewName):
     message = await ctx.send("**__Members for "+crewNameCaps+"__**")
     if 'messageId' in constants[crewName].keys():
-        messageToDelete = await ctx.fetch_message(constants[crewName]['messageId'])
-        await messageToDelete.delete()
+        try:
+            messageToDelete = await ctx.fetch_message(constants[crewName]['messageId'])
+            await messageToDelete.delete()
+        except discord.errors.NotFound:
+            print("Message not found! It might've been deleted. Carrying on :)")
     constants[crewName]['messageId'] = message.id
     file = open('./constants.json','w')
     json.dump(constants,file,indent=4)
