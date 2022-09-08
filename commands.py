@@ -33,175 +33,90 @@ async def on_command_error(ctx: commands.Context, error):
     await ctx.send(f"An unexpected error has occured. <@308561593858392065>, please have a look in the code. Command run: {ctx.command.name}")
     raise error
 
-@bot.command(name='solmm')
-@commands.has_role("Phoenix Family Leadership")
-async def solInit(ctx):
-    await main.sendInitMessage(ctx,'AETERNUM SOL','Sol')
-
-@bot.command(name='ignismm')
-@commands.has_role("Phoenix Family Leadership")
-async def ignisInit(ctx):
-    await main.sendInitMessage(ctx,'AETERNUM IGNIS','Ignis')
-
-@bot.command(name='dustmm')
-@commands.has_role("Phoenix Family Leadership")
-async def dustInit(ctx):
-    await main.sendInitMessage(ctx,'FROM THE DUST','Dust')
-
-@bot.command(name='ashesmm')
-@commands.has_role("Phoenix Family Leadership")
-async def ashesInit(ctx):
-    await main.sendInitMessage(ctx,'FROM THE ASHES','Ashes')
-
-@bot.command(name='rebornmm')
-@commands.has_role("Phoenix Family Leadership")
-async def RebornInit(ctx):
-    await main.sendInitMessage(ctx,'PHOENIX REBORN','Reborn')
-
-@bot.command(name='risenmm')
-@commands.has_role("Phoenix Family Leadership")
-async def RisenInit(ctx):
-    await main.sendInitMessage(ctx,'PHOENIX RISEN','Risen')
-
-@bot.command(name='heliosmm')
-@commands.has_role("Phoenix Family Leadership")
-async def heliosInit(ctx):
-    await main.sendInitMessage(ctx,'PHOENIX HELIOS','Helios')
-
-@bot.command(name='novamm')
-@commands.has_role("Phoenix Family Leadership")
-async def novaInit(ctx):
-    await main.sendInitMessage(ctx,'PHOENIX NOVA','Nova')
-
-@bot.command(name='vulcanmm')
-@commands.has_role("Phoenix Family Leadership")
-async def vulcanInit(ctx):
-    await main.sendInitMessage(ctx,'PHOENIX VULCAN','Vulcan')
-
-@bot.command(name='nebulamm')
-@commands.has_role("Phoenix Family Leadership")
-async def nebulaInit(ctx):
-    await main.sendInitMessage(ctx,'PHOENIX NEBULA','Nebula')
-
-@bot.command(name='titanmm')
-@commands.has_role("Phoenix Family Leadership")
-async def titanInit(ctx):
-    await main.sendInitMessage(ctx,'PHOENIX TITAN','Titan')
-
-@bot.command(name='bootesmm')
-@commands.has_role("Phoenix Family Leadership")
-async def bootesInit(ctx):
-    await main.sendInitMessage(ctx,'BOOTES VOID','Bootes')
-
-@bot.command(name='icemm')
-@commands.has_role("Phoenix Family Leadership")
-async def iceInit(ctx):
-    await main.sendInitMessage(ctx,'PHOENIX ICE','Ice')
-
-@bot.command(name='firemm')
-@commands.has_role("Phoenix Family Leadership")
-async def fireInit(ctx):
-    await main.sendInitMessage(ctx,'PHOENIX FIRE','Fire')
-
-@bot.command(name='dragonmm')
-@commands.has_role("Phoenix Family Leadership")
-async def dragonInit(ctx):
-    await main.sendInitMessage(ctx,'PHOENIX DRAGON','Dragon')
-
-@bot.command(name='astramm')
-@commands.has_role("Phoenix Family Leadership")
-async def australasiaInit(ctx):
-    await main.sendInitMessage(ctx,'PHOENIX AUSTRALASIA','Astra')
-
-@bot.command(name='krakenmm')
-@commands.has_role("Phoenix Family Leadership")
-async def krakenInit(ctx):
-    await main.sendInitMessage(ctx,'PHOENIX KRAKEN','Kraken')
-
 @bot.command(name='firem')
 @commands.has_role("Phoenix Family Leadership")
 async def firePlayers(ctx):
-    await main.getPlayersResponse(ctx, main.constants['Fire'], "Phoenix Fire")
+    await main.getPlayersResponse(ctx, 'Fire')
 
 @bot.command(name='solm')
 @commands.has_role("Phoenix Family Leadership")
 async def solPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.constants['Sol'], 'Aeternum Sol')
+    await main.getPlayersResponse(ctx, 'Sol')
 
 @bot.command(name='dustm')
 @commands.has_role("Phoenix Family Leadership")
 async def dustPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.constants['Dust'], "From The Dust")
+    await main.getPlayersResponse(ctx, 'Dust')
 
 @bot.command(name='risenm')
 @commands.has_role("Phoenix Family Leadership")
 async def risenPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.constants['Risen'], "Phoenix Risen")
+    await main.getPlayersResponse(ctx, 'Risen')
 
 @bot.command(name='dragonm')
 @commands.has_role("Phoenix Family Leadership")
 async def dragonPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.constants['Dragon'], "Phoenix Dragon")
+    await main.getPlayersResponse(ctx, 'Dragon')
 
 @bot.command(name='heliosm')
 @commands.has_role("Phoenix Family Leadership")
 async def heliosPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.constants['Helios'], "Phoenix Helios")
+    await main.getPlayersResponse(ctx, 'Helios')
 
 @bot.command(name='vulcanm')
 @commands.has_role("Phoenix Family Leadership")
 async def vulcanPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.constants['Vulcan'], "Phoenix Vulcan")
+    await main.getPlayersResponse(ctx, 'Vulcan')
 
 @bot.command(name='bootesm')
 @commands.has_role("Phoenix Family Leadership")
 async def bootesPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.constants['Bootes'], "Bootes Void")
+    await main.getPlayersResponse(ctx, 'Bootes')
 
 @bot.command(name='icem')
 @commands.has_role("Phoenix Family Leadership")
 async def icePlayers(ctx):
-    await main.getPlayersResponse(ctx, main.constants['Ice'], "Phoenix Ice")
+    await main.getPlayersResponse(ctx, 'Ice')
 
 @bot.command(name='ignism')
 @commands.has_role("Phoenix Family Leadership")
 async def ignisPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.constants['Ignis'], "Aeternum Ignis")
+    await main.getPlayersResponse(ctx, 'Ignis')
 
 @bot.command(name='ashesm')
 @commands.has_role("Phoenix Family Leadership")
 async def ashesPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.constants['Ashes'], "From The Ashes")
+    await main.getPlayersResponse(ctx, 'Ashes')
 
 @bot.command(name='nebulam')
 @commands.has_role("Phoenix Family Leadership")
 async def nebulaPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.constants['Nebula'], "Phoenix Nebula")
+    await main.getPlayersResponse(ctx, 'Nebula')
 
 @bot.command(name='novam')
 @commands.has_role("Phoenix Family Leadership")
 async def novaPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.constants['Nova'], "Phoenix Nova")
+    await main.getPlayersResponse(ctx, 'Nova')
 
 @bot.command(name='rebornm')
 @commands.has_role("Phoenix Family Leadership")
 async def rebornPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.constants['Reborn'], "Phoenix Reborn")
+    await main.getPlayersResponse(ctx, 'Reborn')
 
 @bot.command(name='titanm')
 @commands.has_role("Phoenix Family Leadership")
 async def titanPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.constants['Titan'], "Phoenix Titan")
+    await main.getPlayersResponse(ctx, 'Titan')
 
 @bot.command(name='krakenm')
 @commands.has_role("Phoenix Family Leadership")
 async def krakenPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.constants['Kraken'], "Phoenix Kraken")
+    await main.getPlayersResponse(ctx, 'Kraken')
 
 @bot.command(name='astram')
 @commands.has_role("Phoenix Family Leadership")
 async def australasiaPlayers(ctx):
-    await main.getPlayersResponse(ctx, main.constants['Astra'], "Phoenix AustralAsia")
+    await main.getPlayersResponse(ctx, 'Astra')
 
 @bot.command(name='score')
 #@commands.has_role("Phoenix Family Leadership")

@@ -78,10 +78,27 @@ async def reorderChannels(ctx: commands.Context, scores: dict, crewName: str):
             return
         lastKey = key
 
-async def getPlayersResponse(ctx, rolesAndColor, crewName: str):
-    memberRoleName = rolesAndColor['member']
-    adminRoleName = rolesAndColor['admin']
-    leaderRoleName = rolesAndColor['leader']
+async def updateMessage(ctx: commands.Context, crewName: str, key):
+    message = await ctx.send("**__Members for "+crewName.upper()+"__**")
+    constants[key]['messageId'] = message.id
+    file = open('./constants.json','w')
+    json.dump(constants,file,indent=4)
+    file.close()
+    return message
+
+async def getPlayersResponse(ctx: commands.Context, key: str):
+    crewName = constants[key]['member']
+    if 'messageId' not in constants[key].keys():
+        message = await updateMessage(ctx, crewName, key)
+    else:
+        try:
+            message = await ctx.fetch_message(constants[key]['messageId'])
+        except discord.errors.NotFound:
+            print('Message not found. Creating another one :)')
+            message = await updateMessage(ctx, crewName, key)
+    memberRoleName = constants[key]['member']
+    adminRoleName = constants[key]['admin']
+    leaderRoleName = constants[key]['leader']
     guild: discord.Guild = ctx.guild
     roleFound = False
     for role in guild.roles:
@@ -112,22 +129,7 @@ async def getPlayersResponse(ctx, rolesAndColor, crewName: str):
             stringResponse+=" -> *Admin*"
         stringResponse+='\n'
         number+=1
-    
-    message = await ctx.fetch_message(rolesAndColor['messageId'])
     await message.edit(content = stringResponse)
-
-async def sendInitMessage(ctx: commands.Context, crewNameCaps, crewName):
-    message = await ctx.send("**__Members for "+crewNameCaps+"__**")
-    if 'messageId' in constants[crewName].keys():
-        try:
-            messageToDelete = await ctx.fetch_message(constants[crewName]['messageId'])
-            await messageToDelete.delete()
-        except discord.errors.NotFound:
-            print("Message not found! It might've been deleted. Carrying on :)")
-    constants[crewName]['messageId'] = message.id
-    file = open('./constants.json','w')
-    json.dump(constants,file,indent=4)
-    file.close()
 
 async def kickOrBanOrUnban(user: str, op: str, bot: commands.Bot, **kwargs):
     userId = int(re.findall(r'\d+', user)[0])
