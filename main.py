@@ -1,7 +1,5 @@
 import discord
-from discord.ext import commands
 import json
-import os
 import re
 
 f = open("./constants.json")
@@ -28,7 +26,7 @@ def sortFunction(member: Member):
         return '1 '+member.name
     return "2 "+member.name
 
-async def init(bot: commands.Bot):
+async def init(bot: discord.Bot):
     for crew in constants:
         if 'leaderboard_id' in constants[crew]:
             channelId = constants[crew]['leaderboard_id']
@@ -55,7 +53,7 @@ def getScoreWithSeparator(intScore):
     return scoreWithSeparator
     
 
-async def setScore(ctx: commands.Context, crewName: str, score: str):
+async def setScore(ctx: discord.ApplicationContext, crewName: str, score: str):
     crewName = crewName.capitalize()
     channel: discord.channel.CategoryChannel = await ctx.bot.fetch_channel(constants[crewName]['leaderboard_id'])
     channelName = channel.name
@@ -64,7 +62,7 @@ async def setScore(ctx: commands.Context, crewName: str, score: str):
     scores[crewName] = int(score)
     await reorderChannels(ctx, scores, crewName)
 
-async def reorderChannels(ctx: commands.Context, scores: dict, crewName: str):
+async def reorderChannels(ctx: discord.ApplicationContext, scores: dict, crewName: str):
     sortedScores = dict(sorted(scores.items(), key=lambda item: item[1],reverse=True))
     if list(sortedScores.keys())[0] == crewName:
         channel: discord.abc.GuildChannel = await ctx.bot.fetch_channel(constants[crewName]['leaderboard_id'])
@@ -78,7 +76,7 @@ async def reorderChannels(ctx: commands.Context, scores: dict, crewName: str):
             return
         lastKey = key
 
-async def updateMessage(ctx: commands.Context, crewName: str, key):
+async def updateMessage(ctx: discord.ApplicationContext, crewName: str, key):
     message = await ctx.send("**__Members for "+crewName.upper()+"__**")
     constants[key]['messageId'] = message.id
     file = open('./constants.json','w')
@@ -86,7 +84,7 @@ async def updateMessage(ctx: commands.Context, crewName: str, key):
     file.close()
     return message
 
-async def getPlayersResponse(ctx: commands.Context, key: str):
+async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
     crewName = constants[key]['member']
     if 'messageId' not in constants[key].keys():
         message = await updateMessage(ctx, crewName, key)
@@ -105,7 +103,7 @@ async def getPlayersResponse(ctx: commands.Context, key: str):
         if role.name == memberRoleName:
             roleFound = True
     if not roleFound:
-        await ctx.send("Role not found on the server! Try again and change the name to the exact name of the role you want info for!")
+        await ctx.send_response("Role not found on the server! Try again and change the name to the exact name of the role you want info for!")
         return
     response = []
     for member in guild.members:
@@ -131,7 +129,7 @@ async def getPlayersResponse(ctx: commands.Context, key: str):
         number+=1
     await message.edit(content = stringResponse)
 
-async def kickOrBanOrUnban(user: str, op: str, bot: commands.Bot, **kwargs):
+async def kickOrBanOrUnban(user: str, op: str, bot: discord.Bot, **kwargs):
     userId = int(re.findall(r'\d+', user)[0])
     userObj = await bot.fetch_user(userId)
     for guild in bot.guilds:
