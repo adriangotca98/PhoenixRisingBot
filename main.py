@@ -129,13 +129,12 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
         number+=1
     await message.edit(content = stringResponse)
 
-async def kickOrBanOrUnban(user: str, op: str, bot: discord.Bot, **kwargs):
+async def kickOrBanOrUnban(user: str, op: str, bot: discord.Bot, reason=None):
     userId = int(re.findall(r'\d+', user)[0])
     userObj = await bot.fetch_user(userId)
     for guild in bot.guilds:
         if guild.id in [racingServerId, serveringServerId, risingServerId, knowingServerId]:
             print("Doing "+op+" for user: "+userObj.name+" in the server named: "+guild.name)
-            reason = kwargs['reason'] if 'reason' in kwargs else None
             if op=='kick':
                 await guild.kick(userObj, reason=reason)
             elif op == 'ban':

@@ -56,15 +56,13 @@ async def setScoreForCrew(ctx: discord.ApplicationContext, crew_name: str, score
 
 @bot.slash_command(name='kick')
 @commands.has_permissions(kick_members=True)
-async def kick(ctx: discord.ApplicationContext, user, *args):
-    reason = ' '.join(args)
+async def kick(ctx: discord.ApplicationContext, user, reason: str):
     await main.kickOrBanOrUnban(user, 'kick', bot, reason = reason)
     await ctx.send_response("User kicked :)",ephemeral=True)
 
 @bot.slash_command(name='ban')
 @commands.has_permissions(ban_members=True)
-async def ban(ctx: discord.ApplicationContext, user, *args):
-    reason = ' '.join(args)
+async def ban(ctx: discord.ApplicationContext, user, reason: str):
     await main.kickOrBanOrUnban(user, 'ban', bot, reason=reason)
     await ctx.send_response("User banned :)", ephemeral=True)
 
