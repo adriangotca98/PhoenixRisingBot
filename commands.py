@@ -37,7 +37,7 @@ async def on_application_command_error(ctx, error):
     await ctx.send_response(f"An unexpected error has occured. <@308561593858392065>, please have a look in the code. Command run: {ctx.command.name}")
     raise error
 
-@bot.slash_command(name='score')
+@bot.slash_command(name='score', description='Set score for the crew in the CREW TABLES section and reorder the channels by score.')
 @commands.has_role("Phoenix Family Leadership")
 @discord.option(
     "crew_name",
@@ -47,26 +47,27 @@ async def on_application_command_error(ctx, error):
 )
 @discord.option(
     "score",
-    type=int
+    type=int,
+    required=True
 )
 async def setScoreForCrew(ctx: discord.ApplicationContext, crew_name: str, score: int):
     scoreStr = str(score)
     await main.setScore(ctx, crew_name, scoreStr)
     await ctx.send_response("Score updated :)",ephemeral=True)
 
-@bot.slash_command(name='kick')
+@bot.slash_command(name='kick', description='Kick a member from all servers (Rising, Knowing, Racing, Servering).')
 @commands.has_permissions(kick_members=True)
 async def kick(ctx: discord.ApplicationContext, user, reason: str):
     await main.kickOrBanOrUnban(user, 'kick', bot, reason = reason)
     await ctx.send_response("User kicked :)",ephemeral=True)
 
-@bot.slash_command(name='ban')
+@bot.slash_command(name='ban',description='Ban a member from all servers (Rising, Knowing, Racing, Servering).')
 @commands.has_permissions(ban_members=True)
 async def ban(ctx: discord.ApplicationContext, user, reason: str):
     await main.kickOrBanOrUnban(user, 'ban', bot, reason=reason)
     await ctx.send_response("User banned :)", ephemeral=True)
 
-@bot.slash_command(name='unban')
+@bot.slash_command(name='unban', description='Unban a former member from all servers.')
 @commands.has_permissions(ban_members=True)
 async def unban(ctx: discord.ApplicationContext, user):
     await main.kickOrBanOrUnban(user, 'unban', bot)
