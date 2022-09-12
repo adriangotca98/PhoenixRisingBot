@@ -77,7 +77,7 @@ async def reorderChannels(ctx: discord.ApplicationContext, scores: dict, crewNam
         lastKey = key
 
 async def updateMessage(ctx: discord.ApplicationContext, crewName: str, key):
-    message = await ctx.send("**__Members for "+crewName.upper()+"__**")
+    message = await ctx.send(content="**__Members for "+crewName.upper()+"__**", file=discord.File(filename='./members_pictures/'+key+'.jpg'))
     constants[key]['messageId'] = message.id
     file = open('./constants.json','w')
     json.dump(constants,file,indent=4)
@@ -127,7 +127,7 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
             stringResponse+=" -> *Admin*"
         stringResponse+='\n'
         number+=1
-    await message.edit(content = stringResponse)
+    await message.edit(content = stringResponse, file=discord.File(filename='./members_pictures/'+key+'.jpg'))
 
 async def kickOrBanOrUnban(user: str, op: str, bot: discord.Bot, reason=None):
     userId = int(re.findall(r'\d+', user)[0])
