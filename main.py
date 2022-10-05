@@ -1,15 +1,19 @@
 import discord
 import json
 import re
+from pymongo import MongoClient
 
-f = open("./constants.json")
-constants = json.load(f)
+client = MongoClient("mongodb+srv://<username>:<password>@phoenixrisingcluster.p2zno6x.mongodb.net/?retryWrites=true&w=majority")
+crewDataCollection = client.get_database("Fawkes").get_collection("crewData")
+configCollection = client.get_database("Fawkes").get_collection("configData")
+
 scores = {}
-f.close()
-serveringServerId = constants['servers']['servering']
-risingServerId = constants['servers']['rising']
-knowingServerId = constants['servers']['knowing']
-racingServerId = constants['servers']['racing']
+crewNames = configCollection.find_one({"key": "crews"}, {"_id": 0, "value": 1})['value']
+serveringServerId = configCollection.find_one({"key": "servers"}, {"_id": 0, "servering": 1})['servering']
+risingServerId = configCollection.find_one({"key": "servers"}, {"_id": 0, "rising": 1})['rising']
+knowingServerId = configCollection.find_one({"key": "servers"}, {"_id": 0, "knowing": 1})['knowing']
+racingServerId = configCollection.find_one({"key": "servers"}, {"_id": 0, "racing": 1})['racing']
+discord_bot_token = configCollection.find_one({"key": "discord_token"}, {"_id": 0, "value": 1})['value']
 
 
 class Member:
@@ -27,11 +31,10 @@ def sortFunction(member: Member):
     return "2 "+member.name
 
 async def init(bot: discord.Bot):
-    for crew in constants:
-        if 'leaderboard_id' in constants[crew]:
-            channelId = constants[crew]['leaderboard_id']
-            channel = await bot.fetch_channel(channelId)
-            scores[crew] = computeScoreFromChannelName(channel.name)
+    for crew in crewNames:
+        channelId = crewDataCollection.find_one({'key': crew},{"_id": 0, "leaderboard_id": 1})['leaderboard_id']
+        channel = await bot.fetch_channel(channelId)
+        scores[crew] = computeScoreFromChannelName(channel.name)
 
 def computeScoreFromChannelName(name: str):
     number = ''
@@ -54,8 +57,10 @@ def getScoreWithSeparator(intScore):
     
 
 async def setScore(ctx: discord.ApplicationContext, crewName: str, score: str):
-    crewName = crewName.capitalize()
-    channel: discord.channel.CategoryChannel = await ctx.bot.fetch_channel(constants[crewName]['leaderboard_id'])
+    print(crewName)
+    print(crewDataCollection.find_one({'key': crewName},{"_id": 0, "leaderboard_id": 1}))
+    channelId = crewDataCollection.find_one({'key': crewName},{"_id": 0, "leaderboard_id": 1})['leaderboard_id']
+    channel: discord.channel.CategoryChannel = await ctx.bot.fetch_channel(channelId)
     channelName = channel.name
     newChannelName = channelName.strip("0123456789'`’") + getScoreWithSeparator(int(score))
     await channel.edit(name=newChannelName)
@@ -64,39 +69,40 @@ async def setScore(ctx: discord.ApplicationContext, crewName: str, score: str):
 
 async def reorderChannels(ctx: discord.ApplicationContext, scores: dict, crewName: str):
     sortedScores = dict(sorted(scores.items(), key=lambda item: item[1],reverse=True))
+    channelId = crewDataCollection.find_one({'key': crewName},{"_id": 0, "leaderboard_id": 1})['leaderboard_id']
+    channel: discord.abc.GuildChannel = await ctx.bot.fetch_channel(channelId)
     if list(sortedScores.keys())[0] == crewName:
-        channel: discord.abc.GuildChannel = await ctx.bot.fetch_channel(constants[crewName]['leaderboard_id'])
         await channel.move(beginning=True)
         return
     for key in sortedScores:
         if key == crewName:
-            channel: discord.abc.GuildChannel = await ctx.bot.fetch_channel(constants[key]['leaderboard_id'])
-            channelAbove: discord.abc.GuildChannel = await ctx.bot.fetch_channel(constants[lastKey]['leaderboard_id'])
-            await channel.move(after=channelAbove)
+            aboveChannelId: int = crewDataCollection.find_one({'key': lastKey},{"_id": 0, "leaderboard_id": 1})['leaderboard_id']
+            aboveChannel: discord.abc.GuildChannel = await ctx.bot.fetch_channel(aboveChannelId)
+            await channel.move(after=aboveChannel)
             return
         lastKey = key
 
-async def updateMessage(ctx: discord.ApplicationContext, crewName: str, key):
+async def updateMessage(ctx: discord.ApplicationContext, crewData):
+    key = crewData['key']
+    crewName = crewData['member']
     message = await ctx.send("**__Members for "+crewName.upper()+"__**")
-    constants[key]['messageId'] = message.id
-    file = open('./constants.json','w')
-    json.dump(constants,file,indent=4)
-    file.close()
+    crewDataCollection.update_one({"key": key}, {"$set": {"message_id": message.id}})
     return message
 
 async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
-    crewName = constants[key]['member']
-    if 'messageId' not in constants[key].keys():
-        message = await updateMessage(ctx, crewName, key)
+    crewData = crewDataCollection.find_one({"key": key}, {"_id": 0, "member": 1, "admin": 1, "key": 1, "leader": 1, "message_id": 1})
+    crewName = crewData['member']
+    if 'message_id' not in crewData.keys():
+        message = await updateMessage(ctx, crewData)
     else:
         try:
-            message = await ctx.fetch_message(constants[key]['messageId'])
+            message = await ctx.fetch_message(crewData['message_id'])
         except discord.errors.NotFound:
             print('Message not found. Creating another one :)')
             message = await updateMessage(ctx, crewName, key)
-    memberRoleName = constants[key]['member']
-    adminRoleName = constants[key]['admin']
-    leaderRoleName = constants[key]['leader']
+    memberRoleName = crewData['member']
+    adminRoleName = crewData['admin']
+    leaderRoleName = crewData['leader']
     guild: discord.Guild = ctx.guild
     roleFound = False
     for role in guild.roles:

@@ -1,4 +1,3 @@
-import os
 import discord
 from discord.ext import commands
 import main
@@ -10,18 +9,6 @@ intents.members = True
 intents.message_content = True
 
 bot = discord.Bot(description=description, intents=intents)
-
-@bot.slash_command(name="members", description="Used to get members of a certain crew")
-@commands.has_role("Phoenix Family Leadership")
-@discord.option(
-    "crew_name",
-    description='Crew for which you want to create/update list of members',
-    required=True,
-    choices=['sol','dust','ashes','fire','ice','dragon','risen','vulcan','helios','bootes','reborn','nebula','titan','kraken','ignis','nova','astra']
-)
-async def getMembers(ctx: discord.ApplicationContext, crew_name: str):
-    await main.getPlayersResponse(ctx, crew_name.lower().capitalize())
-    await ctx.send_response("OK, all good!", ephemeral=True)
 
 @bot.event
 async def on_ready():
@@ -37,13 +24,25 @@ async def on_application_command_error(ctx, error):
     await ctx.send_response(f"An unexpected error has occured. <@308561593858392065>, please have a look in the code. Command run: {ctx.command.name}")
     raise error
 
+@bot.slash_command(name="members", description="Used to get members of a certain crew")
+@commands.has_role("Phoenix Family Leadership")
+@discord.option(
+    "crew_name",
+    description='Crew for which you want to create/update list of members',
+    required=True,
+    choices=['alpha','dust','ashes','fire','ice','dragon','risen','vulcan','helios','bootes','reborn','nebula','titan','kraken','ignis','nova','astra']
+)
+async def getMembers(ctx: discord.ApplicationContext, crew_name: str):
+    await main.getPlayersResponse(ctx, crew_name)
+    await ctx.send_response("OK, all good!", ephemeral=True)
+
 @bot.slash_command(name='score', description='Set score for the crew in the CREW TABLES section and reorder the channels by score.')
 @commands.has_role("Phoenix Family Leadership")
 @discord.option(
     "crew_name",
     description='Crew for which you want to update score',
     required=True,
-    choices=['sol','dust','ashes','fire','ice','dragon','risen','vulcan','helios','bootes','reborn','nebula','titan','kraken','ignis','nova','astra']
+    choices=['alpha','dust','ashes','fire','ice','dragon','risen','vulcan','helios','bootes','reborn','nebula','titan','kraken','ignis','nova','astra']
 )
 @discord.option(
     "score",
@@ -73,4 +72,4 @@ async def unban(ctx: discord.ApplicationContext, user):
     await main.kickOrBanOrUnban(user, 'unban', bot)
     await ctx.send_response("User unbanned :)", ephemeral=True)
 
-bot.run(os.environ.get("DISCORD_BOT_TOKEN"))
+bot.run(main.discord_bot_token)
