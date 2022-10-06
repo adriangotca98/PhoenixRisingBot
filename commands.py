@@ -90,4 +90,21 @@ async def unban(ctx: discord.ApplicationContext, user: discord.Member):
     await main.kickOrBanOrUnban(user, 'unban', bot)
     await ctx.send_response("User unbanned :)", ephemeral=True)
 
+@bot.slash_command(name="multiple", description="Keep track of multiple accounts of the same person (same discord profile) within the same crew")
+@discord.option(
+    "user",
+    description='user that has multiple accounts in the crew (not multiple accounts in the family!)',
+    required=True,
+    input_type=discord.Member
+)
+@discord.option(
+    "crew_name",
+    description='Crew where the player has multiple accounts',
+    required=True,
+    choices=['alpha','dust','ashes','fire','ice','dragon','risen','vulcan','helios','bootes','reborn','nebula','titan','kraken','ignis','nova','astra']
+)
+async def multiple(ctx: discord.ApplicationContext, user: discord.Member, crew_name: str, number_of_accounts: int):
+    main.processMultiple(user, crew_name, number_of_accounts)
+    await ctx.send_response("Multiple accounts recorded!", ephemeral = True)
+
 bot.run(main.discord_bot_token)
