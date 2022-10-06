@@ -1,7 +1,7 @@
 import discord
 from pymongo import MongoClient
 
-client = MongoClient("mongodb+srv://adrian:JcXZ8b6rD9v4Dyv@phoenixrisingcluster.p2zno6x.mongodb.net/?retryWrites=true&w=majority")
+client = MongoClient("mongodb+srv://<username>:<password>@phoenixrisingcluster.p2zno6x.mongodb.net/?retryWrites=true&w=majority")
 crewCollection = client.get_database("Fawkes").get_collection("crewData")
 configCollection = client.get_database("Fawkes").get_collection("configData")
 multipleAccountsCollection = client.get_database("Fawkes").get_collection("multipleAccountsData")
