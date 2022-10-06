@@ -103,6 +103,12 @@ async def unban(ctx: discord.ApplicationContext, user: discord.Member):
     required=True,
     choices=['alpha','dust','ashes','fire','ice','dragon','risen','vulcan','helios','bootes','reborn','nebula','titan','kraken','ignis','nova','astra']
 )
+@discord.option(
+    "number_of_accounts",
+    description='Number of accounts that the player has in that crew.',
+    required=True,
+    input_type=int
+)
 async def multiple(ctx: discord.ApplicationContext, user: discord.Member, crew_name: str, number_of_accounts: int):
     main.processMultiple(user, crew_name, number_of_accounts)
     await ctx.send_response("Multiple accounts recorded!", ephemeral = True)
