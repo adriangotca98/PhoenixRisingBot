@@ -56,19 +56,37 @@ async def setScoreForCrew(ctx: discord.ApplicationContext, crew_name: str, score
 
 @bot.slash_command(name='kick', description='Kick a member from all servers (Rising, Knowing, Racing, Servering).')
 @commands.has_permissions(kick_members=True)
-async def kick(ctx: discord.ApplicationContext, user, reason: str):
+@discord.option(
+    "user",
+    description='user to kick',
+    required=True,
+    input_type=discord.Member
+)
+async def kick(ctx: discord.ApplicationContext, user: discord.Member, reason: str):
     await main.kickOrBanOrUnban(user, 'kick', bot, reason = reason)
     await ctx.send_response("User kicked :)",ephemeral=True)
 
 @bot.slash_command(name='ban',description='Ban a member from all servers (Rising, Knowing, Racing, Servering).')
 @commands.has_permissions(ban_members=True)
-async def ban(ctx: discord.ApplicationContext, user, reason: str):
+@discord.option(
+    "user",
+    description='user to ban',
+    required=True,
+    input_type=discord.Member
+)
+async def ban(ctx: discord.ApplicationContext, user: discord.Member, reason: str):
     await main.kickOrBanOrUnban(user, 'ban', bot, reason=reason)
     await ctx.send_response("User banned :)", ephemeral=True)
 
 @bot.slash_command(name='unban', description='Unban a former member from all servers.')
 @commands.has_permissions(ban_members=True)
-async def unban(ctx: discord.ApplicationContext, user):
+@discord.option(
+    "user",
+    description='user to unban',
+    required=True,
+    input_type=discord.Member
+)
+async def unban(ctx: discord.ApplicationContext, user: discord.Member):
     await main.kickOrBanOrUnban(user, 'unban', bot)
     await ctx.send_response("User unbanned :)", ephemeral=True)
 

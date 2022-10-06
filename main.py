@@ -1,5 +1,4 @@
 import discord
-import json
 import re
 from pymongo import MongoClient
 
@@ -135,15 +134,13 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
         number+=1
     await message.edit(content = stringResponse)
 
-async def kickOrBanOrUnban(user: str, op: str, bot: discord.Bot, reason=None):
-    userId = int(re.findall(r'\d+', user)[0])
-    userObj = await bot.fetch_user(userId)
+async def kickOrBanOrUnban(user: discord.Member, op: str, bot: discord.Bot, reason=None):
     for guild in bot.guilds:
         if guild.id in [racingServerId, serveringServerId, risingServerId, knowingServerId]:
-            print("Doing "+op+" for user: "+userObj.name+" in the server named: "+guild.name)
+            print("Doing "+op+" for user: "+user.name+" in the server named: "+guild.name)
             if op=='kick':
-                await guild.kick(userObj, reason=reason)
+                await guild.kick(user, reason=reason)
             elif op == 'ban':
-                await guild.ban(userObj, reason=reason, delete_message_days=0)
+                await guild.ban(user, reason=reason, delete_message_days=0)
             elif op == 'unban':
-                await guild.unban(userObj, reason=reason)
+                await guild.unban(user, reason=reason)
