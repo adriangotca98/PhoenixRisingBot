@@ -17,6 +17,7 @@ risingServerId = configCollection.find_one({"key": "servers"}, {"_id": 0, "risin
 knowingServerId = configCollection.find_one({"key": "servers"}, {"_id": 0, "knowing": 1})['knowing']
 racingServerId = configCollection.find_one({"key": "servers"}, {"_id": 0, "racing": 1})['racing']
 discord_bot_token = configCollection.find_one({"key": "discord_token"}, {"_id": 0, "value": 1})['value']
+logging_channel_id = int(configCollection.find_one({"key": "log_channel"}, {"_id": 0, "value": 1})['value'])
 
 
 class Member:
@@ -58,7 +59,6 @@ def getScoreWithSeparator(intScore):
     while scoreWithSeparator[0]=='0' or scoreWithSeparator[0]=='’':
         scoreWithSeparator = scoreWithSeparator[1:]
     return scoreWithSeparator
-    
 
 async def setScore(ctx: discord.ApplicationContext, crewName: str, score: str):
     print(crewName)

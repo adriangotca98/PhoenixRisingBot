@@ -17,6 +17,12 @@ async def on_ready():
     print('------')
 
 @bot.event
+async def on_application_command_completion(ctx: discord.ApplicationContext):
+    args = " ".join([option['value'] for option in ctx.selected_options])
+    message = f"**{ctx.author.name}#{ctx.author.discriminator}** has sent the following command: **/{ctx.command.name} {args}**"
+    await (await bot.fetch_channel(main.logging_channel_id)).send(message)
+
+@bot.event
 async def on_application_command_error(ctx, error):
     if isinstance(error, commands.MissingRole) or isinstance(error, commands.MissingPermissions):
         await ctx.send_response("<@"+str(ctx.author.id)+">, you're not authorized to use this command! Only leadership can use this. Thank you :) ", ephemeral=True)
