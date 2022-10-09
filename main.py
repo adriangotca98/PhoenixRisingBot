@@ -1,7 +1,11 @@
 import discord
 from pymongo import MongoClient
 
-client = MongoClient("mongodb+srv://<username>:<password>@phoenixrisingcluster.p2zno6x.mongodb.net/?retryWrites=true&w=majority")
+configFile = open("config.txt", "r")
+config = configFile.read()
+username = config.split("\n")[0]
+password = config.split("\n")[1]
+client = MongoClient(f"mongodb+srv://{username}:{password}@phoenixrisingcluster.p2zno6x.mongodb.net/?retryWrites=true&w=majority")
 crewCollection = client.get_database("Fawkes").get_collection("crewData")
 configCollection = client.get_database("Fawkes").get_collection("configData")
 multipleAccountsCollection = client.get_database("Fawkes").get_collection("multipleAccountsData")
@@ -127,9 +131,13 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
         if memberRoleName in roleNames:
             response.append(memberStruct)
         if str(member.id) in multipleAccountsIds:
-            for i in range(multipleAccountsData[str(member.id)]-1):
-                newMemberStruct = Member(False, False, member.id, member.display_name, i+2)
-                response.append(newMemberStruct)
+            if memberRoleName in roleNames:
+                for i in range(multipleAccountsData[str(member.id)]-1):
+                    newMemberStruct = Member(False, False, member.id, member.display_name, i+2)
+                    response.append(newMemberStruct)
+            else:
+                multipleAccountsCollection.delete_one({"key": str(member.id)})
+                multipleAccountsCollection.update_one({"key": crewName}, {"$unset": {str(member.id): ""}})
 
     response.sort(key = sortFunction)
 
@@ -160,6 +168,15 @@ async def kickOrBanOrUnban(user: discord.Member, op: str, bot: discord.Bot, reas
 
 def processMultiple(user: discord.Member, crewName: str, numberOfAccounts: int):
     # first, update the entry for the user_id key
+    memberRoleName = crewCollection.find_one({"key": crewName}, {"_id": 0, "member": 1})['member']
+    roles = user.roles
+    roleFound = False
+    for role in roles:
+        if role.name == memberRoleName:
+            roleFound = True
+            break
+    if not roleFound:
+        return "User does not have crew role! Add crew role and try again."
     strId = str(user.id)
     existingEntry = multipleAccountsCollection.find_one({"key": strId},{"_id": 0, crewName: 1})
     if existingEntry == None:
@@ -180,3 +197,4 @@ def processMultiple(user: discord.Member, crewName: str, numberOfAccounts: int):
             multipleAccountsCollection.update_one({"key": crewName}, {"$set": {strId: numberOfAccounts}})
         else:
             multipleAccountsCollection.update_one({"key": crewName}, {"$unset": {strId: ""}})
+    return "Multiple accounts recorded!"

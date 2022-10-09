@@ -110,7 +110,7 @@ async def unban(ctx: discord.ApplicationContext, user: discord.Member):
     input_type=int
 )
 async def multiple(ctx: discord.ApplicationContext, user: discord.Member, crew_name: str, number_of_accounts: int):
-    main.processMultiple(user, crew_name, number_of_accounts)
-    await ctx.send_response("Multiple accounts recorded!", ephemeral = True)
+    message = main.processMultiple(user, crew_name, number_of_accounts)
+    await ctx.send_response(message, ephemeral = True)
 
 bot.run(main.discord_bot_token)
