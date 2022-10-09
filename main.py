@@ -91,7 +91,10 @@ async def updateMessage(ctx: discord.ApplicationContext, crewData):
 
 async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
     multipleAccountsData = multipleAccountsCollection.find_one({"key": key}, {"_id": 0})
-    multipleAccountsIds = [key for key in multipleAccountsData if key != 'key']
+    if multipleAccountsData != None:
+        multipleAccountsIds = [key for key in multipleAccountsData if key != 'key']
+    else:
+        multipleAccountsIds = []
     crewData = crewCollection.find_one({"key": key}, {"_id": 0, "member": 1, "admin": 1, "key": 1, "leader": 1, "message_id": 1})
     crewName = crewData['member']
     if 'message_id' not in crewData.keys():
