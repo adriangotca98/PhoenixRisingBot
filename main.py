@@ -108,7 +108,7 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
             message = await ctx.fetch_message(crewData['message_id'])
         except discord.errors.NotFound:
             print('Message not found. Creating another one :)')
-            message = await updateMessage(ctx, crewName, key)
+            message = await updateMessage(ctx, crewName)
     memberRoleName = crewData['member']
     adminRoleName = crewData['admin']
     leaderRoleName = crewData['leader']
