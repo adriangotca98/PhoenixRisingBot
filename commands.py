@@ -23,14 +23,18 @@ async def on_application_command_completion(ctx: discord.ApplicationContext):
     await (await bot.fetch_channel(main.logging_channel_id)).send(message)
 
 @bot.event
-async def on_application_command_error(ctx, error):
+async def on_application_command_error(ctx: discord.ApplicationContext, error):
     if isinstance(error, commands.MissingRole) or isinstance(error, commands.MissingPermissions):
-        await ctx.send_response("<@"+str(ctx.author.id)+">, you're not authorized to use this command! Only leadership can use this. Thank you :) ", ephemeral=True)
+        await ctx.send_followup("<@"+str(ctx.author.id)+">, you're not authorized to use this command! Only leadership can use this. Thank you :) ", ephemeral=True)
         return
-    await ctx.send_response(f"An unexpected error has occured. <@308561593858392065>, please have a look in the code. Command run: {ctx.command.name}")
+    await ctx.send_followup(f"Failed unexpectedly")
+    await ctx.send(f"An unexpected error has occured. <@308561593858392065>, please have a look in the code. Command run: {ctx.command.name}")
+    args = " ".join([str(option['value']) for option in ctx.selected_options])
+    message = f"**{ctx.author.name}#{ctx.author.discriminator}** tried to send the following command: **/{ctx.command.name} {args}**, but it errored out."
+    await (await bot.fetch_channel(main.logging_channel_id)).send(message)
     raise error
 
-@bot.slash_command(name="members", description="Used to get members of a certain crew", guild_ids=[main.risingServerId, main.racingServerId, main.knowingServerId, main.serveringServerId])
+@bot.slash_command(name="members", description="Used to get members of a certain crew", guild_ids=[main.risingServerId])
 @commands.has_role("Phoenix Family Leadership")
 @discord.option(
     "crew_name",
@@ -38,11 +42,18 @@ async def on_application_command_error(ctx, error):
     required=True,
     choices=['alpha','dust','ashes','fire','ice','dragon','risen','vulcan','helios','bootes','reborn','nebula','titan','kraken','ignis','nova','astra']
 )
-async def getMembers(ctx: discord.ApplicationContext, crew_name: str):
-    await main.getPlayersResponse(ctx, crew_name)
-    await ctx.send_response("OK, all good!", ephemeral=True)
+@discord.option(
+    "should_delete_new_movements",
+    description='Flag to tell Fawkes whether or not to delete the movements involving new players in the family.',
+    required=True,
+    choices=["True", "False"]
+)
+async def getMembers(ctx: discord.ApplicationContext, crew_name: str, should_delete_new_movements: str):
+    await ctx.defer(ephemeral=True)
+    message = await main.getPlayersResponse(ctx, crew_name, should_delete_new_movements == "True")
+    await ctx.send_followup(message, ephemeral=True)
 
-@bot.slash_command(name='score', description='Set score for the crew in the CREW TABLES section and reorder the channels by score.', guild_ids=[main.risingServerId, main.racingServerId, main.knowingServerId, main.serveringServerId])
+@bot.slash_command(name='score', description='Set score for the crew in the CREW TABLES section and reorder the channels by score.', guild_ids=[main.risingServerId])
 @commands.has_role("Phoenix Family Leadership")
 @discord.option(
     "crew_name",
@@ -56,9 +67,10 @@ async def getMembers(ctx: discord.ApplicationContext, crew_name: str):
     required=True
 )
 async def setScoreForCrew(ctx: discord.ApplicationContext, crew_name: str, score: int):
+    await ctx.defer(ephemeral=True)
     scoreStr = str(score)
     await main.setScore(ctx, crew_name, scoreStr)
-    await ctx.send_response("Score updated :)",ephemeral=True)
+    await ctx.send_followup("Score updated :)",ephemeral=True)
 
 @bot.slash_command(name='kick', description='Kick a member from all servers (Rising, Knowing, Racing, Servering).', guild_ids=[main.risingServerId, main.racingServerId, main.knowingServerId, main.serveringServerId])
 @commands.has_permissions(kick_members=True)
@@ -69,8 +81,9 @@ async def setScoreForCrew(ctx: discord.ApplicationContext, crew_name: str, score
     input_type=discord.Member
 )
 async def kick(ctx: discord.ApplicationContext, user: discord.Member, reason: str):
+    await ctx.defer(ephemeral=True)
     await main.kickOrBanOrUnban(user, 'kick', bot, reason = reason)
-    await ctx.send_response("User kicked :)",ephemeral=True)
+    await ctx.send_followup("User kicked :)",ephemeral=True)
 
 @bot.slash_command(name='ban',description='Ban a member from all servers (Rising, Knowing, Racing, Servering).', guild_ids=[main.risingServerId, main.racingServerId, main.knowingServerId, main.serveringServerId])
 @commands.has_permissions(ban_members=True)
@@ -81,8 +94,9 @@ async def kick(ctx: discord.ApplicationContext, user: discord.Member, reason: st
     input_type=discord.Member
 )
 async def ban(ctx: discord.ApplicationContext, user: discord.Member, reason: str):
+    await ctx.defer(ephemeral=True)
     await main.kickOrBanOrUnban(user, 'ban', bot, reason=reason)
-    await ctx.send_response("User banned :)", ephemeral=True)
+    await ctx.send_followup("User banned :)", ephemeral=True)
 
 @bot.slash_command(name='unban', description='Unban a former member from all servers.', guild_ids=[main.risingServerId, main.racingServerId, main.knowingServerId, main.serveringServerId])
 @commands.has_permissions(ban_members=True)
@@ -93,10 +107,12 @@ async def ban(ctx: discord.ApplicationContext, user: discord.Member, reason: str
     input_type=discord.Member
 )
 async def unban(ctx: discord.ApplicationContext, user: discord.Member):
+    await ctx.defer(ephemeral=True)
     await main.kickOrBanOrUnban(user, 'unban', bot)
-    await ctx.send_response("User unbanned :)", ephemeral=True)
+    await ctx.send_followup("User unbanned :)", ephemeral=True)
 
-@bot.slash_command(name="multiple", description="Keep track of multiple accounts of the same person (same discord profile) within the same crew", guild_ids=[main.risingServerId, main.racingServerId, main.knowingServerId, main.serveringServerId])
+@bot.slash_command(name="multiple", description="Keep track of multiple accounts of the same person (same discord profile) within the same crew", guild_ids=[main.risingServerId])
+@commands.has_role("Phoenix Family Leadership")
 @discord.option(
     "user",
     description='user that has multiple accounts in the crew (not multiple accounts in the family!)',
@@ -116,7 +132,64 @@ async def unban(ctx: discord.ApplicationContext, user: discord.Member):
     input_type=int
 )
 async def multiple(ctx: discord.ApplicationContext, user: discord.Member, crew_name: str, number_of_accounts: int):
+    await ctx.defer(ephemeral=True)
     message = main.processMultiple(user, crew_name, number_of_accounts)
-    await ctx.send_response(message, ephemeral = True)
+    await ctx.send_followup(message, ephemeral = True)
+
+@bot.slash_command(name="transfer", description="Register a transfer for next season.", guild_ids=[main.risingServerId])
+@commands.has_role("Phoenix Family Leadership")
+@discord.option(
+    "player",
+    description="Tag the player that is moving",
+    required=True,
+    input_type=discord.Member
+)
+@discord.option(
+    "crew_from",
+    description="Crew which the player is leaving from",
+    required=True,
+    choices=['New to family','alpha','dust','ashes','fire','ice','dragon','risen','vulcan','helios','bootes','reborn','nebula','titan','kraken','ignis','nova','astra']
+)
+@discord.option(
+    "crew_to",
+    description="Crew where the player is going to",
+    required=True,
+    choices=['Out of family','alpha','dust','ashes','fire','ice','dragon','risen','vulcan','helios','bootes','reborn','nebula','titan','kraken','ignis','nova','astra']
+)
+@discord.option(
+    "number_of_accounts",
+    description="Number of accounts the player is moving in this transfer.",
+    required=False,
+    input_type = int
+)
+async def transfer(ctx: discord.ApplicationContext, player: discord.Member, crew_from: str, crew_to: str, number_of_accounts: int):
+    await ctx.defer(ephemeral=True)
+    message = await main.processTransfer(ctx, player, crew_from, crew_to, number_of_accounts)
+    await ctx.send_followup(message, ephemeral = True)
+
+@bot.slash_command(name="cancel_transfer", description="unregisters a transfer in case of change of plans",guild_ids=[main.risingServerId])
+@commands.has_role("Phoenix Family Leadership")
+@discord.option(
+    "player",
+    description="Player for which you want to unregister the transfer",
+    required=True,
+    input_type=discord.Member
+)
+@discord.option(
+    "crew_from",
+    description="Crew which the player is planned to leave. Required if the player is involved in multiple transfers.",
+    required=False,
+    choices=['New to family','alpha','dust','ashes','fire','ice','dragon','risen','vulcan','helios','bootes','reborn','nebula','titan','kraken','ignis','nova','astra']
+)
+@discord.option(
+    "crew_to",
+    description="Crew which the player is planned to join. Required if the player is involved in multiple transfers.",
+    required=False,
+    choices=['Out of family','alpha','dust','ashes','fire','ice','dragon','risen','vulcan','helios','bootes','reborn','nebula','titan','kraken','ignis','nova','astra']
+)
+async def cancel_transfer(ctx: discord.ApplicationContext, player: discord.Member, crew_from=None, crew_to=None):
+    await ctx.defer(ephemeral=True)
+    message = await main.unregisterTransfer(ctx, player, crew_from, crew_to)
+    await ctx.send_followup(message, ephemeral = True)
 
 bot.run(main.discord_bot_token)
