@@ -16,9 +16,21 @@ async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
 
+async def getOptionStr(ctx: discord.ApplicationContext, option):
+    try:
+        value=option['value']
+        id=int(value)
+        member= await ctx.guild.fetch_member(id)
+        return f'{member.name}#{member.discriminator}'
+    except:
+        return str(option['value'])
+
 @bot.event
 async def on_application_command_completion(ctx: discord.ApplicationContext):
-    args = " ".join([str(option['value']) for option in ctx.selected_options])
+    args = ''
+    for option in ctx.selected_options:
+        optionStr = await getOptionStr(ctx, option)+" "
+        args+=optionStr
     message = f"**{ctx.author.name}#{ctx.author.discriminator}** has sent the following command: **/{ctx.command.name} {args}**"
     await (await bot.fetch_channel(main.logging_channel_id)).send(message)
 
