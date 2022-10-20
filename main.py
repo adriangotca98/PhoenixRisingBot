@@ -329,6 +329,7 @@ async def updateMovementsMessage(ctx: discord.ApplicationContext, message, crewN
             crewRole = getRole(ctx, crewData['member'])
             newMessage += "from" if inOrOut == "IN" else "to"
             newMessage += " " + crewRole.mention
+        newMessage += '\n'
     await message.edit(newMessage)
 
 async def unregisterTransfer(ctx: discord.ApplicationContext, player: discord.Member, crewFrom, crewTo):
