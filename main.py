@@ -131,6 +131,8 @@ def getMembers(guild: discord.Guild, crewName, adminRoleName, leaderRoleName, me
 
 async def deleteNewcomers(ctx: discord.ApplicationContext, members: list[Member], crewName: str, shouldDeleteNewcomers: bool):
     for i in range(len(members)):
+        if i>=len(members):
+            break
         member = members[i]
         movement = movesCollection.find_one({"player": member.id, "crew_from": "New to family", "crew_to": crewName}, {"_id": 0})
         crewData = crewCollection.find_one({"key": crewName})
