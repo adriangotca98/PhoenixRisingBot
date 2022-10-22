@@ -336,6 +336,7 @@ async def sendMessageInTheHallAndAddScreened(ctx: discord.ApplicationContext, me
     await channel.send(f"""
 Hi, {member.mention}, in addition to the rules you already accepted when joining the server (**i.e, no cheats or modded accounts allowed, no drama, 16+ minimum age**) these are the general rules of all our crews:
     
+
 **1. Please Complete All Cups**
 …any that give RP and/or Wildcard tokens, and Weekly Elite Cup races.
 
@@ -349,6 +350,7 @@ We don't ask for you to be a chatterbox unless you want to. But if you suddenly 
 Helps to ensure we don't accidentally boot you from the server! 😅
 
 *If you aren't clear on any of the rules and wish a more detailed breakdown, please send the following command here as a message:*
+
 !ruless
 
 *If you are happy with your understanding of the crew rules, to open the server and be able to meet your new crew-mates and family members please send the following message in this channel containing exactly the following:*
