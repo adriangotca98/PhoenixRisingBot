@@ -14,13 +14,15 @@ movesCollection = client.get_database("Fawkes").get_collection("movesData")
 
 scores = {}
 crewNames = configCollection.find_one({"key": "crews"}, {"_id": 0, "value": 1})['value']
-serveringServerId = configCollection.find_one({"key": "servers"}, {"_id": 0, "servering": 1})['servering']
-risingServerId = configCollection.find_one({"key": "servers"}, {"_id": 0, "rising": 1})['rising']
-knowingServerId = configCollection.find_one({"key": "servers"}, {"_id": 0, "knowing": 1})['knowing']
-racingServerId = configCollection.find_one({"key": "servers"}, {"_id": 0, "racing": 1})['racing']
 discord_bot_token = configCollection.find_one({"key": "discord_token"}, {"_id": 0, "value": 1})['value']
-logging_channel_id = int(configCollection.find_one({"key": "log_channel"}, {"_id": 0, "value": 1})['value'])
-
+IDs = configCollection.find_one({"key": "IDs"}, {"_id": 0})
+risingServerId = IDs['rising_server_id']
+knowingServerId = IDs['knowing_server_id']
+racingServerId = IDs['racing_server_id']
+serveringServerId = IDs['servering_server_id']
+logging_channel_id = IDs['logging_channel_id']
+hall_channel_id = IDs['hall_channel_id']
+screened_role_id = IDs['screened_role_id']
 
 class Member:
     def __init__(self, admin: bool, leader: bool, id: int, name: str, multiple: int):
@@ -272,6 +274,9 @@ async def processTransfer(ctx: discord.ApplicationContext, player: discord.Membe
 def checkRole(ctx: discord.ApplicationContext, player: discord.Member, crewName: str):
     crewData = crewCollection.find_one({"key": crewName}, {"_id": 0, "member": 1})
     if crewData == None:
+        role = getRole(ctx, "Temporary Visitor Pass")
+        if player.get_role(role.id) == None:
+            return False
         return True
     roleName = crewData['member']
     role = getRole(ctx, roleName)
@@ -301,8 +306,11 @@ async def processMovement(ctx: discord.ApplicationContext, crewFrom: str, crewTo
     if movementData is not None:
         print(f"Existing move found: {movementData['player']} from {crewFrom} to {crewTo} with {movementData['number_of_accounts']} accounts. Deleting that to update the entry.")
         movesCollection.delete_one({"player": player.id, "crew_from": crewFrom, "crew_to": crewTo})
+    shouldSendMessageInHall = False
     if checkRole(ctx, player, crewFrom) == False:
-        return "The player does not have the crew role. Add the role and try again."
+        if crewFrom != "New to family":
+            return "The player does not have the crew role. Add the role and try again."
+        shouldSendMessageInHall = True
     if checkForNumberOfAccounts(player, crewFrom, numberOfAccounts) == False:
         return "The player has too many accounts registered to transfer with this transfer included. Check the multiple or remove from the existing transfers for this player first."
     movesCollection.insert_one({"player": player.id, "crew_from": crewFrom, "crew_to": crewTo, "number_of_accounts": numberOfAccounts})
@@ -314,7 +322,37 @@ async def processMovement(ctx: discord.ApplicationContext, crewFrom: str, crewTo
     if crewToData is not None:
         inMessage = await getMessage(ctx, crewToData, "in_message_id", "members_channel_id", "**IN:**")
         await updateMovementsMessage(ctx, inMessage, crewTo, "IN")
+    if crewFrom == "New to family":
+        await sendMessageInTheHallAndAddScreened(ctx, player, "!"+crewTo, shouldSendMessageInHall)
     return "Transfer processed successfully"
+
+async def sendMessageInTheHallAndAddScreened(ctx: discord.ApplicationContext, member: discord.Member, password: str, shouldSend: bool):
+    if shouldSend == False:
+        return
+    channel = await ctx.guild.fetch_channel(hall_channel_id)
+    role = ctx.guild.get_role(screened_role_id)
+    await member.add_roles(role)
+    await channel.send(f"""
+Hi, my name is Fawkes, I'm the bot helping these guys manage this family. I was informed by them you're joining us, so welcome from me as well.
+In addition to the rules you already accepted when joining the server (i.e, no cheats or modded accounts allowed, no drama, 16+ minimum age) these are the general rules of all our crews:
+        **1. Please Complete All Cups**
+        …any that give RP and/or Wildcard tokens, and Weekly Elite Cup races.\n
+
+        **2. Please Follow Wildcard Schedule**
+        Donate ONLY if the day's card is not filled. ACTIVATING WILDCARD = INSTANT REMOVAL!\n
+
+        **3. Communication ESSENTIAL!**
+        We don't ask for you to be a chatterbox unless you want to. But if you suddenly struggle for time and need some help, please ASK in your crew chat. It is not fair on a crew's top players if you are at the bottom, unreachable and struggling to beat the minimum, and you may be removed.\n
+
+        **4. Keep Your Server Nickname Same As Your In-Game-Name**
+        Helps to ensure we don't accidentally boot you from the server! 😅\n
+
+        If you aren't clear on any of the rules and wish a more detailed breakdown, please send the following command here as a message:
+        !ruless\n
+
+        If you are happy with your understanding of the crew rules, to open the server and be able to meet your new crew-mates and family members please send the following message in this channel containing exactly the following:
+        {password}
+    """)
 
 async def updateMovementsMessage(ctx: discord.ApplicationContext, message, crewName, inOrOut):
     newMessage = f"**Players {'Joining' if inOrOut=='IN' else 'Leaving'}:**\n\n"
