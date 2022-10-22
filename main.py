@@ -333,25 +333,26 @@ async def sendMessageInTheHallAndAddScreened(ctx: discord.ApplicationContext, me
     role = ctx.guild.get_role(screened_role_id)
     await member.add_roles(role)
     await channel.send(f"""
-Hi, my name is Fawkes, I'm the bot helping these guys manage this family. I was informed by them you're joining us, so welcome from me as well.
-In addition to the rules you already accepted when joining the server (i.e, no cheats or modded accounts allowed, no drama, 16+ minimum age) these are the general rules of all our crews:
-        **1. Please Complete All Cups**
-        …any that give RP and/or Wildcard tokens, and Weekly Elite Cup races.\n
+Hi, {member.mention}, my name is Fawkes, I'm the bot helping these guys manage this family. I was informed by them you're joining us, so welcome from me as well.
+In addition to the rules you already accepted when joining the server (**i.e, no cheats or modded accounts allowed, no drama, 16+ minimum age**) these are the general rules of all our crews:
+    
+**1. Please Complete All Cups**
+…any that give RP and/or Wildcard tokens, and Weekly Elite Cup races.
 
-        **2. Please Follow Wildcard Schedule**
-        Donate ONLY if the day's card is not filled. ACTIVATING WILDCARD = INSTANT REMOVAL!\n
+**2. Please Follow Wildcard Schedule**
+Donate ONLY if the day's card is not filled. ACTIVATING WILDCARD = INSTANT REMOVAL!
 
-        **3. Communication ESSENTIAL!**
-        We don't ask for you to be a chatterbox unless you want to. But if you suddenly struggle for time and need some help, please ASK in your crew chat. It is not fair on a crew's top players if you are at the bottom, unreachable and struggling to beat the minimum, and you may be removed.\n
+**3. Communication ESSENTIAL!**
+We don't ask for you to be a chatterbox unless you want to. But if you suddenly struggle for time and need some help, please ASK in your crew chat. It is not fair on a crew's top players if you are at the bottom, unreachable and struggling to beat the minimum, and you may be removed.
 
-        **4. Keep Your Server Nickname Same As Your In-Game-Name**
-        Helps to ensure we don't accidentally boot you from the server! 😅\n
+**4. Keep Your Server Nickname Same As Your In-Game-Name**
+Helps to ensure we don't accidentally boot you from the server! 😅
 
-        If you aren't clear on any of the rules and wish a more detailed breakdown, please send the following command here as a message:
-        !ruless\n
+*If you aren't clear on any of the rules and wish a more detailed breakdown, please send the following command here as a message:*
+!ruless\n
 
-        If you are happy with your understanding of the crew rules, to open the server and be able to meet your new crew-mates and family members please send the following message in this channel containing exactly the following:
-        {password}
+*If you are happy with your understanding of the crew rules, to open the server and be able to meet your new crew-mates and family members please send the following message in this channel containing exactly the following:*
+{password}
     """)
 
 async def updateMovementsMessage(ctx: discord.ApplicationContext, message, crewName, inOrOut):
