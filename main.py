@@ -306,12 +306,11 @@ async def processMovement(ctx: discord.ApplicationContext, crewFrom: str, crewTo
     if movementData is not None:
         print(f"Existing move found: {movementData['player']} from {crewFrom} to {crewTo} with {movementData['number_of_accounts']} accounts. Deleting that to update the entry.")
         movesCollection.delete_one({"player": player.id, "crew_from": crewFrom, "crew_to": crewTo})
-    shouldSendMessageInHall = False
     roleCheck = checkRole(ctx, player, crewFrom)
     if roleCheck == False:
         if crewFrom != "New to family":
             return "The player does not have the crew role. Add the role and try again."
-        shouldSendMessageInHall = roleCheck
+    shouldSendMessageInHall = roleCheck and (crewFrom == "New to family")
     if checkForNumberOfAccounts(player, crewFrom, numberOfAccounts) == False:
         return "The player has too many accounts registered to transfer with this transfer included. Check the multiple or remove from the existing transfers for this player first."
     movesCollection.insert_one({"player": player.id, "crew_from": crewFrom, "crew_to": crewTo, "number_of_accounts": numberOfAccounts})
