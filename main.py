@@ -138,7 +138,7 @@ async def deleteNewcomers(ctx: discord.ApplicationContext, members: list[Member]
         member = members[i]
         movement = movesCollection.find_one({"player": member.id, "crew_from": "New to family", "crew_to": crewName}, {"_id": 0})
         crewData = crewCollection.find_one({"key": crewName})
-        message = await getMessage(ctx, crewData, "in_message_id", "members_channel_id", "**IN:**")
+        message = await getMessage(ctx, crewData, "in_message_id", "members_channel_id", "**Players Joining:**")
         if movement is not None:
             if shouldDeleteNewcomers:
                 movesCollection.delete_one({{"player": member.id, "crew_from": "New to family", "crew_to": crewName}})
@@ -380,7 +380,7 @@ async def unregisterTransfer(ctx: discord.ApplicationContext, player: discord.Me
         return "if you give one of crew_from and crew_to, you must give the other as well."
     if crewTo == crewFrom and crewTo != None:
         return "A movement can't be within the same crew, so I also can't unregister this kind of moves."
-    print(f"Unregister transfer of {player.nick if player.nick is not None else player.name} from {crewFrom} to {crewTo}")
+    print(f"Unregister transfer of {player.display_name} from {crewFrom} to {crewTo}")
     if crewTo == None:
         moves = list(movesCollection.find({"player": player.id}))
         if len(moves)==0:
