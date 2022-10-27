@@ -199,7 +199,7 @@ async def checkMovements(ctx: discord.ApplicationContext, response: List[Member]
             if crewFrom == 'New to family' and not shouldDeleteFreshMovements:
                 continue
             oldMultiple = multipleAccountsCollection.find_one({"key": crewFrom}, {memberId: 1})
-            if oldMultiple is not None:
+            if oldMultiple is not None and memberId in oldMultiple.keys():
                 newMultiple = oldMultiple[memberId] - move['number_of_accounts']
                 if newMultiple > 1:
                     multipleAccountsCollection.update_one({"key": crewFrom}, {"$set": {memberId: newMultiple}})
