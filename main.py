@@ -11,18 +11,25 @@ crewCollection = client.get_database("Fawkes").get_collection("crewData")
 configCollection = client.get_database("Fawkes").get_collection("configData")
 multipleAccountsCollection = client.get_database("Fawkes").get_collection("multipleAccountsData")
 movesCollection = client.get_database("Fawkes").get_collection("movesData")
+vacanciesCollection = client.get_database("Fawkes").get_collection("vacanciesData")
 
 scores = {}
 crewNames = configCollection.find_one({"key": "crews"}, {"_id": 0, "value": 1})['value']
+crewRegion = configCollection.find_one({"key": "crew_region"}, {"_id": 0, "value": 1})['value']
 discord_bot_token = configCollection.find_one({"key": "discord_token"}, {"_id": 0, "value": 1})['value']
 IDs = configCollection.find_one({"key": "IDs"}, {"_id": 0})
 risingServerId = IDs['rising_server_id']
 knowingServerId = IDs['knowing_server_id']
 racingServerId = IDs['racing_server_id']
 serveringServerId = IDs['servering_server_id']
-logging_channel_id = IDs['logging_channel_id']
-hall_channel_id = IDs['hall_channel_id']
-screened_role_id = IDs['screened_role_id']
+loggingChannelId = IDs['logging_channel_id']
+hallChannelId = IDs['hall_channel_id']
+screenedRoleId = IDs['screened_role_id']
+vacanciesChannelId = IDs['vacancies_channel_id']
+if 'vacancies_message_id' in IDs.keys():
+    vacanciesMessageId = IDs['vacancies_message_id']
+else:
+    vacanciesMessageId = None
 
 class Member:
     def __init__(self, admin: bool, leader: bool, id: int, name: str, multiple: int):
@@ -170,9 +177,8 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str, shouldDe
     response = getMembers(guild, crewName, adminRoleName, leaderRoleName, memberRoleName, multipleAccountsIds, multipleAccountsData)
     response.sort(key = sortFunction)
     await checkMovements(ctx, response, crewData, shouldDeleteFreshMovements)
-    response = getMembers(guild, crewName, adminRoleName, leaderRoleName, memberRoleName, multipleAccountsIds, multipleAccountsData)
-    response.sort(key = sortFunction)
     response = await deleteNewcomers(ctx, response, key, shouldDeleteFreshMovements)
+    await updateVacancies(ctx, key, response)
 
     stringResponse = '**__Members of '+crewName.upper()+"__**\n"
     number = 1
@@ -189,7 +195,47 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str, shouldDe
     await message.edit(content = stringResponse)
     return "OK, all good!"
 
+async def updateVacancies(ctx: discord.ApplicationContext, crewName: str, membersList: list = []):
+    currentSeasonCount = len(membersList)
+    if currentSeasonCount == 0:
+        currentSeasonCount = 30
+    nextSeasonCount = currentSeasonCount
+    for move in list(movesCollection.find({"crew_to": crewName})):
+        nextSeasonCount += move['number_of_accounts']
+    for move in list(movesCollection.find({"crew_from": crewName})):
+        nextSeasonCount -= move['number_of_accounts']
+    vacanciesCollection.update_one({}, {"$set": {crewName: {"current": currentSeasonCount, "next": nextSeasonCount}}})
+    vacanciesEntry = vacanciesCollection.find_one({}, {"_id": 0})
+    messageContent ="**__Latest Crew Vacancies__**\n\n"
+    for region in crewRegion.keys():
+        messageContent += f"**__{region} Crews__**\n\n"
+        for crewName in crewRegion[region]:
+            if crewName not in vacanciesEntry.keys():
+                continue
+            messageContent += f"**{crewName.capitalize()}**\n{vacanciesEntry[crewName]['current']}/30 Current Season\n{vacanciesEntry[crewName]['next']}/30 Next Season\n"
+        messageContent += "\n"
+    channel = await ctx.guild.fetch_channel(vacanciesChannelId)
+    try:
+        if vacanciesMessageId is not None:
+            message = await channel.fetch_message(vacanciesMessageId)
+            await message.edit(content=messageContent)
+        else:
+            message = await channel.send(messageContent)
+            configCollection.update_one({"key": "IDs"}, {"$set": {"vacancies_message_id": message.id}})    
+    except discord.errors.NotFound:
+        message = await channel.send(messageContent)
+        configCollection.update_one({"key": "IDs"}, {"$set": {"vacancies_message_id": message.id}})
+
 async def checkMovements(ctx: discord.ApplicationContext, response: List[Member], crewData: dict, shouldDeleteFreshMovements):
+    outOfFamilyMoves = list(movesCollection.find({"crew_from": crewData['key'], "crew_to": "Out of family"}))
+    for move in outOfFamilyMoves:
+        member = await ctx.guild.fetch_member(move['player'])
+        roleFound = False
+        for role in member.roles:
+            roleFound = roleFound or (role.name == crewData['member'])
+        if roleFound == False:
+            movesCollection.delete_one({"crew_from": crewData['key'], "crew_to": "Out of family", "player": move['player']})
+            await deleteMovementFromMessage(ctx, crewFrom, "OUT")
     for member in response:
         movesData = list(movesCollection.find({"player": member.id, "crew_to": crewData['key']}))
         memberId = str(member.id)
@@ -215,13 +261,13 @@ async def deleteMovementFromMessage(ctx: discord.ApplicationContext, crewName: s
     crewData = crewCollection.find_one({"key": crewName})
     if crewData == None:
         return
-    channelId = crewData['members_channel_id']
     if inOrOut == "IN":
-        messageId = crewData['in_message_id']
+        messageIdKey = 'in_message_id'
+        initialMessage = "Players Joining:"
     else:
-        messageId = crewData['out_message_id']
-    channel = await ctx.bot.fetch_channel(channelId)
-    message = await channel.fetch_message(messageId)
+        messageIdKey = 'out_message_id'
+        initialMessage = "Players Leaving:"
+    message = await getMessage(ctx, crewData, messageIdKey, 'members_channel_id', initialMessage)
     await updateMovementsMessage(ctx, message, crewName, inOrOut)
 
 async def kickOrBanOrUnban(user: discord.Member, op: str, bot: discord.Bot, reason=None):
@@ -324,13 +370,15 @@ async def processMovement(ctx: discord.ApplicationContext, crewFrom: str, crewTo
         await updateMovementsMessage(ctx, inMessage, crewTo, "IN")
     if crewFrom == "New to family":
         await sendMessageInTheHallAndAddScreened(ctx, player, "!"+crewTo, shouldSendMessageInHall)
+    await updateVacancies(ctx, crewFrom)
+    await updateVacancies(ctx, crewTo)
     return "Transfer processed successfully"
 
 async def sendMessageInTheHallAndAddScreened(ctx: discord.ApplicationContext, member: discord.Member, password: str, shouldSend: bool):
     if shouldSend == False:
         return
-    channel = await ctx.guild.fetch_channel(hall_channel_id)
-    role = ctx.guild.get_role(screened_role_id)
+    channel = await ctx.guild.fetch_channel(hallChannelId)
+    role = ctx.guild.get_role(screenedRoleId)
     await member.add_roles(role)
     await channel.send(f"""
 Hi, {member.mention}, in addition to the rules you already accepted when joining the server (**i.e, no cheats or modded accounts allowed, no drama, 16+ minimum age**) these are the general rules of all our crews:
@@ -391,9 +439,13 @@ async def unregisterTransfer(ctx: discord.ApplicationContext, player: discord.Me
         result = movesCollection.delete_many({"player": move['player']})
         await deleteMovementFromMessage(ctx, move['crew_from'], "OUT")
         await deleteMovementFromMessage(ctx, move['crew_to'], "IN")
-        return f"Tranferred cancelled. {result.deleted_count} moves for {player.name}#{player.discriminator}"
+        await updateVacancies(ctx, move['crew_from'])
+        await updateVacancies(ctx, move['crew_to'])
+        return f"Transfer/s cancelled. {result.deleted_count} moves for {player.name}#{player.discriminator}"
     move = list(movesCollection.find({"player": player.id, "crew_from": crewFrom, "crew_to": crewTo}))[0]
     movesCollection.delete_one({"player": move['player']})
     await deleteMovementFromMessage(ctx, move['crew_from'], "OUT")
     await deleteMovementFromMessage(ctx, move['crew_to'], "IN")
+    await updateVacancies(ctx, move['crew_from'])
+    await updateVacancies(ctx, move['crew_to'])
     return f"Cancelled transfer for {player.name}#{player.discriminator} from {crewFrom} to {crewTo}"

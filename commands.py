@@ -20,7 +20,7 @@ async def getOptionStr(ctx: discord.ApplicationContext, option):
     try:
         value=option['value']
         id=int(value)
-        member= await ctx.guild.fetch_member(id)
+        member=await ctx.guild.fetch_member(id)
         return f'{member.name}#{member.discriminator}'
     except:
         return str(option['value'])
@@ -32,7 +32,7 @@ async def on_application_command_completion(ctx: discord.ApplicationContext):
         optionStr = await getOptionStr(ctx, option)+" "
         args+=optionStr
     message = f"**{ctx.author.name}#{ctx.author.discriminator}** has sent the following command: **/{ctx.command.name} {args}**"
-    await (await bot.fetch_channel(main.logging_channel_id)).send(message)
+    await (await bot.fetch_channel(main.loggingChannelId)).send(message)
 
 @bot.event
 async def on_application_command_error(ctx: discord.ApplicationContext, error):
@@ -43,7 +43,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     await ctx.send(f"An unexpected error has occured. <@308561593858392065>, please have a look in the code. Command run: {ctx.command.name}")
     args = " ".join([str(option['value']) for option in ctx.selected_options])
     message = f"**{ctx.author.name}#{ctx.author.discriminator}** tried to send the following command: **/{ctx.command.name} {args}**, but it errored out."
-    await (await bot.fetch_channel(main.logging_channel_id)).send(message)
+    await (await bot.fetch_channel(main.loggingChannelId)).send(message)
     raise error
 
 @bot.slash_command(name="members", description="Used to get members of a certain crew", guild_ids=[main.risingServerId])
