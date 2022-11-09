@@ -1,6 +1,7 @@
 from typing import List
 import discord
 from pymongo import MongoClient
+import time
 
 configFile = open("config.txt", "r")
 config = configFile.read()
@@ -14,7 +15,6 @@ movesCollection = client.get_database("Fawkes").get_collection("movesData")
 vacanciesCollection = client.get_database("Fawkes").get_collection("vacanciesData")
 
 scores = {}
-crewNames = configCollection.find_one({"key": "crews"}, {"_id": 0, "value": 1})['value']
 crewRegion = configCollection.find_one({"key": "crew_region"}, {"_id": 0, "value": 1})['value']
 discord_bot_token = configCollection.find_one({"key": "discord_token"}, {"_id": 0, "value": 1})['value']
 IDs = configCollection.find_one({"key": "IDs"}, {"_id": 0})
@@ -30,6 +30,11 @@ if 'vacancies_message_id' in IDs.keys():
     vacanciesMessageId = IDs['vacancies_message_id']
 else:
     vacanciesMessageId = None
+
+def getCrewNames():
+    return configCollection.find_one({"key": "crews"}, {"_id": 0, "value": 1})['value']
+
+# seasonNumber = int((time.time()-configCollection.find_one({"key": "time"}, {"_id": 0})['value'])/60/60/24/7/2)+166
 
 class Member:
     def __init__(self, admin: bool, leader: bool, id: int, name: str, multiple: int):
@@ -47,7 +52,7 @@ def sortFunction(member: Member):
     return "2 "+member.name
 
 async def init(bot: discord.Bot):
-    for crew in crewNames:
+    for crew in getCrewNames():
         channelId = crewCollection.find_one({'key': crew},{"_id": 0, "leaderboard_id": 1})['leaderboard_id']
         channel = await bot.fetch_channel(channelId)
         scores[crew] = computeScoreFromChannelName(channel.name)

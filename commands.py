@@ -52,7 +52,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     "crew_name",
     description='Crew for which you want to create/update list of members',
     required=True,
-    choices=['alpha','dust','ashes','fire','ice','dragon','risen','vulcan','helios','bootes','reborn','nebula','titan','kraken','ignis','nova','astra']
+    choices=main.getCrewNames()
 )
 @discord.option(
     "should_delete_new_movements",
@@ -71,7 +71,7 @@ async def getMembers(ctx: discord.ApplicationContext, crew_name: str, should_del
     "crew_name",
     description='Crew for which you want to update score',
     required=True,
-    choices=['alpha','dust','ashes','fire','ice','dragon','risen','vulcan','helios','bootes','reborn','nebula','titan','kraken','ignis','nova','astra']
+    choices=main.getCrewNames()
 )
 @discord.option(
     "score",
@@ -135,7 +135,7 @@ async def unban(ctx: discord.ApplicationContext, user: discord.Member):
     "crew_name",
     description='Crew where the player has multiple accounts',
     required=True,
-    choices=['alpha','dust','ashes','fire','ice','dragon','risen','vulcan','helios','bootes','reborn','nebula','titan','kraken','ignis','nova','astra']
+    choices=main.getCrewNames()
 )
 @discord.option(
     "number_of_accounts",
@@ -160,13 +160,13 @@ async def multiple(ctx: discord.ApplicationContext, user: discord.Member, crew_n
     "crew_from",
     description="Crew which the player is leaving from",
     required=True,
-    choices=['New to family','alpha','dust','ashes','fire','ice','dragon','risen','vulcan','helios','bootes','reborn','nebula','titan','kraken','ignis','nova','astra']
+    choices=['New to family'] + main.getCrewNames()
 )
 @discord.option(
     "crew_to",
     description="Crew where the player is going to",
     required=True,
-    choices=['Out of family','alpha','dust','ashes','fire','ice','dragon','risen','vulcan','helios','bootes','reborn','nebula','titan','kraken','ignis','nova','astra']
+    choices=['Out of family'] + main.getCrewNames()
 )
 @discord.option(
     "number_of_accounts",
@@ -191,13 +191,13 @@ async def transfer(ctx: discord.ApplicationContext, player: discord.Member, crew
     "crew_from",
     description="Crew which the player is planned to leave. Required if the player is involved in multiple transfers.",
     required=False,
-    choices=['New to family','alpha','dust','ashes','fire','ice','dragon','risen','vulcan','helios','bootes','reborn','nebula','titan','kraken','ignis','nova','astra']
+    choices=['New to family'] + main.getCrewNames()
 )
 @discord.option(
     "crew_to",
     description="Crew which the player is planned to join. Required if the player is involved in multiple transfers.",
     required=False,
-    choices=['Out of family','alpha','dust','ashes','fire','ice','dragon','risen','vulcan','helios','bootes','reborn','nebula','titan','kraken','ignis','nova','astra']
+    choices=['Out of family'] + main.getCrewNames()
 )
 async def cancel_transfer(ctx: discord.ApplicationContext, player: discord.Member, crew_from=None, crew_to=None):
     await ctx.defer(ephemeral=True)
