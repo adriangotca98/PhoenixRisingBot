@@ -203,7 +203,7 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str, shouldDe
 async def updateVacancies(ctx: discord.ApplicationContext, crewName: str, membersList: list = []):
     currentSeasonCount = len(membersList)
     if currentSeasonCount == 0:
-        if vacanciesCollection.find_one({}) is not None:
+        if crewName in vacanciesCollection.find_one({}):
             currentSeasonCount = vacanciesCollection.find_one({})[crewName]['current']
         else:
             currentSeasonCount = 0
