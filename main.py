@@ -162,7 +162,7 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
         return "Role not found on the server! Try again and change the name to the exact name of the role you want info for!"
     response = getMembers(guild, crewName, adminRoleName, leaderRoleName, memberRoleName, multipleAccountsIds, multipleAccountsData)
     response.sort(key = sortFunction)
-    status = await checkMovements(ctx, response, crewData)
+    (status, response) = await checkMovements(ctx, response, crewData)
     await updateVacancies(ctx, key, response)
 
     stringResponse = '**__Members of '+crewName.upper()+"__**\n"
@@ -226,6 +226,13 @@ async def checkMovements(ctx: discord.ApplicationContext, response: List[Member]
         if roleFound == False:
             movesCollection.delete_one({"crew_from": crewData['key'], "crew_to": "Out of family", "player": move['player'], "season": currentSeason})
             await deleteMovementFromMessage(ctx, crewData['key'], "OUT")
+    for i in range(len(response)):
+        if i>=len(response):
+            break
+        futureMovesData = list(movesCollection.find({"season":{"$gt": currentSeason}, "player": member.id, "crew_to": crewData['key']}))
+        if futureMovesData != []:
+            response.pop(i)
+            i-=1
     for member in response:
         movesData = list(movesCollection.find({"player": member.id, "crew_to": crewData['key'], "season": currentSeason}))
         memberId = str(member.id)
@@ -245,8 +252,8 @@ async def checkMovements(ctx: discord.ApplicationContext, response: List[Member]
             await deleteMovementFromMessage(ctx, crewFrom, "OUT")
             await deleteMovementFromMessage(ctx, crewTo, "IN")
     if list(vacanciesCollection.find({"season": {"$lt": currentSeason}, "crew_from": crewData['key']})) != [] or list(vacanciesCollection.find({"season": {"$lt": currentSeason}, "crew_to": crewData['key']})) != []:
-       return "Old moves are still in the list. Check which are in the `Players Joining:` and `Players Leaving:` and either unregister them or make them."
-    return "OK, all good!"
+       return ("Old moves are still in the list. Check which are in the `Players Joining:` and `Players Leaving:` and either unregister them or make them.", response)
+    return ("OK, all good!", response)
 
 async def deleteMovementFromMessage(ctx: discord.ApplicationContext, crewName: str, inOrOut: str):
     crewData = crewCollection.find_one({"key": crewName})
