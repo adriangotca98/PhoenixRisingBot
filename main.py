@@ -244,7 +244,7 @@ async def checkMovements(ctx: discord.ApplicationContext, response: List[Member]
             movesCollection.delete_one({"season": currentSeason, "player": move['player'], "crew_from": move['crew_from'], "crew_to": move['crew_to']})
             await deleteMovementFromMessage(ctx, crewFrom, "OUT")
             await deleteMovementFromMessage(ctx, crewTo, "IN")
-    if list(vacanciesCollection.find({"season": {"$lt": currentSeason}, "crew_from": crewData['key']}) != [] or vacanciesCollection.find({"season": {"$lt": currentSeason}, "crew_to": crewData['key']})) != []:
+    if list(vacanciesCollection.find({"season": {"$lt": currentSeason}, "crew_from": crewData['key']})) != [] or list(vacanciesCollection.find({"season": {"$lt": currentSeason}, "crew_to": crewData['key']})) != []:
        return "Old moves are still in the list. Check which are in the `Players Joining:` and `Players Leaving:` and either unregister them or make them."
     return "OK, all good!"
 
