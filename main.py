@@ -229,6 +229,7 @@ async def checkMovements(ctx: discord.ApplicationContext, response: List[Member]
     for i in range(len(response)):
         if i>=len(response):
             break
+        member = response[i]
         futureMovesData = list(movesCollection.find({"season":{"$gt": currentSeason}, "player": member.id, "crew_to": crewData['key']}))
         if futureMovesData != []:
             response.pop(i)
