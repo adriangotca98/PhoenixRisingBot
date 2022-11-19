@@ -29,9 +29,10 @@ async def getOptionStr(ctx: discord.ApplicationContext, option):
 @bot.event
 async def on_application_command_completion(ctx: discord.ApplicationContext):
     args = ''
-    for option in ctx.selected_options:
-        optionStr = await getOptionStr(ctx, option)+" "
-        args+=optionStr
+    if ctx.selected_options is not None:
+        for option in ctx.selected_options:
+            optionStr = await getOptionStr(ctx, option)+" "
+            args+=optionStr
     message = f"**{ctx.author.name}#{ctx.author.discriminator}** has sent the following command: **/{ctx.command.name} {args}**"
     await (await bot.fetch_channel(main.loggingChannelId)).send(message)
 
