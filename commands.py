@@ -15,6 +15,7 @@ async def on_ready():
     await main.init(bot)
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
+    bot.commands[0].checks[0]
 
 async def getOptionStr(ctx: discord.ApplicationContext, option):
     try:
@@ -169,15 +170,26 @@ async def multiple(ctx: discord.ApplicationContext, user: discord.Member, crew_n
     choices=['Out of family'] + main.getCrewNames()
 )
 @discord.option(
+    "season",
+    description="Season when the player will join the destination crew. Run /season for getting current season.",
+    required=True,
+    input_type=int
+)
+@discord.option(
     "number_of_accounts",
     description="Number of accounts the player is moving in this transfer.",
     required=False,
     input_type = int
 )
-async def transfer(ctx: discord.ApplicationContext, player: discord.Member, crew_from: str, crew_to: str, number_of_accounts: int):
+async def transfer(ctx: discord.ApplicationContext, player: discord.Member, crew_from: str, crew_to: str, season: int, number_of_accounts: int):
     await ctx.defer(ephemeral=True)
-    message = await main.processTransfer(ctx, player, crew_from, crew_to, number_of_accounts)
+    message = await main.processTransfer(ctx, player, crew_from, crew_to, number_of_accounts, season)
     await ctx.send_followup(message, ephemeral = True)
+
+@bot.slash_command(name='current_season', description="Gets the current season we're in", guild_ids=[main.risingServerId])
+@commands.has_role('Phoenix Rising')
+async def current_season(ctx: discord.ApplicationContext):
+    await ctx.send_response(str(main.getCurrentSeason()), ephemeral=True)
 
 @bot.slash_command(name="cancel_transfer", description="unregisters a transfer in case of change of plans",guild_ids=[main.risingServerId])
 @commands.has_role("Phoenix Family Leadership")
