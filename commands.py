@@ -56,15 +56,9 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     required=True,
     choices=main.getCrewNames()
 )
-@discord.option(
-    "should_delete_new_movements",
-    description='Flag to tell Fawkes whether or not to delete the movements involving new players in the family.',
-    required=True,
-    choices=["True", "False"]
-)
-async def getMembers(ctx: discord.ApplicationContext, crew_name: str, should_delete_new_movements: str):
+async def getMembers(ctx: discord.ApplicationContext, crew_name: str):
     await ctx.defer(ephemeral=True)
-    message = await main.getPlayersResponse(ctx, crew_name, should_delete_new_movements == "True")
+    message = await main.getPlayersResponse(ctx, crew_name)
     await ctx.send_followup(message, ephemeral=True)
 
 @bot.slash_command(name='score', description='Set score for the crew in the CREW TABLES section and reorder the channels by score.', guild_ids=[main.risingServerId])

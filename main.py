@@ -141,25 +141,7 @@ def getMembers(guild: discord.Guild, crewName, adminRoleName, leaderRoleName, me
                 multipleAccountsCollection.update_one({"key": crewName}, {"$unset": {memberId: ""}})
     return response
 
-async def deleteNewcomers(ctx: discord.ApplicationContext, members: list[Member], crewName: str, shouldDeleteNewcomers: bool):
-    currentSeason = getCurrentSeason()
-    for i in range(len(members)):
-        if i>=len(members):
-            break
-        member = members[i]
-        movement = movesCollection.find_one({"player": member.id, "crew_from": "New to family", "crew_to": crewName, "season": currentSeason}, {"_id": 0})
-        crewData = crewCollection.find_one({"key": crewName})
-        message = await getMessage(ctx, crewData, "in_message_id", "members_channel_id", "**Players Joining:**")
-        if movement is not None:
-            if shouldDeleteNewcomers:
-                movesCollection.delete_one({{"player": member.id, "crew_from": "New to family", "crew_to": crewName, "season": currentSeason}})
-                await updateMovementsMessage(ctx, message, crewName, "IN")
-            else:
-                members.pop(i)
-                i-=1
-    return members
-
-async def getPlayersResponse(ctx: discord.ApplicationContext, key: str, shouldDeleteFreshMovements):
+async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
     multipleAccountsData = multipleAccountsCollection.find_one({"key": key}, {"_id": 0})
     if multipleAccountsData != None:
         multipleAccountsIds = [key for key in multipleAccountsData if key != 'key']
@@ -180,8 +162,7 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str, shouldDe
         return "Role not found on the server! Try again and change the name to the exact name of the role you want info for!"
     response = getMembers(guild, crewName, adminRoleName, leaderRoleName, memberRoleName, multipleAccountsIds, multipleAccountsData)
     response.sort(key = sortFunction)
-    status = await checkMovements(ctx, response, crewData, shouldDeleteFreshMovements)
-    response = await deleteNewcomers(ctx, response, key, shouldDeleteFreshMovements)
+    status = await checkMovements(ctx, response, crewData)
     await updateVacancies(ctx, key, response)
 
     stringResponse = '**__Members of '+crewName.upper()+"__**\n"
@@ -234,7 +215,7 @@ async def updateVacancies(ctx: discord.ApplicationContext, crewName: str, member
         message = await channel.send(messageContent)
         configCollection.update_one({"key": "IDs"}, {"$set": {"vacancies_message_id": message.id}})
 
-async def checkMovements(ctx: discord.ApplicationContext, response: List[Member], crewData: dict, shouldDeleteFreshMovements):
+async def checkMovements(ctx: discord.ApplicationContext, response: List[Member], crewData: dict):
     currentSeason = getCurrentSeason()
     outOfFamilyMoves = list(movesCollection.find({"crew_from": crewData['key'], "crew_to": "Out of family", "season": currentSeason}))
     for move in outOfFamilyMoves:
@@ -251,8 +232,6 @@ async def checkMovements(ctx: discord.ApplicationContext, response: List[Member]
         for move in movesData:
             crewFrom = move['crew_from']
             crewTo = move['crew_to']
-            if crewFrom == 'New to family' and not shouldDeleteFreshMovements:
-                continue
             oldMultiple = multipleAccountsCollection.find_one({"key": crewFrom}, {memberId: 1})
             if oldMultiple is not None and memberId in oldMultiple.keys():
                 newMultiple = oldMultiple[memberId] - move['number_of_accounts']
@@ -265,7 +244,7 @@ async def checkMovements(ctx: discord.ApplicationContext, response: List[Member]
             movesCollection.delete_one({"season": currentSeason, "player": move['player'], "crew_from": move['crew_from'], "crew_to": move['crew_to']})
             await deleteMovementFromMessage(ctx, crewFrom, "OUT")
             await deleteMovementFromMessage(ctx, crewTo, "IN")
-    if vacanciesCollection.find({"season": {"$lt": currentSeason}, "crew_from": crewData['key']}) != [] or vacanciesCollection.find({"season": {"$lt": currentSeason}, "crew_to": crewData['key']}) != []:
+    if list(vacanciesCollection.find({"season": {"$lt": currentSeason}, "crew_from": crewData['key']}) != [] or vacanciesCollection.find({"season": {"$lt": currentSeason}, "crew_to": crewData['key']})) != []:
        return "Old moves are still in the list. Check which are in the `Players Joining:` and `Players Leaving:` and either unregister them or make them."
     return "OK, all good!"
 
