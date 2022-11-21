@@ -426,6 +426,7 @@ async def updateMovementsMessage(ctx: discord.ApplicationContext, message, crewN
             member = await ctx.guild.fetch_member(move['player'])
         except:
             movesCollection.delete_many({"player": move['player']})
+            continue
         newMessage+=f"{member.mention} "    
         if crewData is None:
             newMessage += move[crewKey] + " in S" + str(move['season'])
