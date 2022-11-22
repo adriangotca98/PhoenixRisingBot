@@ -43,7 +43,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
         return
     await ctx.send_followup(f"Failed unexpectedly")
     await ctx.send(f"An unexpected error has occured. <@308561593858392065>, please have a look in the code. Command run: {ctx.command.name}")
-    args = " ".join([str(option['value']) for option in ctx.selected_options])
+    args = " ".join([(await getOptionStr(ctx, option)) for option in ctx.selected_options])
     message = f"**{ctx.author.name}#{ctx.author.discriminator}** tried to send the following command: **/{ctx.command.name} {args}**, but it errored out."
     await (await bot.fetch_channel(main.loggingChannelId)).send(message)
     raise error
