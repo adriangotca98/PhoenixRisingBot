@@ -49,7 +49,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     raise error
 
 @bot.slash_command(name="members", description="Used to get members of a certain crew", guild_ids=[main.risingServerId])
-@commands.has_role("Phoenix Family Leadership")
+@commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 @discord.option(
     "crew_name",
     description='Crew for which you want to create/update list of members',
@@ -62,7 +62,7 @@ async def getMembers(ctx: discord.ApplicationContext, crew_name: str):
     await ctx.send_followup(message, ephemeral=True)
 
 @bot.slash_command(name='score', description='Set score for the crew in the CREW TABLES section and reorder the channels by score.', guild_ids=[main.risingServerId])
-@commands.has_role("Phoenix Family Leadership")
+@commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 @discord.option(
     "crew_name",
     description='Crew for which you want to update score',
@@ -120,7 +120,7 @@ async def unban(ctx: discord.ApplicationContext, user: discord.Member):
     await ctx.send_followup("User unbanned :)", ephemeral=True)
 
 @bot.slash_command(name="multiple", description="Keep track of multiple accounts of the same person (same discord profile) within the same crew", guild_ids=[main.risingServerId])
-@commands.has_role("Phoenix Family Leadership")
+@commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 @discord.option(
     "user",
     description='user that has multiple accounts in the crew (not multiple accounts in the family!)',
@@ -145,7 +145,7 @@ async def multiple(ctx: discord.ApplicationContext, user: discord.Member, crew_n
     await ctx.send_followup(message, ephemeral = True)
 
 @bot.slash_command(name="transfer", description="Register a transfer for next season.", guild_ids=[main.risingServerId])
-@commands.has_role("Phoenix Family Leadership")
+@commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 @discord.option(
     "player",
     description="Tag the player that is moving",
@@ -187,7 +187,7 @@ async def current_season(ctx: discord.ApplicationContext):
     await ctx.send_response(str(main.getCurrentSeason()), ephemeral=True)
 
 @bot.slash_command(name="cancel_transfer", description="unregisters a transfer in case of change of plans",guild_ids=[main.risingServerId])
-@commands.has_role("Phoenix Family Leadership")
+@commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 @discord.option(
     "player",
     description="Player for which you want to unregister the transfer",
