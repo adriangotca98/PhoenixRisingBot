@@ -219,7 +219,11 @@ async def checkMovements(ctx: discord.ApplicationContext, response: List[Member]
     currentSeason = getCurrentSeason()
     outOfFamilyMoves = list(movesCollection.find({"crew_from": crewData['key'], "crew_to": "Out of family", "season": currentSeason}))
     for move in outOfFamilyMoves:
-        member = await ctx.guild.fetch_member(move['player'])
+        try:
+            member = await ctx.guild.fetch_member(move['player'])
+        except:
+            movesCollection.delete_many({"player": move['player']})
+            continue
         roleFound = False
         for role in member.roles:
             roleFound = roleFound or (role.name == crewData['member'])
