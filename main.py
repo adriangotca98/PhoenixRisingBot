@@ -424,6 +424,7 @@ async def updateMovementsMessage(ctx: discord.ApplicationContext, message, crewN
     movementsKey = "crew_from" if inOrOut=="OUT" else "crew_to"
     crewKey = "crew_to" if inOrOut=="OUT" else "crew_from"
     movements = movesCollection.find({movementsKey: crewName}, {"_id": 0})
+    idx = 1
     for move in movements:
         crewData = crewCollection.find_one({"key": move[crewKey]}, {"_id": 0})
         try:
@@ -431,7 +432,7 @@ async def updateMovementsMessage(ctx: discord.ApplicationContext, message, crewN
         except:
             movesCollection.delete_many({"player": move['player']})
             continue
-        newMessage+=f"{member.mention} "    
+        newMessage+=f"{str(idx)}. {member.mention} "    
         if crewData is None:
             newMessage += move[crewKey] + " in S" + str(move['season'])
         else:
@@ -440,6 +441,7 @@ async def updateMovementsMessage(ctx: discord.ApplicationContext, message, crewN
             newMessage += " " + crewRole.mention
             newMessage += " in S" + str(move['season'])
         newMessage += '\n'
+        idx+=1
     await message.edit(newMessage)
 
 async def unregisterTransfer(ctx: discord.ApplicationContext, player: discord.Member, crewFrom, crewTo):
