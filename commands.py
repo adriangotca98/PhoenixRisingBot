@@ -21,7 +21,7 @@ async def getOptionStr(ctx: discord.ApplicationContext, option):
     try:
         value=option['value']
         id=int(value)
-        member=await ctx.guild.fetch_member(id)
+        member=await ctx.bot.fetch_user(id)
         return f'{member.name}#{member.discriminator}'
     except:
         return str(option['value'])
