@@ -39,9 +39,9 @@ async def on_application_command_completion(ctx: discord.ApplicationContext):
 @bot.event
 async def on_application_command_error(ctx: discord.ApplicationContext, error):
     if isinstance(error, commands.MissingRole) or isinstance(error, commands.MissingPermissions):
-        await ctx.send_followup("<@"+str(ctx.author.id)+">, you're not authorized to use this command! Only leadership can use this. Thank you :) ", ephemeral=True)
+        await ctx.send_response("<@"+str(ctx.author.id)+">, you're not authorized to use this command! Only leadership can use this. Thank you :) ", ephemeral=True)
         return
-    await ctx.send_followup(f"Failed unexpectedly")
+    await ctx.send_response(f"Failed unexpectedly")
     await ctx.send(f"An unexpected error has occured. <@308561593858392065>, please have a look in the code. Command run: {ctx.command.name}")
     args = " ".join([(await getOptionStr(ctx, option)) for option in ctx.selected_options])
     message = f"**{ctx.author.name}#{ctx.author.discriminator}** tried to send the following command: **/{ctx.command.name} {args}**, but it errored out."
