@@ -315,7 +315,7 @@ def getRole(ctx: discord.ApplicationContext, roleName: str):
 def getCurrentSeason():
     return int((time.time()-configCollection.find_one({"key": "time"}, {"_id": 0})['value'])/60/60/24/7/2)+166
 
-async def processTransfer(ctx: discord.ApplicationContext, player: discord.Member, crewFrom: str, crewTo: str, numberOfAccounts: int, season: int):
+async def processTransfer(ctx: discord.ApplicationContext, player: discord.Member, crewFrom: str, crewTo: str, numberOfAccounts: int, season: int, pingAdmin: bool):
     if crewFrom == "New to family" and crewTo == "Out of family":
         return "A player can't be new to family and going out of family at the same time"
     if crewFrom == crewTo:
@@ -323,7 +323,7 @@ async def processTransfer(ctx: discord.ApplicationContext, player: discord.Membe
     roleCheck = checkRole(ctx, player, crewFrom)
     if season<getCurrentSeason()+int(crewFrom!="New to family"):
         return "Transfers can only happen in the future, for members who were left out by mistake simply add the role and run /members command. The only transfers that can happen in the current season are the new players."
-    message = await processMovement(ctx, crewFrom, crewTo, player, numberOfAccounts, season)
+    message = await processMovement(ctx, crewFrom, crewTo, player, numberOfAccounts, season, pingAdmin)
     return message
 
 def checkRole(ctx: discord.ApplicationContext, player: discord.Member, crewName: str):
@@ -360,7 +360,7 @@ def checkForNumberOfAccounts(player: discord.Member, crewName: str, numberOfAcco
         numberOfAccountsAvailableToMove-=numAccounts
     return numberOfAccountsAvailableToMove>=numberOfAccountsToMoveNext
 
-async def processMovement(ctx: discord.ApplicationContext, crewFrom: str, crewTo: str, player: discord.Member, numberOfAccounts: int, season: int) -> str:
+async def processMovement(ctx: discord.ApplicationContext, crewFrom: str, crewTo: str, player: discord.Member, numberOfAccounts: int, season: int, pingAdmin: bool) -> str:
     movementData = movesCollection.find_one({"player": player.id, "crew_from": crewFrom, "crew_to": crewTo})
     if numberOfAccounts is None:
         numberOfAccounts = 1
@@ -382,11 +382,25 @@ async def processMovement(ctx: discord.ApplicationContext, crewFrom: str, crewTo
     if crewToData is not None:
         inMessage = await getMessage(ctx, crewToData, "in_message_id", "members_channel_id", "**IN:**")
         await updateMovementsMessage(ctx, inMessage, crewTo, "IN")
-    if crewFrom == "New to family":
-        await sendMessageInTheHallAndAddScreened(ctx, player, "!"+crewTo, shouldSendMessageInHall)
+    await sendMessageInTheHallAndAddScreened(ctx, player, "!"+crewTo, shouldSendMessageInHall)
     await updateVacancies(ctx, crewFrom)
     await updateVacancies(ctx, crewTo)
+    await sendMessageToAdminChat(ctx, crewTo, player, "confirm", "to", pingAdmin, season)
+    await sendMessageToAdminChat(ctx, crewFrom, player, "confirm", "from", pingAdmin, season)
     return "Transfer processed successfully"
+
+async def sendMessageToAdminChat(ctx: discord.ApplicationContext, crew: str, player: discord.Member, confirmOrCancel: str, toOrFrom: str, pingAdmin: bool, season=0):
+    if pingAdmin == False:
+        return
+    crewData = crewCollection.find_one({"key": crew}, {"admin_channel_id": 1, "admin": 1, "_id": 0})
+    if crewData == None:
+        return
+    adminRole: discord.Role = getRole(ctx, crewData['admin'])
+    if confirmOrCancel == "confirm":
+        message = f"{adminRole.mention},\n{ctx.author.mention} confirmed that {player.mention} will be moving {toOrFrom} your crew in S{season}"
+    else:
+        message = f"{adminRole.mention},\n{ctx.author.mention} has just canceled a scheduled move of {player.mention} {toOrFrom} your crew."
+    await (await ctx.bot.fetch_channel(crewData['admin_channel_id'])).send(message)
 
 async def sendMessageInTheHallAndAddScreened(ctx: discord.ApplicationContext, member: discord.Member, password: str, shouldSend: bool):
     if shouldSend == False:
@@ -417,7 +431,7 @@ Helps to ensure we don't accidentally boot you from the server! 😅
 *If you are happy with your understanding of the crew rules, to open the server and be able to meet your new crew-mates and family members please send the following message in this channel containing exactly the following:*
 
 {password}
-    """)
+""")
 
 async def updateMovementsMessage(ctx: discord.ApplicationContext, message, crewName, inOrOut):
     newMessage = f"**Players {'Joining' if inOrOut=='IN' else 'Leaving'}:**\n\n"
@@ -444,7 +458,7 @@ async def updateMovementsMessage(ctx: discord.ApplicationContext, message, crewN
         idx+=1
     await message.edit(newMessage)
 
-async def unregisterTransfer(ctx: discord.ApplicationContext, player: discord.Member, crewFrom, crewTo):
+async def unregisterTransfer(ctx: discord.ApplicationContext, player: discord.Member, crewFrom, crewTo, pingAdmin: True):
     if crewTo != crewFrom and (crewTo == None or crewFrom == None):
         return "if you give one of crew_from and crew_to, you must give the other as well."
     if crewTo == crewFrom and crewTo != None:
@@ -462,6 +476,8 @@ async def unregisterTransfer(ctx: discord.ApplicationContext, player: discord.Me
         await deleteMovementFromMessage(ctx, move['crew_to'], "IN")
         await updateVacancies(ctx, move['crew_from'])
         await updateVacancies(ctx, move['crew_to'])
+        await sendMessageToAdminChat(ctx, move['crew_to'], player, "cancel", "to", pingAdmin)
+        await sendMessageToAdminChat(ctx, move['crew_from'], player, "cancel", "from", pingAdmin)
         return f"Transfer/s cancelled. {result.deleted_count} moves for {player.name}#{player.discriminator}"
     move = list(movesCollection.find({"player": player.id, "crew_from": crewFrom, "crew_to": crewTo}))[0]
     movesCollection.delete_one({"player": move['player']})
@@ -469,4 +485,6 @@ async def unregisterTransfer(ctx: discord.ApplicationContext, player: discord.Me
     await deleteMovementFromMessage(ctx, move['crew_to'], "IN")
     await updateVacancies(ctx, move['crew_from'])
     await updateVacancies(ctx, move['crew_to'])
+    await sendMessageToAdminChat(ctx, move['crew_to'], player, "cancel", "to", pingAdmin)
+    await sendMessageToAdminChat(ctx, move['crew_from'], player, "cancel", "from", pingAdmin)
     return f"Cancelled transfer for {player.name}#{player.discriminator} from {crewFrom} to {crewTo}"

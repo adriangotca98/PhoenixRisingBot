@@ -41,7 +41,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     if isinstance(error, commands.MissingRole) or isinstance(error, commands.MissingPermissions):
         await ctx.send_response("<@"+str(ctx.author.id)+">, you're not authorized to use this command! Only leadership can use this. Thank you :) ", ephemeral=True)
         return
-    await ctx.send_response(f"Failed unexpectedly")
+    await ctx.send_followup(f"Failed unexpectedly", ephemeral=True)
     await ctx.send(f"An unexpected error has occured. <@308561593858392065>, please have a look in the code. Command run: {ctx.command.name}")
     args = " ".join([(await getOptionStr(ctx, option)) for option in ctx.selected_options])
     message = f"**{ctx.author.name}#{ctx.author.discriminator}** tried to send the following command: **/{ctx.command.name} {args}**, but it errored out."
@@ -171,14 +171,20 @@ async def multiple(ctx: discord.ApplicationContext, user: discord.Member, crew_n
     input_type=int
 )
 @discord.option(
+    "ping_admin",
+    description="Whether or not Fawkes should ping admins for this. Check False if the admin teams were informed.",
+    required=True,
+    input_type=bool
+)
+@discord.option(
     "number_of_accounts",
     description="Number of accounts the player is moving in this transfer.",
     required=False,
-    input_type = int
+    input_type=int
 )
-async def transfer(ctx: discord.ApplicationContext, player: discord.Member, crew_from: str, crew_to: str, season: int, number_of_accounts: int):
+async def transfer(ctx: discord.ApplicationContext, player: discord.Member, crew_from: str, crew_to: str, season: int, ping_admin: bool, number_of_accounts: int):
     await ctx.defer(ephemeral=True)
-    message = await main.processTransfer(ctx, player, crew_from, crew_to, number_of_accounts, season)
+    message = await main.processTransfer(ctx, player, crew_from, crew_to, number_of_accounts, season, ping_admin)
     await ctx.send_followup(message, ephemeral = True)
 
 @bot.slash_command(name='current_season', description="Gets the current season we're in", guild_ids=[main.risingServerId])
@@ -195,6 +201,12 @@ async def current_season(ctx: discord.ApplicationContext):
     input_type=discord.Member
 )
 @discord.option(
+    "ping_admin",
+    description="Whether or not Fawkes should ping admins for this. Check False if the admin teams were informed.",
+    required=True,
+    input_type=bool
+)
+@discord.option(
     "crew_from",
     description="Crew which the player is planned to leave. Required if the player is involved in multiple transfers.",
     required=False,
@@ -206,9 +218,9 @@ async def current_season(ctx: discord.ApplicationContext):
     required=False,
     choices=['Out of family'] + main.getCrewNames()
 )
-async def cancel_transfer(ctx: discord.ApplicationContext, player: discord.Member, crew_from=None, crew_to=None):
+async def cancel_transfer(ctx: discord.ApplicationContext, player: discord.Member, ping_admin: bool, crew_from=None, crew_to=None):
     await ctx.defer(ephemeral=True)
-    message = await main.unregisterTransfer(ctx, player, crew_from, crew_to)
+    message = await main.unregisterTransfer(ctx, player, crew_from, crew_to, ping_admin)
     await ctx.send_followup(message, ephemeral = True)
 
 bot.run(main.discord_bot_token)
