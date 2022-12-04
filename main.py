@@ -399,7 +399,7 @@ async def sendMessageToAdminChat(ctx: discord.ApplicationContext, crew: str, pla
     if confirmOrCancel == "confirm":
         message = f"{adminRole.mention},\n{ctx.author.mention} confirmed that {player.mention} will be moving {toOrFrom} your crew in S{season}"
     else:
-        message = f"{adminRole.mention},\n{ctx.author.mention} has just canceled a scheduled move of {player.mention} {toOrFrom} your crew."
+        message = f"{adminRole.mention},\n{ctx.author.mention} has just canceled a scheduled move of {player.mention} {toOrFrom} your crew in S{season}."
     await (await ctx.bot.fetch_channel(crewData['admin_channel_id'])).send(message)
 
 async def sendMessageInTheHallAndAddScreened(ctx: discord.ApplicationContext, member: discord.Member, password: str, shouldSend: bool):
@@ -476,8 +476,8 @@ async def unregisterTransfer(ctx: discord.ApplicationContext, player: discord.Me
         await deleteMovementFromMessage(ctx, move['crew_to'], "IN")
         await updateVacancies(ctx, move['crew_from'])
         await updateVacancies(ctx, move['crew_to'])
-        await sendMessageToAdminChat(ctx, move['crew_to'], player, "cancel", "to", pingAdmin)
-        await sendMessageToAdminChat(ctx, move['crew_from'], player, "cancel", "from", pingAdmin)
+        await sendMessageToAdminChat(ctx, move['crew_to'], player, "cancel", "to", pingAdmin, move['season'])
+        await sendMessageToAdminChat(ctx, move['crew_from'], player, "cancel", "from", pingAdmin, move['season'])
         return f"Transfer/s cancelled. {result.deleted_count} moves for {player.name}#{player.discriminator}"
     move = list(movesCollection.find({"player": player.id, "crew_from": crewFrom, "crew_to": crewTo}))[0]
     movesCollection.delete_one({"player": move['player']})
@@ -485,6 +485,6 @@ async def unregisterTransfer(ctx: discord.ApplicationContext, player: discord.Me
     await deleteMovementFromMessage(ctx, move['crew_to'], "IN")
     await updateVacancies(ctx, move['crew_from'])
     await updateVacancies(ctx, move['crew_to'])
-    await sendMessageToAdminChat(ctx, move['crew_to'], player, "cancel", "to", pingAdmin)
-    await sendMessageToAdminChat(ctx, move['crew_from'], player, "cancel", "from", pingAdmin)
+    await sendMessageToAdminChat(ctx, move['crew_to'], player, "cancel", "to", pingAdmin, move['season'])
+    await sendMessageToAdminChat(ctx, move['crew_from'], player, "cancel", "from", pingAdmin, move['season'])
     return f"Cancelled transfer for {player.name}#{player.discriminator} from {crewFrom} to {crewTo}"
