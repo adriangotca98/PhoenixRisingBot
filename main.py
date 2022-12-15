@@ -230,14 +230,6 @@ async def checkMovements(ctx: discord.ApplicationContext, response: List[Member]
         if roleFound == False:
             movesCollection.delete_one({"crew_from": crewData['key'], "crew_to": "Out of family", "player": move['player'], "season": currentSeason})
             await deleteMovementFromMessage(ctx, crewData['key'], "OUT")
-    for i in range(len(response)):
-        if i>=len(response):
-            break
-        member = response[i]
-        futureMovesData = list(movesCollection.find({"season":{"$gt": currentSeason}, "player": member.id, "crew_to": crewData['key']}))
-        if futureMovesData != []:
-            response.pop(i)
-            i-=1
     for member in response:
         movesData = list(movesCollection.find({"player": member.id, "crew_to": crewData['key'], "season": currentSeason}))
         memberId = str(member.id)
