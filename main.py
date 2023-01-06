@@ -1,6 +1,6 @@
 from typing import List
 import discord
-from pymongo import MongoClient
+from pymongo import MongoClient, collection
 import time
 
 configFile = open("config.txt", "r")
@@ -14,25 +14,29 @@ multipleAccountsCollection = client.get_database("Fawkes").get_collection("multi
 movesCollection = client.get_database("Fawkes").get_collection("movesData")
 vacanciesCollection = client.get_database("Fawkes").get_collection("vacanciesData")
 
+def getDbField(collection: collection.Collection, key: str, subkey: str):
+    entry = collection.find_one({"key": key}, {"_id": 0, subkey: 1})
+    if entry is None:
+        return None
+    return entry[subkey]
+
 scores = {}
-crewRegion = configCollection.find_one({"key": "crew_region"}, {"_id": 0, "value": 1})['value']
-discord_bot_token = configCollection.find_one({"key": "discord_token"}, {"_id": 0, "value": 1})['value']
-IDs = configCollection.find_one({"key": "IDs"}, {"_id": 0})
-risingServerId = IDs['rising_server_id']
-knowingServerId = IDs['knowing_server_id']
-racingServerId = IDs['racing_server_id']
-serveringServerId = IDs['servering_server_id']
-loggingChannelId = IDs['logging_channel_id']
-hallChannelId = IDs['hall_channel_id']
-screenedRoleId = IDs['screened_role_id']
-vacanciesChannelId = IDs['vacancies_channel_id']
-if 'vacancies_message_id' in IDs.keys():
-    vacanciesMessageId = IDs['vacancies_message_id']
-else:
-    vacanciesMessageId = None
+crewRegionEntry = configCollection.find_one({"key": "crew_region"}, {"_id": 0, "value": 1})
+crewRegionEntry = crewRegionEntry if crewRegionEntry != None else {}
+crewRegion = getDbField(configCollection, "crew_region", "value") or {}
+discord_bot_token = getDbField(configCollection, "discord_token", "value") or ""
+risingServerId = getDbField(configCollection, "IDs", 'rising_server_id') or -1
+knowingServerId = getDbField(configCollection, "IDs", 'knowing_server_id') or -1
+racingServerId = getDbField(configCollection, "IDs", 'racing_server_id') or -1
+serveringServerId = getDbField(configCollection, "IDs", 'servering_server_id') or -1
+loggingChannelId = getDbField(configCollection, "IDs", 'logging_channel_id') or -1
+hallChannelId = getDbField(configCollection, "IDs", 'hall_channel_id') or -1
+screenedRoleId = getDbField(configCollection, "IDs", 'screened_role_id') or -1
+vacanciesChannelId = getDbField(configCollection, "IDs", 'vacancies_channel_id') or -1
+vacanciesMessageId = getDbField(configCollection, "IDs", 'vacancies_message_id') or -1
 
 def getCrewNames():
-    return configCollection.find_one({"key": "crews"}, {"_id": 0, "value": 1})['value']
+    return getDbField(configCollection, "crews", "value") or []
 
 class Member:
     def __init__(self, admin: bool, leader: bool, id: int, name: str, multiple: int):
@@ -50,9 +54,14 @@ def sortFunction(member: Member):
     return "2 "+member.name
 
 async def init(bot: discord.Bot):
-    for crew in getCrewNames():
-        channelId = crewCollection.find_one({'key': crew},{"_id": 0, "leaderboard_id": 1})['leaderboard_id']
+    crewNames = getCrewNames()
+    if crewNames is None:
+        return
+    for crew in crewNames:
+        channelId = getDbField(crewCollection, crew, 'leaderboard_id') or 0
         channel = await bot.fetch_channel(channelId)
+        if not isinstance(channel, discord.TextChannel):
+            continue
         scores[crew] = computeScoreFromChannelName(channel.name)
 
 def computeScoreFromChannelName(name: str):
@@ -76,8 +85,10 @@ def getScoreWithSeparator(intScore):
 
 async def setScore(ctx: discord.ApplicationContext, crewName: str, score: str):
     print(f"Setting score {str(score)} for {crewName}")
-    channelId = crewCollection.find_one({'key': crewName},{"_id": 0, "leaderboard_id": 1})['leaderboard_id']
-    channel: discord.channel.CategoryChannel = await ctx.bot.fetch_channel(channelId)
+    channelId = getDbField(crewCollection, crewName, 'leaderboard_id') or -1
+    channel = await ctx.bot.fetch_channel(channelId)
+    if not isinstance(channel, discord.TextChannel):
+        return
     channelName = channel.name
     newChannelName = channelName.strip("0123456789'`’") + getScoreWithSeparator(int(score))
     await channel.edit(name=newChannelName)
@@ -86,16 +97,21 @@ async def setScore(ctx: discord.ApplicationContext, crewName: str, score: str):
 
 async def reorderChannels(ctx: discord.ApplicationContext, scores: dict, crewName: str):
     sortedScores = dict(sorted(scores.items(), key=lambda item: item[1],reverse=True))
-    channelId = crewCollection.find_one({'key': crewName},{"_id": 0, "leaderboard_id": 1})['leaderboard_id']
-    channel: discord.abc.GuildChannel = await ctx.bot.fetch_channel(channelId)
+    channelId = getDbField(crewCollection, crewName, 'leaderboard_id') or -1
+    channel = await ctx.bot.fetch_channel(channelId)
     if list(sortedScores.keys())[0] == crewName:
-        await channel.move(beginning=True)
+        if isinstance(channel, discord.TextChannel):
+            await channel.move(beginning=True)
         return
+    lastKey = ""
     for key in sortedScores:
         if key == crewName:
-            aboveChannelId: int = crewCollection.find_one({'key': lastKey},{"_id": 0, "leaderboard_id": 1})['leaderboard_id']
-            aboveChannel: discord.abc.GuildChannel = await ctx.bot.fetch_channel(aboveChannelId)
-            await channel.move(after=aboveChannel)
+            aboveChannelId = getDbField(crewCollection, lastKey, 'leaderboard_id')
+            if aboveChannelId is None:
+                continue
+            aboveChannel = await ctx.bot.fetch_channel(aboveChannelId)
+            if isinstance(channel, discord.TextChannel):
+                await channel.move(after=aboveChannel)
             return
         lastKey = key
 
@@ -103,9 +119,11 @@ async def updateMessage(ctx: discord.ApplicationContext, crewData, keyToSet, ini
     key = crewData['key']
     channelId = crewData['members_channel_id']
     channel = await ctx.bot.fetch_channel(channelId)
-    message = await channel.send(initialMessage)
-    crewCollection.update_one({"key": key}, {"$set": {keyToSet: message.id}})
-    return message
+    if isinstance(channel, discord.TextChannel):
+        message = await channel.send(initialMessage)
+        crewCollection.update_one({"key": key}, {"$set": {keyToSet: message.id}})
+        return message
+    return None
 
 async def getMessage(ctx, crewData, keyToGet, channelKey, initialMessage):
     if keyToGet not in crewData.keys():
@@ -147,13 +165,15 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
         multipleAccountsIds = [key for key in multipleAccountsData if key != 'key']
     else:
         multipleAccountsIds = []
-    crewData = crewCollection.find_one({"key": key}, {"_id": 0})
-    crewName = crewData['member']
+    crewData = crewCollection.find_one({"key": key}, {"_id": 0}) or {}
+    crewName = getDbField(crewCollection, key, 'member') or ""
     message = await getMessage(ctx, crewData, "message_id", "members_channel_id", "**__Members for "+crewName.upper()+"__**")
-    memberRoleName = crewData['member']
-    adminRoleName = crewData['admin']
-    leaderRoleName = crewData['leader']
-    guild: discord.Guild = ctx.guild
+    memberRoleName = getDbField(crewCollection, key, 'member') or ""
+    adminRoleName = getDbField(crewCollection, key, 'admin') or ""
+    leaderRoleName = getDbField(crewCollection, key, 'leader') or ""
+    guild = ctx.guild
+    if guild is None:
+        return
     roleFound = False
     for role in guild.roles:
         if role.name == memberRoleName:
@@ -177,15 +197,17 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
             stringResponse+=" -> *Admin*"
         stringResponse+='\n'
         number+=1
-    await message.edit(content = stringResponse)
+    if message is not None:
+        await message.edit(content = stringResponse)
     return status
 
 async def updateVacancies(ctx: discord.ApplicationContext, crewName: str, membersList: list = []):
     currentSeason = getCurrentSeason()
     currentSeasonCount = len(membersList)
+    vacanciesEntry = vacanciesCollection.find_one({}) or {}
     if currentSeasonCount == 0:
-        if crewName in vacanciesCollection.find_one({}):
-            currentSeasonCount = vacanciesCollection.find_one({})[crewName]['current']
+        if crewName in vacanciesEntry:
+            currentSeasonCount = vacanciesEntry[crewName]['current']
         else:
             currentSeasonCount = 0
     nextSeasonCount = currentSeasonCount
@@ -194,7 +216,6 @@ async def updateVacancies(ctx: discord.ApplicationContext, crewName: str, member
     for move in list(movesCollection.find({"crew_from": crewName, "season": currentSeason+1})):
         nextSeasonCount -= move['number_of_accounts']
     vacanciesCollection.update_one({}, {"$set": {crewName: {"current": currentSeasonCount, "next": nextSeasonCount}}})
-    vacanciesEntry = vacanciesCollection.find_one({}, {"_id": 0})
     messageContent ="**__Latest Crew Vacancies__**\n\n"
     for region in crewRegion.keys():
         messageContent += f"**__{region} Crews__**\n\n"
@@ -203,24 +224,30 @@ async def updateVacancies(ctx: discord.ApplicationContext, crewName: str, member
                 continue
             messageContent += f"**{crewName.capitalize()}**\n{vacanciesEntry[crewName]['current']}/30 Current Season\n{vacanciesEntry[crewName]['next']}/30 Next Season\n"
         messageContent += "\n"
-    channel = await ctx.guild.fetch_channel(vacanciesChannelId)
-    try:
-        if vacanciesMessageId is not None:
-            message = await channel.fetch_message(vacanciesMessageId)
-            await message.edit(content=messageContent)
-        else:
-            message = await channel.send(messageContent)
-            configCollection.update_one({"key": "IDs"}, {"$set": {"vacancies_message_id": message.id}})    
-    except discord.errors.NotFound:
-        message = await channel.send(messageContent)
-        configCollection.update_one({"key": "IDs"}, {"$set": {"vacancies_message_id": message.id}})
+    guild = ctx.guild
+    if guild is not None:
+        channel = await guild.fetch_channel(vacanciesChannelId)
+        try:
+            if vacanciesMessageId is not None and isinstance(channel, discord.TextChannel):
+                message = await channel.fetch_message(vacanciesMessageId)
+                await message.edit(content=messageContent)
+            elif isinstance(channel, discord.TextChannel):
+                message = await channel.send(messageContent)
+                configCollection.update_one({"key": "IDs"}, {"$set": {"vacancies_message_id": message.id}})    
+        except discord.errors.NotFound:
+            if isinstance(channel, discord.TextChannel):
+                message = await channel.send(messageContent)
+                configCollection.update_one({"key": "IDs"}, {"$set": {"vacancies_message_id": message.id}})
 
 async def checkMovements(ctx: discord.ApplicationContext, response: List[Member], crewData: dict):
     currentSeason = getCurrentSeason()
     outOfFamilyMoves = list(movesCollection.find({"crew_from": crewData['key'], "crew_to": "Out of family", "season": currentSeason}))
+    guild = ctx.guild
+    if guild is None:
+        return ("Not OK! Get in touch with server admins.", [])
     for move in outOfFamilyMoves:
         try:
-            member = await ctx.guild.fetch_member(move['player'])
+            member = await guild.fetch_member(move['player'])
         except:
             movesCollection.delete_many({"player": move['player']})
             continue
@@ -277,7 +304,7 @@ async def kickOrBanOrUnban(user: discord.Member, op: str, bot: discord.Bot, reas
                 await guild.unban(user, reason=reason)
 
 def processMultiple(user: discord.Member, crewName: str, numberOfAccounts: int):
-    memberRoleName = crewCollection.find_one({"key": crewName}, {"_id": 0, "member": 1})['member']
+    memberRoleName = getDbField(crewCollection, crewName, 'member')
     roles = user.roles
     roleFound = False
     for role in roles:
@@ -299,13 +326,15 @@ def processMultiple(user: discord.Member, crewName: str, numberOfAccounts: int):
     return "Multiple accounts recorded!"
 
 def getRole(ctx: discord.ApplicationContext, roleName: str):
+    if ctx.guild is None:
+        return None
     for role in ctx.guild.roles:
         if role.name == roleName:
             return role
     return None
 
 def getCurrentSeason():
-    return int((time.time()-configCollection.find_one({"key": "time"}, {"_id": 0})['value'])/60/60/24/7/2)+166
+    return int((time.time()-(getDbField(configCollection, 'time', 'value') or 0))/60/60/24/7/2)+166
 
 async def processTransfer(ctx: discord.ApplicationContext, player: discord.Member, crewFrom: str, crewTo: str, numberOfAccounts: int, season: int, pingAdmin: bool):
     if crewFrom == "New to family" and crewTo == "Out of family":
@@ -324,16 +353,16 @@ def checkRole(ctx: discord.ApplicationContext, player: discord.Member, crewName:
     if movesData is not None:
         lastMove = movesData[-1]
         if lastMove['crew_to'] != crewName:
-            return {False, f"I looked at this player history of movements and from what I can see, he will NOT be in **{crewData['member']}** at the time of the transfer. Last move is registered to {lastMove['crew_to']} in season {lastMove['season']}. If your move is before that you'll have to redo the path till then so we don't risk mising links between seasons. Talk with <@308561593858392065> about how to do this."}
+            return (False, f"I looked at this player history of movements and from what I can see, he will NOT be in **{getDbField(crewCollection, crewName, 'member')}** at the time of the transfer. Last move is registered to {lastMove['crew_to']} in season {lastMove['season']}. If your move is before that you'll have to redo the path till then so we don't risk mising links between seasons. Talk with <@308561593858392065> about how to do this.")
         return (True, "history")
     if crewData == None:
         role = getRole(ctx, "Temporary Visitor Pass")
-        if player.get_role(role.id) == None:
+        if role is None or player.get_role(role.id) is None:
             return (True, False)
         return (True, True)
     roleName = crewData['member']
     role = getRole(ctx, roleName)
-    if player.get_role(role.id) == None:
+    if role is None or player.get_role(role.id) == None:
         return (False, "The player does not have the crew role. Add the role and try again.")
     return (True, "crew_role")
 
@@ -385,22 +414,31 @@ async def sendMessageToAdminChat(ctx: discord.ApplicationContext, crew: str, pla
     if pingAdmin == False:
         return
     crewData = crewCollection.find_one({"key": crew}, {"admin_channel_id": 1, "admin": 1, "_id": 0})
-    if crewData == None:
+    if crewData is None:
         return
-    adminRole: discord.Role = getRole(ctx, crewData['admin'])
-    if confirmOrCancel == "confirm":
+    adminRole = getRole(ctx, crewData['admin'])
+    if adminRole is None:
+        return
+    message = ""
+    if confirmOrCancel == "confirm" and ctx.author:
         message = f"{adminRole.mention},\n{ctx.author.mention} confirmed that {player.mention} will be moving {toOrFrom} your crew in S{season}"
-    else:
+    elif ctx.author:
         message = f"{adminRole.mention},\n{ctx.author.mention} has just canceled a scheduled move of {player.mention} {toOrFrom} your crew in S{season}."
-    await (await ctx.bot.fetch_channel(crewData['admin_channel_id'])).send(message)
+    channel = await ctx.bot.fetch_channel(crewData['admin_channel_id'])
+    if isinstance(channel, discord.TextChannel):
+        await channel.send(message)
 
 async def sendMessageInTheHallAndAddScreened(ctx: discord.ApplicationContext, member: discord.Member, password: str, shouldSend: bool):
-    if shouldSend == False:
+    guild = ctx.guild
+    if shouldSend == False or guild is None:
         return
-    channel = await ctx.guild.fetch_channel(hallChannelId)
-    role = ctx.guild.get_role(screenedRoleId)
+    channel = await ctx.bot.fetch_channel(hallChannelId)
+    role = guild.get_role(screenedRoleId)
+    if role is None:
+        return
     await member.add_roles(role)
-    await channel.send(f"""
+    if isinstance(channel, discord.TextChannel):
+        await channel.send(f"""
 Hi, {member.mention}, in addition to the rules you already accepted when joining the server (**i.e, no cheats or modded accounts allowed, no drama, 16+ minimum age**) these are the general rules of all our crews:
     
 
@@ -434,23 +472,27 @@ async def updateMovementsMessage(ctx: discord.ApplicationContext, message, crewN
     for move in movements:
         crewData = crewCollection.find_one({"key": move[crewKey]}, {"_id": 0})
         try:
-            member = await ctx.guild.fetch_member(move['player'])
+            guild = ctx.guild
+            if guild is not None:
+                member = await guild.fetch_member(move['player'])
+            else:
+                member = None
         except:
             movesCollection.delete_many({"player": move['player']})
             continue
-        newMessage+=f"{str(idx)}. {member.mention} "    
+        if member is not None:
+            newMessage+=f"{str(idx)}. {member.mention} "    
         if crewData is None:
-            newMessage += move[crewKey] + " in S" + str(move['season'])
+            newMessage += f"{move[crewKey]} in S{str(move['season'])}"
         else:
             crewRole = getRole(ctx, crewData['member'])
-            newMessage += "from" if inOrOut == "IN" else "to"
-            newMessage += " " + crewRole.mention
-            newMessage += " in S" + str(move['season'])
+            numberOfAccounts = crewData['number_of_accounts']
+            newMessage += f'{"from" if inOrOut == "IN" else "to"} {crewRole.mention if crewRole is not None else ""}{f" with {numberOfAccounts} accounts" if numberOfAccounts>1 else ""} in S{str(move["season"])}'
         newMessage += '\n'
         idx+=1
     await message.edit(newMessage)
 
-async def unregisterTransfer(ctx: discord.ApplicationContext, player: discord.Member, crewFrom, crewTo, pingAdmin: True):
+async def unregisterTransfer(ctx: discord.ApplicationContext, player: discord.Member, crewFrom, crewTo, pingAdmin = True):
     if crewTo != crewFrom and (crewTo == None or crewFrom == None):
         return "if you give one of crew_from and crew_to, you must give the other as well."
     if crewTo == crewFrom and crewTo != None:

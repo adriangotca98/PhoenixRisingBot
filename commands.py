@@ -13,7 +13,7 @@ bot = discord.Bot(description=description, intents=intents)
 @bot.event
 async def on_ready():
     await main.init(bot)
-    print(f'Logged in as {bot.user} (ID: {bot.user.id})')
+    print(f'Logged in as {bot.user} (ID: {bot.user.id if bot.user!=None else 0})')
     print('------')
     bot.commands[0].checks[0]
 
@@ -33,18 +33,27 @@ async def on_application_command_completion(ctx: discord.ApplicationContext):
         for option in ctx.selected_options:
             optionStr = await getOptionStr(ctx, option)+" "
             args+=optionStr
-    message = f"**{ctx.author.name}#{ctx.author.discriminator}** has sent the following command: **/{ctx.command.name} {args}**"
-    await (await bot.fetch_channel(main.loggingChannelId)).send(message)
+    if ctx.author != None:
+        message = f"**{ctx.author.name}#{ctx.author.discriminator}** has sent the following command: **/{ctx.command.name} {args}**"
+        channel = await bot.fetch_channel(main.loggingChannelId)
+        if isinstance(channel, discord.TextChannel):
+            await channel.send(message)
 
 @bot.event
 async def on_application_command_error(ctx: discord.ApplicationContext, error):
     if isinstance(error, commands.MissingRole) or isinstance(error, commands.MissingPermissions):
-        await ctx.send_response("<@"+str(ctx.author.id)+">, you're not authorized to use this command! Only leadership can use this. Thank you :) ", ephemeral=True)
+        if ctx.author != None:
+            await ctx.send_response("<@"+str(ctx.author.id)+">, you're not authorized to use this command! Only leadership can use this. Thank you :) ", ephemeral=True)
         return
     await ctx.send(f"An unexpected error has occured. <@308561593858392065>, please have a look in the code. Command run: {ctx.command.name}")
-    args = " ".join([(await getOptionStr(ctx, option)) for option in ctx.selected_options])
-    message = f"**{ctx.author.name}#{ctx.author.discriminator}** tried to send the following command: **/{ctx.command.name} {args}**, but it errored out."
-    await (await bot.fetch_channel(main.loggingChannelId)).send(message)
+    args = None
+    if ctx.selected_options != None:
+        args = " ".join([(await getOptionStr(ctx, option)) for option in ctx.selected_options])
+    if ctx.author != None:
+        message = f"**{ctx.author.name}#{ctx.author.discriminator}** tried to send the following command: **/{ctx.command.name} {args}**, but it errored out."
+        channel = await bot.fetch_channel(main.loggingChannelId)
+        if isinstance(channel, discord.TextChannel):
+            await channel.send(message)
     await ctx.send_followup(f"Failed unexpectedly", ephemeral=True)
     raise error
 
