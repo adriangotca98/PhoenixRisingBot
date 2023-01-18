@@ -15,7 +15,6 @@ async def on_ready():
     await main.init(bot)
     print(f'Logged in as {bot.user} (ID: {bot.user.id if bot.user!=None else 0})')
     print('------')
-    bot.commands[0].checks[0]
 
 async def getOptionStr(ctx: discord.ApplicationContext, option):
     try:
@@ -68,7 +67,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
 async def getMembers(ctx: discord.ApplicationContext, crew_name: str):
     await ctx.defer(ephemeral=True)
     message = await main.getPlayersResponse(ctx, crew_name)
-    await ctx.send_followup(message, ephemeral=True, delete_after=5)
+    await ctx.send_followup(message, ephemeral=True, delete_after=60)
 
 @bot.slash_command(name='score', description='Set score for the crew in the CREW TABLES section and reorder the channels by score.', guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
@@ -87,7 +86,7 @@ async def setScoreForCrew(ctx: discord.ApplicationContext, crew_name: str, score
     await ctx.defer(ephemeral=True)
     scoreStr = str(score)
     await main.setScore(ctx, crew_name, scoreStr)
-    await ctx.send_followup("Score updated :)",ephemeral=True, delete_after=5)
+    await ctx.send_followup("Score updated :)",ephemeral=True, delete_after=60)
 
 @bot.slash_command(name='kick', description='Kick a member from all servers (Rising, Knowing, Racing, Servering).', guild_ids=[main.risingServerId, main.racingServerId, main.knowingServerId, main.serveringServerId])
 @commands.has_permissions(kick_members=True)
@@ -100,7 +99,7 @@ async def setScoreForCrew(ctx: discord.ApplicationContext, crew_name: str, score
 async def kick(ctx: discord.ApplicationContext, user: discord.Member, reason: str):
     await ctx.defer(ephemeral=True)
     await main.kickOrBanOrUnban(user, 'kick', bot, reason = reason)
-    await ctx.send_followup("User kicked :)",ephemeral=True, delete_after=5)
+    await ctx.send_followup("User kicked :)",ephemeral=True, delete_after=60)
 
 @bot.slash_command(name='ban',description='Ban a member from all servers (Rising, Knowing, Racing, Servering).', guild_ids=[main.risingServerId, main.racingServerId, main.knowingServerId, main.serveringServerId])
 @commands.has_permissions(ban_members=True)
@@ -113,7 +112,7 @@ async def kick(ctx: discord.ApplicationContext, user: discord.Member, reason: st
 async def ban(ctx: discord.ApplicationContext, user: discord.Member, reason: str):
     await ctx.defer(ephemeral=True)
     await main.kickOrBanOrUnban(user, 'ban', bot, reason=reason)
-    await ctx.send_followup("User banned :)", ephemeral=True, delete_after=5)
+    await ctx.send_followup("User banned :)", ephemeral=True, delete_after=60)
 
 @bot.slash_command(name='unban', description='Unban a former member from all servers.', guild_ids=[main.risingServerId, main.racingServerId, main.knowingServerId, main.serveringServerId])
 @commands.has_permissions(ban_members=True)
@@ -126,7 +125,7 @@ async def ban(ctx: discord.ApplicationContext, user: discord.Member, reason: str
 async def unban(ctx: discord.ApplicationContext, user: discord.Member):
     await ctx.defer(ephemeral=True)
     await main.kickOrBanOrUnban(user, 'unban', bot)
-    await ctx.send_followup("User unbanned :)", ephemeral=True, delete_after=5)
+    await ctx.send_followup("User unbanned :)", ephemeral=True, delete_after=60)
 
 @bot.slash_command(name="multiple", description="Keep track of multiple accounts of the same person (same discord profile) within the same crew", guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
@@ -194,12 +193,12 @@ async def multiple(ctx: discord.ApplicationContext, user: discord.Member, crew_n
 async def transfer(ctx: discord.ApplicationContext, player: discord.Member, crew_from: str, crew_to: str, season: int, ping_admin: bool, number_of_accounts: int):
     await ctx.defer(ephemeral=True)
     message = await main.processTransfer(ctx, player, crew_from, crew_to, number_of_accounts, season, ping_admin)
-    await ctx.send_followup(message, ephemeral = True, delete_after=5)
+    await ctx.send_followup(message, ephemeral = True, delete_after=60)
 
 @bot.slash_command(name='current_season', description="Gets the current season we're in", guild_ids=[main.risingServerId])
 @commands.has_role('Phoenix Rising')
 async def current_season(ctx: discord.ApplicationContext):
-    await ctx.send_response(str(main.getCurrentSeason()), ephemeral=True, delete_after=5)
+    await ctx.send_response(str(main.getCurrentSeason()), ephemeral=True, delete_after=60)
 
 @bot.slash_command(name="cancel_transfer", description="unregisters a transfer in case of change of plans",guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
@@ -230,6 +229,6 @@ async def current_season(ctx: discord.ApplicationContext):
 async def cancel_transfer(ctx: discord.ApplicationContext, player: discord.Member, ping_admin: bool, crew_from=None, crew_to=None):
     await ctx.defer(ephemeral=True)
     message = await main.unregisterTransfer(ctx, player, crew_from, crew_to, ping_admin)
-    await ctx.send_followup(message, ephemeral = True, delete_after=5)
+    await ctx.send_followup(message, ephemeral = True, delete_after=60)
 
 bot.run(main.discord_bot_token)

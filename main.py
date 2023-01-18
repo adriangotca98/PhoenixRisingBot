@@ -486,7 +486,7 @@ async def updateMovementsMessage(ctx: discord.ApplicationContext, message, crewN
             newMessage += f"{move[crewKey]} in S{str(move['season'])}"
         else:
             crewRole = getRole(ctx, crewData['member'])
-            numberOfAccounts = crewData['number_of_accounts']
+            numberOfAccounts = move['number_of_accounts']
             newMessage += f'{"from" if inOrOut == "IN" else "to"} {crewRole.mention if crewRole is not None else ""}{f" with {numberOfAccounts} accounts" if numberOfAccounts>1 else ""} in S{str(move["season"])}'
         newMessage += '\n'
         idx+=1
