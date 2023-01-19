@@ -150,7 +150,7 @@ async def unban(ctx: discord.ApplicationContext, user: discord.Member):
 async def multiple(ctx: discord.ApplicationContext, user: discord.Member, crew_name: str, number_of_accounts: int):
     await ctx.defer(ephemeral=True)
     message = main.processMultiple(user, crew_name, number_of_accounts)
-    await ctx.send_followup(message, ephemeral = True, delete=5)
+    await ctx.send_followup(message, ephemeral = True, delete_after=5)
 
 @bot.slash_command(name="transfer", description="Register a transfer for next season.", guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
