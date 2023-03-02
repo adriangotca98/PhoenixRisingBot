@@ -336,15 +336,16 @@ def getRole(ctx: discord.ApplicationContext, roleName: str):
 def getCurrentSeason():
     return int((time.time()-(getDbField(configCollection, 'time', 'value') or 0))/60/60/24/7/2)+166
 
-async def processTransfer(ctx: discord.ApplicationContext, player: discord.Member, crewFrom: str, crewTo: str, numberOfAccounts: int, season: int, pingAdmin: bool):
+async def processTransfer(ctx: discord.ApplicationContext, player: discord.Member, crewFrom: str, crewTo: str, numberOfAccounts: int, season: int, pingAdmin: bool, shouldKick: bool):
     if crewFrom == "New to family" and crewTo == "Out of family":
         return "A player can't be new to family and going out of family at the same time"
     if crewFrom == crewTo:
         return "A move can't take place within the same crew."
-    roleCheck = checkRole(ctx, player, crewFrom)
+    if crewTo == "Out of family" and shouldKick == None:
+        return "Set should_kick for this kind of move."
     if season<getCurrentSeason()+int(crewFrom!="New to family"):
         return "Transfers can only happen in the future, for members who were left out by mistake simply add the role and run /members command. The only transfers that can happen in the current season are the new players."
-    message = await processMovement(ctx, crewFrom, crewTo, player, numberOfAccounts, season, pingAdmin)
+    message = await processMovement(ctx, crewFrom, crewTo, player, numberOfAccounts, season, pingAdmin, shouldKick)
     return message
 
 def checkRole(ctx: discord.ApplicationContext, player: discord.Member, crewName: str):
@@ -381,7 +382,7 @@ def checkForNumberOfAccounts(player: discord.Member, crewName: str, numberOfAcco
         numberOfAccountsAvailableToMove-=numAccounts
     return numberOfAccountsAvailableToMove>=numberOfAccountsToMoveNext
 
-async def processMovement(ctx: discord.ApplicationContext, crewFrom: str, crewTo: str, player: discord.Member, numberOfAccounts: int, season: int, pingAdmin: bool) -> str:
+async def processMovement(ctx: discord.ApplicationContext, crewFrom: str, crewTo: str, player: discord.Member, numberOfAccounts: int, season: int, pingAdmin: bool, shouldKick: bool) -> str:
     movementData = movesCollection.find_one({"player": player.id, "crew_from": crewFrom, "crew_to": crewTo})
     if numberOfAccounts is None:
         numberOfAccounts = 1
@@ -394,7 +395,10 @@ async def processMovement(ctx: discord.ApplicationContext, crewFrom: str, crewTo
     shouldSendMessageInHall = roleCheck[1] == True and (crewFrom == "New to family")
     if checkForNumberOfAccounts(player, crewFrom, numberOfAccounts) == False:
         return "The player has too many accounts registered to transfer with this transfer included. Check the multiple or remove from the existing transfers for this player first."
-    movesCollection.insert_one({"player": player.id, "crew_from": crewFrom, "crew_to": crewTo, "number_of_accounts": numberOfAccounts, "season": season})
+    objectToInsert = {"player": player.id, "crew_from": crewFrom, "crew_to": crewTo, "number_of_accounts": numberOfAccounts, "season": season}
+    if shouldKick != None and crewTo == "Out of family":
+        objectToInsert["should_kick"]=True
+    movesCollection.insert_one(objectToInsert)
     crewFromData = crewCollection.find_one({"key": crewFrom}, {"_id": 0})
     if crewFromData is not None:
         outMessage = await getMessage(ctx, crewFromData, 'out_message_id', "members_channel_id", "**OUT:**")

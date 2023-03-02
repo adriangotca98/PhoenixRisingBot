@@ -53,6 +53,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
         channel = await bot.fetch_channel(main.loggingChannelId)
         if isinstance(channel, discord.TextChannel):
             await channel.send(message)
+    print(str(error))
     await ctx.send_response(f"Failed unexpectedly", ephemeral=True)
     raise error
 
@@ -190,9 +191,15 @@ async def multiple(ctx: discord.ApplicationContext, user: discord.Member, crew_n
     required=False,
     input_type=int
 )
-async def transfer(ctx: discord.ApplicationContext, player: discord.Member, crew_from: str, crew_to: str, season: int, ping_admin: bool, number_of_accounts: int):
+@discord.option(
+    "should_kick",
+    description="Whether Fawkes should kick the member. Available only if crew_to is Out of family.",
+    required=False,
+    input_type=bool
+)
+async def transfer(ctx: discord.ApplicationContext, player: discord.Member, crew_from: str, crew_to: str, season: int, ping_admin: bool, number_of_accounts: int, should_kick: bool):
     await ctx.defer(ephemeral=True)
-    message = await main.processTransfer(ctx, player, crew_from, crew_to, number_of_accounts, season, ping_admin)
+    message = await main.processTransfer(ctx, player, crew_from, crew_to, number_of_accounts, season, ping_admin, should_kick)
     await ctx.send_followup(message, ephemeral = True, delete_after=60)
 
 @bot.slash_command(name='current_season', description="Gets the current season we're in", guild_ids=[main.risingServerId])
