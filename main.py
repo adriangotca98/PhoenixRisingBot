@@ -83,6 +83,49 @@ def getScoreWithSeparator(intScore):
         scoreWithSeparator = scoreWithSeparator[1:]
     return scoreWithSeparator
 
+async def makeTransfers(ctx: discord.ApplicationContext, season: int):
+    currentSeason = getCurrentSeason()
+    if ctx.guild is None:
+        return "Something is terribly wrong. Contact server admins."
+    transfers = movesCollection.find({"season": currentSeason-1})
+    crewsToUpdateMembers = set()
+    for transfer in transfers:
+        try:
+            player = await ctx.guild.fetch_member(transfer['player'])
+        except:
+            movesCollection.delete_many({"player": transfer['player']})
+            continue
+        crewFromRoleName = str(getDbField(crewCollection, transfer['crew_from'], 'member'))
+        crewToRoleName = str(getDbField(crewCollection, transfer['crew_to'], 'member'))
+        if checkRole(ctx, player, transfer['crew_from'])[0] == True:
+            crewToRole = getRole(ctx, crewToRoleName)
+            if crewToRole != None:
+                await player.add_roles(crewToRole)
+            crewFromRole = getRole(ctx, crewFromRoleName)
+            if crewFromRole != None:
+                await player.remove_roles(crewFromRole)
+        multipleEntry = multipleAccountsCollection.find_one({"key": transfer['crew_from']})
+        if multipleEntry is None and transfer['number_of_accounts'] > 1:
+            continue
+        if multipleEntry is not None:
+            currentMultipleValue = multipleEntry[str(transfer['player'])]
+            newMultipleValue = currentMultipleValue - transfer['number_of_accounts']
+            if newMultipleValue != 1:
+                multipleAccountsCollection.update_one({"key": transfer['crew_from']}, {"$set": {str(transfer['player']): newMultipleValue}})
+            if transfer['number_of_accounts'] > 1:
+                multipleAccountsCollection.find_one_and_update({"key": transfer['crew_to']}, {"$set": {str(transfer['player']): transfer['number_of_accounts']}})
+        if crewToRoleName == "Out of family" and transfer['should_kick'] == True:
+            await player.kick(reason="Kicked by Fawkes via transfer")
+        movesCollection.delete_one(transfer)
+        await deleteMovementFromMessage(ctx, transfer['crew_from'], "OUT")
+        await deleteMovementFromMessage(ctx, transfer['crew_to'], "IN")
+        crewsToUpdateMembers.add(transfer['crew_from'])
+        crewsToUpdateMembers.add(transfer['crew_to'])
+    for crew in crewsToUpdateMembers:
+        if crew not in ['New to family', 'Out of family']:
+            await getPlayersResponse(ctx, crew)
+
+
 async def setScore(ctx: discord.ApplicationContext, crewName: str, score: str):
     print(f"Setting score {str(score)} for {crewName}")
     channelId = getDbField(crewCollection, crewName, 'leaderboard_id') or -1
@@ -182,7 +225,6 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
         return "Role not found on the server! Try again and change the name to the exact name of the role you want info for!"
     response = getMembers(guild, crewName, adminRoleName, leaderRoleName, memberRoleName, multipleAccountsIds, multipleAccountsData)
     response.sort(key = sortFunction)
-    (status, response) = await checkMovements(ctx, response, crewData)
     await updateVacancies(ctx, key, response)
 
     stringResponse = '**__Members of '+crewName.upper()+"__**\n"
@@ -199,7 +241,7 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
         number+=1
     if message is not None:
         await message.edit(content = stringResponse)
-    return status
+    return "OK, all good."
 
 async def updateVacancies(ctx: discord.ApplicationContext, crewName: str, membersList: list = []):
     currentSeason = getCurrentSeason()
@@ -239,46 +281,6 @@ async def updateVacancies(ctx: discord.ApplicationContext, crewName: str, member
                 message = await channel.send(messageContent)
                 configCollection.update_one({"key": "IDs"}, {"$set": {"vacancies_message_id": message.id}})
 
-async def checkMovements(ctx: discord.ApplicationContext, response: List[Member], crewData: dict):
-    currentSeason = getCurrentSeason()
-    outOfFamilyMoves = list(movesCollection.find({"crew_from": crewData['key'], "crew_to": "Out of family", "season": currentSeason}))
-    guild = ctx.guild
-    if guild is None:
-        return ("Not OK! Get in touch with server admins.", [])
-    for move in outOfFamilyMoves:
-        try:
-            member = await guild.fetch_member(move['player'])
-        except:
-            movesCollection.delete_many({"player": move['player']})
-            continue
-        roleFound = False
-        for role in member.roles:
-            roleFound = roleFound or (role.name == crewData['member'])
-        if roleFound == False:
-            movesCollection.delete_one({"crew_from": crewData['key'], "crew_to": "Out of family", "player": move['player'], "season": currentSeason})
-            await deleteMovementFromMessage(ctx, crewData['key'], "OUT")
-    for member in response:
-        movesData = list(movesCollection.find({"player": member.id, "crew_to": crewData['key'], "season": currentSeason}))
-        memberId = str(member.id)
-        for move in movesData:
-            crewFrom = move['crew_from']
-            crewTo = move['crew_to']
-            oldMultiple = multipleAccountsCollection.find_one({"key": crewFrom}, {memberId: 1})
-            if oldMultiple is not None and memberId in oldMultiple.keys():
-                newMultiple = oldMultiple[memberId] - move['number_of_accounts']
-                if newMultiple > 1:
-                    multipleAccountsCollection.update_one({"key": crewFrom}, {"$set": {memberId: newMultiple}})
-                else:
-                    multipleAccountsCollection.update_one({"key": crewFrom}, {"$unset": {memberId: ""}})
-                if move['number_of_accounts'] != 1:
-                    multipleAccountsCollection.update_one({"key": crewTo}, {"$set": {memberId: move['number_of_accounts']}})
-            movesCollection.delete_one({"season": currentSeason, "player": move['player'], "crew_from": move['crew_from'], "crew_to": move['crew_to']})
-            await deleteMovementFromMessage(ctx, crewFrom, "OUT")
-            await deleteMovementFromMessage(ctx, crewTo, "IN")
-    if list(vacanciesCollection.find({"season": {"$lt": currentSeason}, "crew_from": crewData['key']})) != [] or list(vacanciesCollection.find({"season": {"$lt": currentSeason}, "crew_to": crewData['key']})) != []:
-       return ("Old moves are still in the list. Check which are in the `Players Joining:` and `Players Leaving:` and either unregister them or make them.", response)
-    return ("OK, all good!", response)
-
 async def deleteMovementFromMessage(ctx: discord.ApplicationContext, crewName: str, inOrOut: str):
     crewData = crewCollection.find_one({"key": crewName})
     if crewData == None:
@@ -314,15 +316,10 @@ def processMultiple(user: discord.Member, crewName: str, numberOfAccounts: int):
     if not roleFound:
         return "User does not have crew role! Add crew role and try again."
     memberId = str(user.id)
-    existingEntry = multipleAccountsCollection.find_one({"key": crewName},{"_id": 0, memberId: 1})
-    if existingEntry == None:
-        if numberOfAccounts != 1:
-            multipleAccountsCollection.insert_one({"key": crewName, memberId: numberOfAccounts})
+    if numberOfAccounts != 1:
+        multipleAccountsCollection.find_one_and_update({"key": crewName}, {"$set": {memberId: numberOfAccounts}}, upsert=True)
     else:
-        if numberOfAccounts != 1:
-            multipleAccountsCollection.update_one({"key": crewName}, {"$set": {memberId: numberOfAccounts}})
-        else:
-            multipleAccountsCollection.update_one({"key": crewName}, {"$unset": {memberId: ""}})
+        multipleAccountsCollection.find_one_and_update({"key": crewName}, {"$unset": {memberId: ""}})
     return "Multiple accounts recorded!"
 
 def getRole(ctx: discord.ApplicationContext, roleName: str):
@@ -410,11 +407,11 @@ async def processMovement(ctx: discord.ApplicationContext, crewFrom: str, crewTo
     await sendMessageInTheHallAndAddScreened(ctx, player, "!"+crewTo, shouldSendMessageInHall)
     await updateVacancies(ctx, crewFrom)
     await updateVacancies(ctx, crewTo)
-    await sendMessageToAdminChat(ctx, crewTo, player, "confirm", "to", pingAdmin, season)
-    await sendMessageToAdminChat(ctx, crewFrom, player, "confirm", "from", pingAdmin, season)
+    await sendMessageToAdminChat(ctx, crewTo, player, "confirm", "to", pingAdmin, season, numberOfAccounts)
+    await sendMessageToAdminChat(ctx, crewFrom, player, "confirm", "from", pingAdmin, season, numberOfAccounts)
     return "Transfer processed successfully"
 
-async def sendMessageToAdminChat(ctx: discord.ApplicationContext, crew: str, player: discord.Member, confirmOrCancel: str, toOrFrom: str, pingAdmin: bool, season=0):
+async def sendMessageToAdminChat(ctx: discord.ApplicationContext, crew: str, player: discord.Member, confirmOrCancel: str, toOrFrom: str, pingAdmin: bool, season: int, numberOfAccounts: int):
     if pingAdmin == False:
         return
     crewData = crewCollection.find_one({"key": crew}, {"admin_channel_id": 1, "admin": 1, "_id": 0})
@@ -425,9 +422,9 @@ async def sendMessageToAdminChat(ctx: discord.ApplicationContext, crew: str, pla
         return
     message = ""
     if confirmOrCancel == "confirm" and ctx.author:
-        message = f"{adminRole.mention},\n{ctx.author.mention} confirmed that {player.mention} will be moving {toOrFrom} your crew in S{season}"
+        message = f"{adminRole.mention},\n{ctx.author.mention} confirmed that {player.mention} will be moving {toOrFrom} your crew in S{season} with {numberOfAccounts} account" + "s." if numberOfAccounts>1 else "."
     elif ctx.author:
-        message = f"{adminRole.mention},\n{ctx.author.mention} has just canceled a scheduled move of {player.mention} {toOrFrom} your crew in S{season}."
+        message = f"{adminRole.mention},\n{ctx.author.mention} has just canceled a scheduled move of {player.mention} {toOrFrom} your crew in S{season} with {numberOfAccounts} account" + "s." if numberOfAccounts>1 else "."
     channel = await ctx.bot.fetch_channel(crewData['admin_channel_id'])
     if isinstance(channel, discord.TextChannel):
         await channel.send(message)
@@ -514,8 +511,8 @@ async def unregisterTransfer(ctx: discord.ApplicationContext, player: discord.Me
         await deleteMovementFromMessage(ctx, move['crew_to'], "IN")
         await updateVacancies(ctx, move['crew_from'])
         await updateVacancies(ctx, move['crew_to'])
-        await sendMessageToAdminChat(ctx, move['crew_to'], player, "cancel", "to", pingAdmin, move['season'])
-        await sendMessageToAdminChat(ctx, move['crew_from'], player, "cancel", "from", pingAdmin, move['season'])
+        await sendMessageToAdminChat(ctx, move['crew_to'], player, "cancel", "to", pingAdmin, move['season'], move['number_of_accounts'])
+        await sendMessageToAdminChat(ctx, move['crew_from'], player, "cancel", "from", pingAdmin, move['season'], move['number_of_accounts'])
         return f"Transfer/s cancelled. {result.deleted_count} moves for {player.name}#{player.discriminator}"
     move = list(movesCollection.find({"player": player.id, "crew_from": crewFrom, "crew_to": crewTo}))[0]
     movesCollection.delete_one({"player": move['player']})
@@ -523,6 +520,6 @@ async def unregisterTransfer(ctx: discord.ApplicationContext, player: discord.Me
     await deleteMovementFromMessage(ctx, move['crew_to'], "IN")
     await updateVacancies(ctx, move['crew_from'])
     await updateVacancies(ctx, move['crew_to'])
-    await sendMessageToAdminChat(ctx, move['crew_to'], player, "cancel", "to", pingAdmin, move['season'])
-    await sendMessageToAdminChat(ctx, move['crew_from'], player, "cancel", "from", pingAdmin, move['season'])
+    await sendMessageToAdminChat(ctx, move['crew_to'], player, "cancel", "to", pingAdmin, move['season'], move['number_of_accounts'])
+    await sendMessageToAdminChat(ctx, move['crew_from'], player, "cancel", "from", pingAdmin, move['season'], move['number_of_accounts'])
     return f"Cancelled transfer for {player.name}#{player.discriminator} from {crewFrom} to {crewTo}"

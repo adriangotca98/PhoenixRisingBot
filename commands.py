@@ -57,6 +57,27 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     await ctx.send_response(f"Failed unexpectedly", ephemeral=True)
     raise error
 
+@bot.slash_command(name="make_transfers", description="Used to process all transfers from last season or a given season.", guild_ids=[main.risingServerId])
+@commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
+@discord.option(
+    "season",
+    description="Season for which transfers should be processed. Optional, default is current_season-1",
+    required=False,
+    input_type=int
+)
+async def makeTransfers(ctx: discord.ApplicationContext, season: int):
+    if season is None:
+        season = main.getCurrentSeason() - 1
+    if season < main.getCurrentSeason() - 1:
+        await ctx.send_response("Can't process transfers older than 1 season. Cancel the transfers and modify the roles manually!", ephemeral=True, delete_after=60)
+        return
+    if season > main.getCurrentSeason():
+        await ctx.send_response("Can't process transfers happening in the future!", ephemeral=True, delete_after=60)
+        return
+    await ctx.defer(ephemeral=True)
+    message=await main.makeTransfers(ctx, season)
+    await ctx.send_followup(message, ephemeral=True, delete_after=60)
+
 @bot.slash_command(name="members", description="Used to get members of a certain crew", guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 @discord.option(
@@ -80,7 +101,7 @@ async def getMembers(ctx: discord.ApplicationContext, crew_name: str):
 )
 @discord.option(
     "score",
-    type=int,
+    input_type=int,
     required=True
 )
 async def setScoreForCrew(ctx: discord.ApplicationContext, crew_name: str, score: int):
