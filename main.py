@@ -87,9 +87,10 @@ async def makeTransfers(ctx: discord.ApplicationContext, season: int):
     currentSeason = getCurrentSeason()
     if ctx.guild is None:
         return "Something is terribly wrong. Contact server admins."
-    transfers = movesCollection.find({"season": currentSeason-1})
+    transfers = list(movesCollection.find({"season": currentSeason}))
     crewsToUpdateMembers = set()
     for transfer in transfers:
+        print(f"Processing {transfer}")
         try:
             player = await ctx.guild.fetch_member(transfer['player'])
         except:
@@ -106,12 +107,14 @@ async def makeTransfers(ctx: discord.ApplicationContext, season: int):
                 await player.remove_roles(crewFromRole)
         multipleEntry = multipleAccountsCollection.find_one({"key": transfer['crew_from']})
         if multipleEntry is None and transfer['number_of_accounts'] > 1:
-            continue
-        if multipleEntry is not None:
-            currentMultipleValue = multipleEntry[str(transfer['player'])]
+            multipleAccountsCollection.update_one({'key': transfer['crew']}, {"$set": {str(transfer['player']): transfer['number_of_accounts']}})
+        elif multipleEntry is not None:
+            currentMultipleValue = multipleEntry[str(transfer['player'])] if str(transfer['player']) in multipleEntry else 1
             newMultipleValue = currentMultipleValue - transfer['number_of_accounts']
-            if newMultipleValue != 1:
+            if newMultipleValue > 1:
                 multipleAccountsCollection.update_one({"key": transfer['crew_from']}, {"$set": {str(transfer['player']): newMultipleValue}})
+            elif currentMultipleValue > 1:
+                multipleAccountsCollection.update_one({"key": transfer['crew_from']}, {"$unset": {str(transfer['player']): ""}})
             if transfer['number_of_accounts'] > 1:
                 multipleAccountsCollection.find_one_and_update({"key": transfer['crew_to']}, {"$set": {str(transfer['player']): transfer['number_of_accounts']}})
         if crewToRoleName == "Out of family" and 'should_kick' in transfer and transfer['should_kick'] == True:
@@ -124,6 +127,7 @@ async def makeTransfers(ctx: discord.ApplicationContext, season: int):
     for crew in crewsToUpdateMembers:
         if crew not in ['New to family', 'Out of family']:
             await getPlayersResponse(ctx, crew)
+    return "All good"
 
 
 async def setScore(ctx: discord.ApplicationContext, crewName: str, score: str):
@@ -422,9 +426,9 @@ async def sendMessageToAdminChat(ctx: discord.ApplicationContext, crew: str, pla
         return
     message = ""
     if confirmOrCancel == "confirm" and ctx.author:
-        message = f"{adminRole.mention},\n{ctx.author.mention} confirmed that {player.mention} will be moving {toOrFrom} your crew in S{season} with {numberOfAccounts} account" + "s." if numberOfAccounts>1 else "."
+        message = f"{adminRole.mention},\n{ctx.author.mention} confirmed that {player.mention} will be moving {toOrFrom} your crew in S{season} with {numberOfAccounts} account" + ("s." if numberOfAccounts>1 else ".")
     elif ctx.author:
-        message = f"{adminRole.mention},\n{ctx.author.mention} has just canceled a scheduled move of {player.mention} {toOrFrom} your crew in S{season} with {numberOfAccounts} account" + "s." if numberOfAccounts>1 else "."
+        message = f"{adminRole.mention},\n{ctx.author.mention} has just canceled a scheduled move of {player.mention} {toOrFrom} your crew in S{season} with {numberOfAccounts} account" + ("s." if numberOfAccounts>1 else ".")
     channel = await ctx.bot.fetch_channel(crewData['admin_channel_id'])
     if isinstance(channel, discord.TextChannel):
         await channel.send(message)
