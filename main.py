@@ -114,7 +114,7 @@ async def makeTransfers(ctx: discord.ApplicationContext, season: int):
                 multipleAccountsCollection.update_one({"key": transfer['crew_from']}, {"$set": {str(transfer['player']): newMultipleValue}})
             if transfer['number_of_accounts'] > 1:
                 multipleAccountsCollection.find_one_and_update({"key": transfer['crew_to']}, {"$set": {str(transfer['player']): transfer['number_of_accounts']}})
-        if crewToRoleName == "Out of family" and transfer['should_kick'] == True:
+        if crewToRoleName == "Out of family" and 'should_kick' in transfer and transfer['should_kick'] == True:
             await player.kick(reason="Kicked by Fawkes via transfer")
         movesCollection.delete_one(transfer)
         await deleteMovementFromMessage(ctx, transfer['crew_from'], "OUT")
