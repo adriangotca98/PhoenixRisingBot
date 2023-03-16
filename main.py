@@ -107,7 +107,7 @@ async def makeTransfers(ctx: discord.ApplicationContext, season: int):
                 await player.remove_roles(crewFromRole)
         multipleEntry = multipleAccountsCollection.find_one({"key": transfer['crew_from']})
         if multipleEntry is None and transfer['number_of_accounts'] > 1:
-            multipleAccountsCollection.update_one({'key': transfer['crew']}, {"$set": {str(transfer['player']): transfer['number_of_accounts']}})
+            multipleAccountsCollection.update_one({'key': transfer['crew_to']}, {"$set": {str(transfer['player']): transfer['number_of_accounts']}})
         elif multipleEntry is not None:
             currentMultipleValue = multipleEntry[str(transfer['player'])] if str(transfer['player']) in multipleEntry else 1
             newMultipleValue = currentMultipleValue - transfer['number_of_accounts']
