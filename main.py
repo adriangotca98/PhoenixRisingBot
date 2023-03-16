@@ -262,6 +262,8 @@ async def updateVacancies(ctx: discord.ApplicationContext, crewName: str, member
     for move in list(movesCollection.find({"crew_from": crewName, "season": currentSeason+1})):
         nextSeasonCount -= move['number_of_accounts']
     vacanciesCollection.update_one({}, {"$set": {crewName: {"current": currentSeasonCount, "next": nextSeasonCount}}})
+    vacanciesEntry[crewName]['current']=currentSeasonCount
+    vacanciesEntry[crewName]['next']=nextSeasonCount
     messageContent ="**__Latest Crew Vacancies__**\n\n"
     for region in crewRegion.keys():
         messageContent += f"**__{region} Crews__**\n\n"
