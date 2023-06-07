@@ -446,26 +446,25 @@ async def sendMessageInTheHallAndAddScreened(ctx: discord.ApplicationContext, me
     await member.add_roles(role)
     if isinstance(channel, discord.TextChannel):
         await channel.send(f"""
-Hi, {member.mention}, in addition to the rules you already accepted when joining the server (**i.e, no cheats or modded accounts allowed, no drama, 16+ minimum age**) these are the general rules of all our crews:
-    
+Hi {member.mention}!
+In addition to the rules you already accepted when joining the server (**i.e, no drama, don’t be younger than 16**) these are the general rules of all our crews:
 
-**1. Please Complete All Cups**
+**1. No HARMFUL Cheating!**
+At Phoenix, we recognise that your account is yours to manage as you please. We just ask you to not do the things that harm all other players (namely, no showdown speed-hacks/using overfused cars, no RP mods and no excessive resource modding that will get you banned in-game).
+
+**2. Please Complete All Cups**
 …any that give RP and/or Wildcard tokens, and Weekly Elite Cup races.
 
-**2. Please Follow Wildcard Schedule**
+**3. Please Follow Wildcard Schedule**
 Donate ONLY if the day's card is not filled. ACTIVATING WILDCARD = INSTANT REMOVAL!
 
-**3. Communication ESSENTIAL!**
-We don't ask for you to be a chatterbox unless you want to. But if you suddenly struggle for time and need some help, please ASK in your crew chat. It is not fair on a crew's top players if you are at the bottom, unreachable and struggling to beat the minimum, and you may be removed.
+**4. Communication ESSENTIAL!**
+If you need some help, please ASK in your crew chat. We are all a team! No one wants you to be struggling at the bottom of the crew and unreachable.
 
-**4. Keep Your Server Nickname Same As Your In-Game-Name**
+**5. Please Keep Your Server Nickname Same As Your In-Game-Name**
 Helps to ensure we don't accidentally boot you from the server! 😅
 
-*If you aren't clear on any of the rules and wish a more detailed breakdown, please send the following command here as a message:*
-
-!ruless
-
-*If you are happy with your understanding of the crew rules, to open the server and be able to meet your new crew-mates and family members please send the following message in this channel containing exactly the following:*
+*If you are happy with your understanding of the crew rules, to open the server and be able to meet your new crew-mates and family members please send the following phrase in a message in this channel, exactly as shown:*
 
 {password}
 """)
