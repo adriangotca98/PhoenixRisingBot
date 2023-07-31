@@ -133,3 +133,4 @@ dmypy.json
 **/play.py
 **/config.txt
 **/.vscode
+output.txt

@@ -439,12 +439,12 @@ async def sendMessageInTheHallAndAddScreened(ctx: discord.ApplicationContext, me
     guild = ctx.guild
     if shouldSend == False or guild is None:
         return
-    channel = await ctx.bot.fetch_channel(hallChannelId)
+    channel = await ctx.bot.fetch_channel(ctx.channel_id)
     role = guild.get_role(screenedRoleId)
     if role is None:
         return
     await member.add_roles(role)
-    if isinstance(channel, discord.TextChannel):
+    if isinstance(channel, discord.TextChannel) or isinstance(channel, discord.Thread):
         await channel.send(f"""
 Hi {member.mention}!
 In addition to the rules you already accepted when joining the server (**i.e, no drama, don’t be younger than 16**) these are the general rules of all our crews:

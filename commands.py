@@ -53,7 +53,10 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
         channel = await bot.fetch_channel(main.loggingChannelId)
         if isinstance(channel, discord.TextChannel):
             await channel.send(message)
-    await ctx.send_followup(f"Failed unexpectedly", ephemeral=True)
+    try:
+        await ctx.send_followup(f"Failed unexpectedly", ephemeral=True)
+    except Exception:
+        await ctx.send("Failed unexpectedly")
     raise error
 
 @bot.slash_command(name="make_transfers", description="Used to process all transfers from last season or a given season.", guild_ids=[main.risingServerId])
