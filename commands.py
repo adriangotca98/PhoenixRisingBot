@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import main
+from view import MembersCrewsView
 
 description = '''Phoenix Rising family bot, Fawkes.'''
 
@@ -58,6 +59,11 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     except Exception:
         await ctx.send("Failed unexpectedly")
     raise error
+
+@bot.slash_command(name="new_members", description="Test", guild_ids=[main.risingServerId])
+@commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
+async def new_command(ctx: discord.ApplicationContext):
+    await ctx.send_response("pick an option", view=MembersCrewsView(ctx), ephemeral=True, delete_after=60)
 
 @bot.slash_command(name="make_transfers", description="Used to process all transfers from last season or a given season.", guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
