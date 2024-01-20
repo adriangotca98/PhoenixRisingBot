@@ -71,7 +71,7 @@ async def new_multiple(ctx: discord.ApplicationContext):
     await ctx.send_response(" ", view=MultipleView(ctx), ephemeral=True, delete_after=60)
 
 @bot.slash_command(name="new_score", description="Sets a score for the crew given", guild_ids=[main.risingServerId])
-@commands.has_any_role("Phoenix Family Leadership")
+@commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def new_score(ctx: discord.ApplicationContext):
     await ctx.send_response(" ", view=ScoreView(ctx), ephemeral=True, delete_after=60)
 
