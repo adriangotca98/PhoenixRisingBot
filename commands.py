@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 import main
-from view import MembersCrewsView
+from views import MembersCrewsView, MultipleView, ScoreView
 
 description = '''Phoenix Rising family bot, Fawkes.'''
 
@@ -60,10 +60,20 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
         await ctx.send("Failed unexpectedly")
     raise error
 
-@bot.slash_command(name="new_members", description="Test", guild_ids=[main.risingServerId])
+@bot.slash_command(name="new_members", description="Refresh the members list for a given crew", guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
-async def new_command(ctx: discord.ApplicationContext):
-    await ctx.send_response("pick an option", view=MembersCrewsView(ctx), ephemeral=True, delete_after=60)
+async def new_members(ctx: discord.ApplicationContext):
+    await ctx.send_response(" ", view=MembersCrewsView(ctx), ephemeral=True, delete_after=60)
+
+@bot.slash_command(name="new_multiple", description="Register a player with multiple accounts in a single crew", guild_ids=[main.risingServerId])
+@commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
+async def new_multiple(ctx: discord.ApplicationContext):
+    await ctx.send_response(" ", view=MultipleView(ctx), ephemeral=True, delete_after=60)
+
+@bot.slash_command(name="new_score", description="Sets a score for the crew given", guild_ids=[main.risingServerId])
+@commands.has_any_role("Phoenix Family Leadership")
+async def new_score(ctx: discord.ApplicationContext):
+    await ctx.send_response(" ", view=ScoreView(ctx), ephemeral=True, delete_after=60)
 
 @bot.slash_command(name="make_transfers", description="Used to process all transfers from last season or a given season.", guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
