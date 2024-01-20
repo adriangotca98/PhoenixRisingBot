@@ -35,3 +35,19 @@ class ScoreNextButton(discord.ui.Button):
     
     async def callback(self, interaction: Interaction):
         await interaction.response.send_modal(modals.ScoreModal(self.ctx, self.crew))
+
+class KickBanUnbanButton(discord.ui.Button):
+    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, op: str, user: discord.Member):
+        super().__init__()
+        self.ctx = ctx
+        self.label = op
+        self.op = op
+        self.user = user
+        self.bot = bot
+        self.style = discord.ButtonStyle.green if op == "unban" else discord.ButtonStyle.blurple
+    
+    async def callback(self, interaction: Interaction):
+        if self.op == 'unban':
+            await main.kickOrBanOrUnban(self.user, self.op, self.bot)
+        else:
+            interaction.response.send_modal(modals.KickBanModal(self.user, self.op, self.bot))

@@ -1,8 +1,7 @@
 import discord
 from discord.ext import commands
 import main
-from views import MembersCrewsView, MultipleView, ScoreView
-
+import views
 description = '''Phoenix Rising family bot, Fawkes.'''
 
 intents = discord.Intents.default()
@@ -63,17 +62,32 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
 @bot.slash_command(name="new_members", description="Refresh the members list for a given crew", guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def new_members(ctx: discord.ApplicationContext):
-    await ctx.send_response(" ", view=MembersCrewsView(ctx), ephemeral=True, delete_after=60)
+    await ctx.send_response(" ", view=views.MembersCrewsView(ctx), ephemeral=True, delete_after=60)
 
 @bot.slash_command(name="new_multiple", description="Register a player with multiple accounts in a single crew", guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def new_multiple(ctx: discord.ApplicationContext):
-    await ctx.send_response(" ", view=MultipleView(ctx), ephemeral=True, delete_after=60)
+    await ctx.send_response(" ", view=views.MultipleView(ctx), ephemeral=True, delete_after=60)
 
 @bot.slash_command(name="new_score", description="Sets a score for the crew given", guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def new_score(ctx: discord.ApplicationContext):
-    await ctx.send_response(" ", view=ScoreView(ctx), ephemeral=True, delete_after=60)
+    await ctx.send_response(" ", view=views.ScoreView(ctx), ephemeral=True, delete_after=60)
+
+@bot.slash_command(name="new_ban", description="Bans a user")
+@commands.has_permissions(ban_members=True)
+async def new_ban(ctx: discord.ApplicationContext):
+    await ctx.send_response(" ", view=views.KickBanUnbanView(ctx, "ban"), ephemeral=True, delete_after=60)
+
+@bot.slash_command(name="new_unban", description="Unbans a user")
+@commands.has_permissions(ban_members=True)
+async def new_unban(ctx: discord.ApplicationContext):
+    await ctx.send_response(" ", view=views.KickBanUnbanView(ctx, "unban"), ephemeral=True, delete_after=60)
+
+@bot.slash_command(name="new_kick", description="Kicks a user")
+@commands.has_permissions(kick_members=True)
+async def new_ban(ctx: discord.ApplicationContext):
+    await ctx.send_response(" ", view=views.KickBanUnbanView(ctx, bot, "kick"), ephemeral=True, delete_after=60)
 
 @bot.slash_command(name="make_transfers", description="Used to process all transfers from last season or a given season.", guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")

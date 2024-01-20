@@ -92,4 +92,17 @@ class ScoreView(discord.ui.View):
         self.add_item(buttons.ScoreNextButton(self.ctx, select.values[0]))
         await interaction.response.edit_message(view=self)
     
+class KickBanUnbanView(discord.ui.View):
+    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, op: str):
+        super().__init__()
+        self.ctx = ctx
+        self.bot = bot
+        self.op = op
     
+    @discord.ui.user_select(
+        placeholder="Select the user",
+        row=0
+    )
+    async def callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+        self.add_item(buttons.KickBanUnbanButton(self.ctx, self.bot, self.op, select.values[0]))
+        interaction.response.edit_message(view = self)
