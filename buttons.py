@@ -51,3 +51,35 @@ class KickBanUnbanButton(discord.ui.Button):
             await main.kickOrBanOrUnban(self.user, self.op, self.bot)
         else:
             interaction.response.send_modal(modals.KickBanModal(self.user, self.op, self.bot))
+
+class TransferPingButton(discord.ui.Button):
+    def __init__(self, ctx: discord.ApplicationContext, user: discord.Member, crew_from: str, crew_to: str, season: int, should_kick: bool):
+        super().__init__()
+        self.label="Send with ping to admins!"
+        self.ctx=ctx
+        self.user=user
+        self.crew_from=crew_from
+        self.crew_to=crew_to
+        self.season=season
+        self.should_kick=should_kick
+        self.style=discord.ButtonStyle.green
+    
+    async def callback(self, interaction: discord.Interaction):
+        self.view.disable_all_items()
+        await interaction.response.send_modal(modals.TransferModal(self.ctx, self.view, self.user, self.crew_from, self.crew_to, self.season, True, self.should_kick))
+
+class TransferNoPingButton(discord.ui.Button):
+    def __init__(self, ctx: discord.ApplicationContext, user: discord.Member, crew_from: str, crew_to: str, season: int, should_kick: bool):
+        super().__init__()
+        self.label="Send without ping to admins!"
+        self.ctx=ctx
+        self.user=user
+        self.crew_from=crew_from
+        self.crew_to=crew_to
+        self.season=season
+        self.should_kick=should_kick
+        self.style=discord.ButtonStyle.red
+    
+    async def callback(self, interaction: discord.Interaction):
+        self.view.disable_all_items()
+        await interaction.response.send_modal(modals.TransferModal(self.ctx, self.view, self.user, self.crew_from, self.crew_to, self.season, False, self.should_kick))

@@ -1,5 +1,4 @@
 import discord
-from discord.interactions import Interaction
 import main
 import buttons
 
@@ -45,7 +44,6 @@ class MultipleView(discord.ui.View):
     )
     async def user_select_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
         self.player=select.values[0]
-        print(select.values[0].mention)
         self.maybe_add_button()
         await interaction.response.edit_message(view=self)
 
@@ -56,7 +54,6 @@ class MultipleView(discord.ui.View):
     )
     async def crew_select_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
         self.crew = select.values[0]
-        print(select.values[0])
         select = updateSelect(select)
         self.maybe_add_button()
         await interaction.response.edit_message(view=self)
@@ -68,7 +65,6 @@ class MultipleView(discord.ui.View):
     )
     async def input_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
         self.number=int(select.values[0])
-        print(select.values[0])
         select = updateSelect(select)
         self.maybe_add_button()
         await interaction.response.edit_message(view=self)
@@ -106,3 +102,79 @@ class KickBanUnbanView(discord.ui.View):
     async def callback(self, select: discord.ui.Select, interaction: discord.Interaction):
         self.add_item(buttons.KickBanUnbanButton(self.ctx, self.bot, self.op, select.values[0]))
         interaction.response.edit_message(view = self)
+
+class TransferView(discord.ui.View):
+    def __init__(self, ctx: discord.ApplicationContext):
+        super().__init__()
+        self.ctx=ctx
+        self.user=None
+        self.crew_from=None
+        self.crew_to=None
+        self.season=None
+        self.ping=None
+        self.next_buttons=None
+        self.should_kick=None
+        for idx1 in range(len(self.children)):
+            if isinstance(self.children[idx1], discord.ui.Select):
+                for idx2 in range(len(self.children[idx1].options)):
+                    self.children[idx1].options[idx2].default=False
+    
+    def maybe_add_button(self):
+        if self.user is not None and self.crew_from is not None and self.crew_to is not None and self.season is not None:
+            if self.next_buttons:
+                for next_button in self.next_buttons:
+                    self.remove_item(next_button)
+            self.next_buttons = [buttons.TransferPingButton(self.ctx, self.user, self.crew_from, self.crew_to, self.season, self.should_kick), buttons.TransferNoPingButton(self.ctx, self.user, self.crew_from, self.crew_to, self.season, self.should_kick)]
+            for next_button in self.next_buttons:
+                self.add_item(next_button)
+
+    @discord.ui.user_select(
+        placeholder="Select the user",
+        row=0
+    )
+    async def user_select_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+        self.user = select.values[0]
+        self.maybe_add_button()
+        await interaction.response.edit_message(view=self)
+    
+    @discord.ui.string_select(
+        placeholder="Where is the player going from?",
+        row=1,
+        options=list(map(lambda name: discord.SelectOption(label=name, default=False), ["New to family"]+main.getCrewNames()))
+    )
+    async def crew_from_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+        self.crew_from = select.values[0]
+        select = updateSelect(select)
+        self.maybe_add_button()
+        await interaction.response.edit_message(view=self)
+    
+    @discord.ui.string_select(
+        placeholder="Where is the player going to?",
+        row=2,
+        options=list(map(lambda name: discord.SelectOption(label=name, default=False), ["Out of family - kick", "Out of family - keep community"]+main.getCrewNames()))
+    )
+    async def crew_to_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+        self.crew_to = select.values[0]
+        if self.crew_to.endswith("kick"):
+            self.should_kick = True
+        else:
+            self.should_kick = False
+        if self.crew_to.startswith("Out of family"):
+            self.crew_to = "Out of family"
+        select=updateSelect(select)
+        self.maybe_add_button()
+        await interaction.response.edit_message(view=self)
+    
+    @discord.ui.string_select(
+        placeholder="Season",
+        row=3,
+        options=list(map(lambda name: discord.SelectOption(label=name, default=False), [f"current ({main.getCurrentSeason()})", str(main.getCurrentSeason()+1), str(main.getCurrentSeason()+2), str(main.getCurrentSeason()+3), str(main.getCurrentSeason()+4)]))
+    )
+    async def season_select(self, select: discord.ui.Select, interaction: discord.Interaction):
+        season = main.getCurrentSeason()+4
+        while str(season) != select.values[0] and season > main.getCurrentSeason():
+            season -= 1
+        self.season = season
+        select=updateSelect(select)
+        self.maybe_add_button()
+        await interaction.response.edit_message(view=self)
