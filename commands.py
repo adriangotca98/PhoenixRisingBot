@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import main
 import views
+
 description = '''Phoenix Rising family bot, Fawkes.'''
 
 intents = discord.Intents.default()
@@ -10,46 +11,57 @@ intents.message_content = True
 
 bot = discord.Bot(description=description, intents=intents)
 
+
 @bot.event
 async def on_ready():
     await main.init(bot)
-    print(f'Logged in as {bot.user} (ID: {bot.user.id if bot.user!=None else 0})')
+    print(f'Logged in as {bot.user} (ID: {bot.user.id if bot.user is not None else 0})')
     print('------')
+
 
 async def getOptionStr(ctx: discord.ApplicationContext, option):
     try:
-        value=option['value']
-        id=int(value)
-        member=await ctx.bot.fetch_user(id)
+        value = option['value']
+        member_id = int(value)
+        member = await ctx.bot.fetch_user(member_id)
         return f'{member.name}#{member.discriminator}'
     except:
         return str(option['value'])
+
 
 @bot.event
 async def on_application_command_completion(ctx: discord.ApplicationContext):
     args = ''
     if ctx.selected_options is not None:
         for option in ctx.selected_options:
-            optionStr = await getOptionStr(ctx, option)+" "
-            args+=optionStr
-    if ctx.author != None:
-        message = f"**{ctx.author.name}#{ctx.author.discriminator}** has sent the following command: **/{ctx.command.name} {args}**"
+            option_str = await getOptionStr(ctx, option) + " "
+            args += option_str
+    if ctx.author is not None:
+        message = (f"**{ctx.author.name}#{ctx.author.discriminator}** has sent the following command:"
+                   f"**/{ctx.command.name} {args}**")
         channel = await bot.fetch_channel(main.loggingChannelId)
         if isinstance(channel, discord.TextChannel):
             await channel.send(message)
 
+
 @bot.event
 async def on_application_command_error(ctx: discord.ApplicationContext, error):
     if isinstance(error, commands.MissingRole) or isinstance(error, commands.MissingPermissions):
-        if ctx.author != None:
-            await ctx.send_response("<@"+str(ctx.author.id)+">, you're not authorized to use this command! Only leadership can use this. Thank you :) ", ephemeral=True)
+        if ctx.author is not None:
+            await ctx.send_response("<@" + str(
+                ctx.author.id) + ">, you're not authorized to use this command! Only leadership can use this. Thank "
+                                 "you :) ",
+                                    ephemeral=True)
         return
-    await ctx.send(f"An unexpected error has occured. <@308561593858392065>, please have a look in the code. Command run: {ctx.command.name}")
+    await ctx.send(
+        f"An unexpected error has occurred. <@308561593858392065>, please have a look in the code. "
+        f"Command run: {ctx.command.name}")
     args = None
-    if ctx.selected_options != None:
+    if ctx.selected_options is not None:
         args = " ".join([(await getOptionStr(ctx, option)) for option in ctx.selected_options])
-    if ctx.author != None:
-        message = f"**{ctx.author.name}#{ctx.author.discriminator}** tried to send the following command: **/{ctx.command.name} {args}**, but it errored out."
+    if ctx.author is not None:
+        message = (f"**{ctx.author.name}#{ctx.author.discriminator}** tried to send the following command: "
+                   f"**/{ctx.command.name} {args}**, but it error out.")
         channel = await bot.fetch_channel(main.loggingChannelId)
         if isinstance(channel, discord.TextChannel):
             await channel.send(message)
@@ -59,66 +71,66 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
         await ctx.send("Failed unexpectedly")
     raise error
 
-@bot.slash_command(name="new_members", description="Refresh the members list for a given crew", guild_ids=[main.risingServerId])
+
+@bot.slash_command(name="new_members", description="Refresh the members list for a given crew",
+                   guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def new_members(ctx: discord.ApplicationContext):
     await ctx.send_response(" ", view=views.MembersCrewsView(ctx), ephemeral=True, delete_after=60)
 
-@bot.slash_command(name="new_multiple", description="Register a player with multiple accounts in a single crew", guild_ids=[main.risingServerId])
+
+@bot.slash_command(name="new_multiple", description="Register a player with multiple accounts in a single crew",
+                   guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def new_multiple(ctx: discord.ApplicationContext):
     await ctx.send_response(" ", view=views.MultipleView(ctx), ephemeral=True, delete_after=60)
+
 
 @bot.slash_command(name="new_score", description="Sets a score for the crew given", guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def new_score(ctx: discord.ApplicationContext):
     await ctx.send_response(" ", view=views.ScoreView(ctx), ephemeral=True, delete_after=60)
 
+
 @bot.slash_command(name="new_ban", description="Bans a user")
 @commands.has_permissions(ban_members=True)
 async def new_ban(ctx: discord.ApplicationContext):
     await ctx.send_response(" ", view=views.KickBanUnbanView(ctx, bot, "ban"), ephemeral=True, delete_after=60)
+
 
 @bot.slash_command(name="new_unban", description="Unbans a user")
 @commands.has_permissions(ban_members=True)
 async def new_unban(ctx: discord.ApplicationContext):
     await ctx.send_response(" ", view=views.KickBanUnbanView(ctx, bot, "unban"), ephemeral=True, delete_after=60)
 
+
 @bot.slash_command(name="new_kick", description="Kicks a user")
 @commands.has_permissions(kick_members=True)
 async def new_kick(ctx: discord.ApplicationContext):
     await ctx.send_response(" ", view=views.KickBanUnbanView(ctx, bot, "kick"), ephemeral=True, delete_after=60)
+
 
 @bot.slash_command(name="new_transfer", description="Used to register a transfer")
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def new_transfer(ctx: discord.ApplicationContext):
     await ctx.send_response(" ", view=views.TransferView(ctx), ephemeral=True, delete_after=60)
 
+
 @bot.slash_command(name="new_cancel_transfer", description='Used to cancel a transfer')
-@commands.has_any_role("Phoenix Family Leadership","Fawkes Access")
+@commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def new_cancel_transfer(ctx: discord.ApplicationContext):
     await ctx.send_response(" ", view=views.CancelTransferView(ctx), ephemeral=True, delete_after=60)
 
-@bot.slash_command(name="make_transfers", description="Used to process all transfers from last season or a given season.", guild_ids=[main.risingServerId])
+
+@bot.slash_command(name="make_transfers",
+                   description="Used to process all transfers from last season or a given season.",
+                   guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
-@discord.option(
-    "season",
-    description="Season for which transfers should be processed. Optional, default is current_season-1",
-    required=False,
-    input_type=int
-)
-async def makeTransfers(ctx: discord.ApplicationContext, season: int):
-    if season is None:
-        season = main.getCurrentSeason() - 1
-    if season < main.getCurrentSeason() - 1:
-        await ctx.send_response("Can't process transfers older than 1 season. Cancel the transfers and modify the roles manually!", ephemeral=True, delete_after=60)
-        return
-    if season > main.getCurrentSeason():
-        await ctx.send_response("Can't process transfers happening in the future!", ephemeral=True, delete_after=60)
-        return
+async def makeTransfers(ctx: discord.ApplicationContext):
     await ctx.defer(ephemeral=True)
-    message=await main.makeTransfers(ctx, season)
+    message = await main.makeTransfers(ctx)
     await ctx.send_followup(message, ephemeral=True, delete_after=60)
+
 
 @bot.slash_command(name="members", description="Used to get members of a certain crew", guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
@@ -133,7 +145,10 @@ async def getMembers(ctx: discord.ApplicationContext, crew_name: str):
     message = await main.getPlayersResponse(ctx, crew_name)
     await ctx.send_followup(message, ephemeral=True, delete_after=60)
 
-@bot.slash_command(name='score', description='Set score for the crew in the CREW TABLES section and reorder the channels by score.', guild_ids=[main.risingServerId])
+
+@bot.slash_command(name='score',
+                   description='Set score for the crew in the CREW TABLES section and reorder the channels by score.',
+                   guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 @discord.option(
     "crew_name",
@@ -150,9 +165,11 @@ async def setScoreForCrew(ctx: discord.ApplicationContext, crew_name: str, score
     await ctx.defer(ephemeral=True)
     scoreStr = str(score)
     await main.setScore(ctx, crew_name, scoreStr)
-    await ctx.send_followup("Score updated :)",ephemeral=True, delete_after=60)
+    await ctx.send_followup("Score updated :)", ephemeral=True, delete_after=60)
 
-@bot.slash_command(name='kick', description='Kick a member from all servers (Rising, Knowing, Racing, Servering).', guild_ids=[main.risingServerId, main.racingServerId, main.knowingServerId, main.serveringServerId])
+
+@bot.slash_command(name='kick', description='Kick a member from all servers (Rising, Knowing, Racing, Servering).',
+                   guild_ids=[main.risingServerId, main.racingServerId, main.knowingServerId, main.serveringServerId])
 @commands.has_permissions(kick_members=True)
 @discord.option(
     "user",
@@ -162,10 +179,12 @@ async def setScoreForCrew(ctx: discord.ApplicationContext, crew_name: str, score
 )
 async def kick(ctx: discord.ApplicationContext, user: discord.Member, reason: str):
     await ctx.defer(ephemeral=True)
-    await main.kickOrBanOrUnban(user, 'kick', bot, reason = reason)
-    await ctx.send_followup("User kicked :)",ephemeral=True, delete_after=60)
+    await main.kickOrBanOrUnban(user, 'kick', bot, reason=reason)
+    await ctx.send_followup("User kicked :)", ephemeral=True, delete_after=60)
 
-@bot.slash_command(name='ban',description='Ban a member from all servers (Rising, Knowing, Racing, Servering).', guild_ids=[main.risingServerId, main.racingServerId, main.knowingServerId, main.serveringServerId])
+
+@bot.slash_command(name='ban', description='Ban a member from all servers (Rising, Knowing, Racing, Servering).',
+                   guild_ids=[main.risingServerId, main.racingServerId, main.knowingServerId, main.serveringServerId])
 @commands.has_permissions(ban_members=True)
 @discord.option(
     "user",
@@ -178,7 +197,9 @@ async def ban(ctx: discord.ApplicationContext, user: discord.Member, reason: str
     await main.kickOrBanOrUnban(user, 'ban', bot, reason=reason)
     await ctx.send_followup("User banned :)", ephemeral=True, delete_after=60)
 
-@bot.slash_command(name='unban', description='Unban a former member from all servers.', guild_ids=[main.risingServerId, main.racingServerId, main.knowingServerId, main.serveringServerId])
+
+@bot.slash_command(name='unban', description='Unban a former member from all servers.',
+                   guild_ids=[main.risingServerId, main.racingServerId, main.knowingServerId, main.serveringServerId])
 @commands.has_permissions(ban_members=True)
 @discord.option(
     "user",
@@ -191,7 +212,11 @@ async def unban(ctx: discord.ApplicationContext, user: discord.Member):
     await main.kickOrBanOrUnban(user, 'unban', bot)
     await ctx.send_followup("User unbanned :)", ephemeral=True, delete_after=60)
 
-@bot.slash_command(name="multiple", description="Keep track of multiple accounts of the same person (same discord profile) within the same crew", guild_ids=[main.risingServerId])
+
+@bot.slash_command(name="multiple",
+                   description="Keep track of multiple accounts of the same person (same discord profile) "
+                               "within the same crew",
+                   guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 @discord.option(
     "user",
@@ -214,7 +239,8 @@ async def unban(ctx: discord.ApplicationContext, user: discord.Member):
 async def multiple(ctx: discord.ApplicationContext, user: discord.Member, crew_name: str, number_of_accounts: int):
     await ctx.defer(ephemeral=True)
     message = main.processMultiple(user, crew_name, number_of_accounts)
-    await ctx.send_followup(message, ephemeral = True, delete_after=5)
+    await ctx.send_followup(message, ephemeral=True, delete_after=5)
+
 
 @bot.slash_command(name="transfer", description="Register a transfer for next season.", guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
@@ -260,17 +286,23 @@ async def multiple(ctx: discord.ApplicationContext, user: discord.Member, crew_n
     required=False,
     input_type=bool
 )
-async def transfer(ctx: discord.ApplicationContext, player: discord.Member, crew_from: str, crew_to: str, season: int, ping_admin: bool, number_of_accounts: int, should_kick: bool):
+async def transfer(ctx: discord.ApplicationContext, player: discord.Member, crew_from: str, crew_to: str, season: int,
+                   ping_admin: bool, number_of_accounts: int, should_kick: bool):
     await ctx.defer(ephemeral=True)
-    message = await main.processTransfer(ctx, player, crew_from, crew_to, number_of_accounts, season, ping_admin, should_kick)
-    await ctx.send_followup(message, ephemeral = True, delete_after=60)
+    message = await main.processTransfer(ctx, player, crew_from, crew_to, number_of_accounts, season, ping_admin,
+                                         should_kick)
+    await ctx.send_followup(message, ephemeral=True, delete_after=60)
 
-@bot.slash_command(name='current_season', description="Gets the current season we're in", guild_ids=[main.risingServerId])
+
+@bot.slash_command(name='current_season', description="Gets the current season we're in",
+                   guild_ids=[main.risingServerId])
 @commands.has_role('Phoenix Rising')
 async def current_season(ctx: discord.ApplicationContext):
     await ctx.send_response(str(main.getCurrentSeason()), ephemeral=True, delete_after=60)
 
-@bot.slash_command(name="cancel_transfer", description="unregisters a transfer in case of change of plans",guild_ids=[main.risingServerId])
+
+@bot.slash_command(name="cancel_transfer", description="unregisters a transfer in case of change of plans",
+                   guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 @discord.option(
     "player",
@@ -296,9 +328,11 @@ async def current_season(ctx: discord.ApplicationContext):
     required=False,
     choices=['Out of family'] + main.getCrewNames()
 )
-async def cancel_transfer(ctx: discord.ApplicationContext, player: discord.Member, ping_admin: bool, crew_from=None, crew_to=None):
+async def cancel_transfer(ctx: discord.ApplicationContext, player: discord.Member, ping_admin: bool, crew_from=None,
+                          crew_to=None):
     await ctx.defer(ephemeral=True)
     message = await main.unregisterTransfer(ctx, player, crew_from, crew_to, ping_admin)
-    await ctx.send_followup(message, ephemeral = True, delete_after=60)
+    await ctx.send_followup(message, ephemeral=True, delete_after=60)
+
 
 bot.run(main.discord_bot_token)
