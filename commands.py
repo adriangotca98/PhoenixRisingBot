@@ -6,8 +6,6 @@ import views
 description = '''Phoenix Rising family bot, Fawkes.'''
 
 intents = discord.Intents.default()
-intents.members = True
-intents.message_content = True
 
 bot = discord.Bot(description=description, intents=intents)
 
@@ -25,7 +23,7 @@ async def getOptionStr(ctx: discord.ApplicationContext, option):
         member_id = int(value)
         member = await ctx.bot.fetch_user(member_id)
         return f'{member.name}#{member.discriminator}'
-    except:
+    except discord.Forbidden or discord.HTTPException:
         return str(option['value'])
 
 
@@ -67,7 +65,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
             await channel.send(message)
     try:
         await ctx.send_followup(f"Failed unexpectedly", ephemeral=True)
-    except Exception:
+    except RuntimeError:
         await ctx.send("Failed unexpectedly")
     raise error
 
