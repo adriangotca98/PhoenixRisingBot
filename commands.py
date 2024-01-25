@@ -1,7 +1,5 @@
 import discord
 from discord.ext import commands
-from keyring import delete_password
-from numpy import delete
 import main
 import views
 description = '''Phoenix Rising family bot, Fawkes.'''
