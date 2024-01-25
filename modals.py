@@ -1,4 +1,3 @@
-from socket import CAN_BCM_TX_ANNOUNCE
 import discord
 from discord.interactions import Interaction
 import main

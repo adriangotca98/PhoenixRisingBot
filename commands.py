@@ -79,12 +79,12 @@ async def new_score(ctx: discord.ApplicationContext):
 @bot.slash_command(name="new_ban", description="Bans a user")
 @commands.has_permissions(ban_members=True)
 async def new_ban(ctx: discord.ApplicationContext):
-    await ctx.send_response(" ", view=views.KickBanUnbanView(ctx, "ban"), ephemeral=True, delete_after=60)
+    await ctx.send_response(" ", view=views.KickBanUnbanView(ctx, bot, "ban"), ephemeral=True, delete_after=60)
 
 @bot.slash_command(name="new_unban", description="Unbans a user")
 @commands.has_permissions(ban_members=True)
 async def new_unban(ctx: discord.ApplicationContext):
-    await ctx.send_response(" ", view=views.KickBanUnbanView(ctx, "unban"), ephemeral=True, delete_after=60)
+    await ctx.send_response(" ", view=views.KickBanUnbanView(ctx, bot, "unban"), ephemeral=True, delete_after=60)
 
 @bot.slash_command(name="new_kick", description="Kicks a user")
 @commands.has_permissions(kick_members=True)
@@ -95,6 +95,11 @@ async def new_ban(ctx: discord.ApplicationContext):
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def new_transfer(ctx: discord.ApplicationContext):
     await ctx.send_response(" ", view=views.TransferView(ctx), ephemeral=True, delete_after=60)
+
+@bot.slash_command(name="new_cancel_transfer", description='Used to cancel a transfer')
+@commands.has_any_role("Phoenix Family Leadership","Fawkes Access")
+async def new_cancel_transfer(ctx: discord.ApplicationContext):
+    await ctx.send_response(" ", view=views.CancelTransferView(ctx), ephemeral=True, delete_after=60)
 
 @bot.slash_command(name="make_transfers", description="Used to process all transfers from last season or a given season.", guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
