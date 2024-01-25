@@ -300,7 +300,7 @@ async def deleteMovementFromMessage(ctx: discord.ApplicationContext, crewName: s
     message = await getMessage(ctx, crewData, messageIdKey, 'members_channel_id', initialMessage)
     await updateMovementsMessage(ctx, message, crewName, inOrOut)
 
-async def kickOrBanOrUnban(user: discord.Member, op: str, bot: discord.Bot, reason=None):
+async def kickOrBanOrUnban(user: discord.Member, op: str, bot: discord.Bot, reason: str | None = None):
     for guild in bot.guilds:
         if guild.id in [racingServerId, serveringServerId, risingServerId, knowingServerId]:
             print("Doing "+op+" for user: "+user.name+" in the server named: "+guild.name)
