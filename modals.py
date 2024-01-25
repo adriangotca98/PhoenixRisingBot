@@ -11,15 +11,15 @@ class ScoreModal(discord.ui.Modal):
     
     async def callback(self, interaction: Interaction):
         try:
-            score = int(self.children[0].value)
-            await main.setScore(self.ctx, self.crew, score)
+            score = int(str(self.children[0].value))
+            await main.setScore(self.ctx, self.crew, str(score))
             await interaction.response.send_message("Score updated.", ephemeral=True, delete_after=60)
         except ValueError:
             await interaction.response.send_message("Errored out cause the number given was not a number, try again with a number.", ephemeral=True, delete_after=60)
 
 class KickBanModal(discord.ui.Modal):
     def __init__(self, user, op, bot):
-        super.__init__(title=f"Enter the reason, if any for the {op}")
+        super().__init__(title=f"Enter the reason, if any for the {op}")
         self.user = user
         self.op = op
         self.bot = bot
@@ -44,8 +44,9 @@ class TransferModal(discord.ui.Modal):
         self.add_item(discord.ui.InputText(label="Number of accounts", style=discord.InputTextStyle.short, required=False))
     
     async def callback(self, interaction: discord.Interaction):
+        number_of_accounts = -1
         try:
-            number_of_accounts = int(self.children[0].value)
+            number_of_accounts = int(str(self.children[0].value))
         except ValueError:
             number_of_accounts = 1
         finally:

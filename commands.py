@@ -86,7 +86,7 @@ async def new_unban(ctx: discord.ApplicationContext):
 
 @bot.slash_command(name="new_kick", description="Kicks a user")
 @commands.has_permissions(kick_members=True)
-async def new_ban(ctx: discord.ApplicationContext):
+async def new_kick(ctx: discord.ApplicationContext):
     await ctx.send_response(" ", view=views.KickBanUnbanView(ctx, bot, "kick"), ephemeral=True, delete_after=60)
 
 @bot.slash_command(name="new_transfer", description="Used to register a transfer")

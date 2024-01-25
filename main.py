@@ -439,7 +439,9 @@ async def sendMessageInTheHallAndAddScreened(ctx: discord.ApplicationContext, me
     guild = ctx.guild
     if shouldSend == False or guild is None:
         return
-    channel = await ctx.bot.fetch_channel(ctx.channel_id)
+    channel=None
+    if ctx.channel_id:
+        channel = await ctx.bot.fetch_channel(ctx.channel_id)
     role = guild.get_role(screenedRoleId)
     if role is None:
         return
