@@ -37,7 +37,7 @@ async def on_application_command_completion(ctx: discord.ApplicationContext):
             option_str = await getOptionStr(ctx, option) + " "
             args += option_str
     if ctx.author is not None:
-        discriminator = f"#{ctx.author.discriminator}" if ctx.author.discriminator != 0 else ""
+        discriminator = f"#{ctx.author.discriminator}" if ctx.author.discriminator != "0" else ""
         message = (f"**{ctx.author.name}{discriminator}** has sent the following command:"
                    f"**/{ctx.command.name} {args}**")
         channel = await bot.fetch_channel(main.loggingChannelId)
@@ -61,7 +61,8 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     if ctx.selected_options is not None:
         args = " ".join([(await getOptionStr(ctx, option)) for option in ctx.selected_options])
     if ctx.author is not None:
-        message = (f"**{ctx.author.name}#{ctx.author.discriminator}** tried to send the following command: "
+        discriminator = f"#{ctx.author.discriminator}" if ctx.author.discriminator != "0" else ""
+        message = (f"**{ctx.author.name}{discriminator}** tried to send the following command: "
                    f"**/{ctx.command.name} {args}**, but it error out.")
         channel = await bot.fetch_channel(main.loggingChannelId)
         if isinstance(channel, discord.TextChannel):
