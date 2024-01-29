@@ -22,7 +22,9 @@ async def getOptionStr(ctx: discord.ApplicationContext, option):
         value = option['value']
         member_id = int(value)
         member = await ctx.bot.fetch_user(member_id)
-        return f'{member.name}#{member.discriminator}'
+        if member.discriminator != 0:
+            return f'{member.name}#{member.discriminator}'
+        return f'{member.name}'
     except discord.Forbidden or discord.HTTPException:
         return str(option['value'])
 
@@ -35,7 +37,8 @@ async def on_application_command_completion(ctx: discord.ApplicationContext):
             option_str = await getOptionStr(ctx, option) + " "
             args += option_str
     if ctx.author is not None:
-        message = (f"**{ctx.author.name}#{ctx.author.discriminator}** has sent the following command:"
+        discriminator = f"#{ctx.author.discriminator}" if ctx.author.discriminator != 0 else ""
+        message = (f"**{ctx.author.name}{discriminator}** has sent the following command:"
                    f"**/{ctx.command.name} {args}**")
         channel = await bot.fetch_channel(main.loggingChannelId)
         if isinstance(channel, discord.TextChannel):
