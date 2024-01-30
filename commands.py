@@ -6,6 +6,8 @@ import views
 description = '''Phoenix Rising family bot, Fawkes.'''
 
 intents = discord.Intents.default()
+intents.members = True
+intents.message_content = True
 
 bot = discord.Bot(description=description, intents=intents)
 

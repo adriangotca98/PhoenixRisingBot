@@ -272,9 +272,7 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
     return "OK, all good."
 
 
-async def updateVacancies(ctx: discord.ApplicationContext, crew_name: str, members_list: list = None):
-    if members_list is None:
-        members_list = []
+async def updateVacancies(ctx: discord.ApplicationContext, crew_name: str, members_list: list = []):
     currentSeason = getCurrentSeason()
     currentSeasonCount = len(members_list)
     vacanciesEntry = vacanciesCollection.find_one({}) or {}
@@ -444,7 +442,7 @@ async def processMovement(ctx: discord.ApplicationContext, crewFrom: str, crewTo
         movesCollection.delete_one({"player": player.id, "crew_from": crewFrom, "crew_to": crewTo})
     roleCheck = checkRole(ctx, player, crewFrom)
     if not roleCheck[0]:
-        return roleCheck[1]
+        return str(roleCheck[1])
     shouldSendMessageInHall = roleCheck[1] is True and (crewFrom == "New to family")
     if not checkForNumberOfAccounts(player, crewFrom, numberOfAccounts):
         return ("The player has too many accounts registered to transfer with this transfer included. "
