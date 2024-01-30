@@ -40,8 +40,11 @@ vacanciesMessageId = getDbField(configCollection, "IDs", 'vacancies_message_id')
 
 
 def getCrewNames():
-    return getDbField(configCollection, "crews", "value") or []
-
+    crewNames = getDbField(configCollection, "crews", "value")
+    if crewNames is None:
+        return []
+    crewNames.sort()
+    return crewNames
 
 class Member:
     def __init__(self, admin: bool, leader: bool, member_id: int, name: str, multiple: int):
