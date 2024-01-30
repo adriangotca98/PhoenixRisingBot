@@ -27,6 +27,8 @@ async def getOptionStr(ctx: discord.ApplicationContext, option):
         return f'{member.name}'
     except discord.Forbidden or discord.HTTPException:
         return str(option['value'])
+    except ValueError:
+        return str(option['value'])
 
 
 @bot.event
