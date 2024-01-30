@@ -186,15 +186,11 @@ class TransferView(discord.ui.View):
         placeholder="Season",
         row=3,
         options=list(map(lambda name: discord.SelectOption(label=name, default=False),
-                         [f"current ({main.getCurrentSeason()})", str(main.getCurrentSeason() + 1),
-                          str(main.getCurrentSeason() + 2), str(main.getCurrentSeason() + 3),
-                          str(main.getCurrentSeason() + 4)]))
+                         [str(main.getCurrentSeason() + 1), str(main.getCurrentSeason() + 2),
+                          str(main.getCurrentSeason() + 3), str(main.getCurrentSeason() + 4)]))
     )
     async def season_select(self, select: discord.ui.Select, interaction: discord.Interaction):
-        season = main.getCurrentSeason() + 4
-        while str(season) != select.values[0] and season > main.getCurrentSeason():
-            season -= 1
-        self.season = season
+        self.season = int(str(select.values[0]))
         select = update_select(select)
         self.maybe_add_button()
         await interaction.response.edit_message(view=self)

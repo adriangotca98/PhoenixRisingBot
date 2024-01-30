@@ -119,7 +119,7 @@ async def new_kick(ctx: discord.ApplicationContext):
 @bot.slash_command(name="new_transfer", description="Used to register a transfer")
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def new_transfer(ctx: discord.ApplicationContext):
-    await ctx.send_response(" ", view=views.TransferView(ctx), ephemeral=True, delete_after=600)
+    await ctx.send_response(f"Current season is {main.getCurrentSeason()}", view=views.TransferView(ctx), ephemeral=True, delete_after=600)
 
 
 @bot.slash_command(name="new_cancel_transfer", description='Used to cancel a transfer')
