@@ -395,7 +395,7 @@ def checkRole(ctx: discord.ApplicationContext, player: discord.Member, crewName:
     movesData = list(movesCollection.find({"player": player.id}))
     movesData.sort(key=lambda elem: elem['season'])
     crewData = crewCollection.find_one({"key": crewName}, {"_id": 0, "member": 1})
-    if movesData is not None:
+    if len(movesData) != 0:
         lastMove = movesData[-1]
         if lastMove['crew_to'] != crewName:
             return (False,
