@@ -102,50 +102,50 @@ async def fawkes(ctx: discord.ApplicationContext):
                    guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def new_members(ctx: discord.ApplicationContext):
-    await ctx.send_response(" ", view=views.MembersCrewsView(ctx), ephemeral=True, delete_after=600)
+    await ctx.send_response(main.commandsMessages['members'], view=views.MembersCrewsView(ctx), ephemeral=True, delete_after=600)
 
 
 @bot.slash_command(name="new_multiple", description="Register a player with multiple accounts in a single crew",
                    guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def new_multiple(ctx: discord.ApplicationContext):
-    await ctx.send_response(" ", view=views.MultipleView(ctx), ephemeral=True, delete_after=600)
+    await ctx.send_response(main.commandsMessages['multiple'], view=views.MultipleView(ctx), ephemeral=True, delete_after=600)
 
 
 @bot.slash_command(name="new_score", description="Sets a score for the crew given", guild_ids=[main.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def new_score(ctx: discord.ApplicationContext):
-    await ctx.send_response(" ", view=views.ScoreView(ctx), ephemeral=True, delete_after=600)
+    await ctx.send_response(main.commandsMessages['score'], view=views.ScoreView(ctx), ephemeral=True, delete_after=600)
 
 
 @bot.slash_command(name="new_ban", description="Bans a user")
 @commands.has_permissions(ban_members=True)
 async def new_ban(ctx: discord.ApplicationContext):
-    await ctx.send_response(" ", view=views.KickBanUnbanView(ctx, bot, "ban"), ephemeral=True, delete_after=600)
+    await ctx.send_response(main.commandsMessages['ban'], view=views.KickBanUnbanView(ctx, bot, "ban"), ephemeral=True, delete_after=600)
 
 
 @bot.slash_command(name="new_unban", description="Unbans a user")
 @commands.has_permissions(ban_members=True)
 async def new_unban(ctx: discord.ApplicationContext):
-    await ctx.send_response(" ", view=views.KickBanUnbanView(ctx, bot, "unban"), ephemeral=True, delete_after=600)
+    await ctx.send_response(main.commandsMessages['unban'], view=views.KickBanUnbanView(ctx, bot, "unban"), ephemeral=True, delete_after=600)
 
 
 @bot.slash_command(name="new_kick", description="Kicks a user")
 @commands.has_permissions(kick_members=True)
 async def new_kick(ctx: discord.ApplicationContext):
-    await ctx.send_response(" ", view=views.KickBanUnbanView(ctx, bot, "kick"), ephemeral=True, delete_after=600)
+    await ctx.send_response(main.commandsMessages['kick'], view=views.KickBanUnbanView(ctx, bot, "kick"), ephemeral=True, delete_after=600)
 
 
 @bot.slash_command(name="new_transfer", description="Used to register a transfer")
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def new_transfer(ctx: discord.ApplicationContext):
-    await ctx.send_response(f"Current season is {main.getCurrentSeason()}", view=views.TransferView(ctx), ephemeral=True, delete_after=600)
+    await ctx.send_response(main.commandsMessages['transfer'], view=views.TransferView(ctx), ephemeral=True, delete_after=600)
 
 
 @bot.slash_command(name="new_cancel_transfer", description='Used to cancel a transfer')
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def new_cancel_transfer(ctx: discord.ApplicationContext):
-    await ctx.send_response(" ", view=views.CancelTransferView(ctx), ephemeral=True, delete_after=600)
+    await ctx.send_response(main.commandsMessages['cancel_transfer'], view=views.CancelTransferView(ctx), ephemeral=True, delete_after=600)
 
 
 @bot.slash_command(name="make_transfers",

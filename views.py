@@ -29,23 +29,44 @@ class FawkesView(discord.ui.View):
             'cancel_transfer': CancelTransferView(self.ctx),
             'kick': KickBanUnbanView(self.ctx, self.bot, 'kick'),
             'members': MembersCrewsView(self.ctx),
+            'make_transfers': MakeTransfersView(self.ctx),
             'multiple': MultipleView(self.ctx),
             'score': ScoreView(self.ctx),
             'transfer': TransferView(self.ctx),
             'unban': KickBanUnbanView(self.ctx, self.bot, 'unban')
         }
-        messages = {
-            'current_season': main.getCurrentSeason(),
-            'make_transfers': await main.makeTransfers(self.ctx)
-        }
-        for key in views:
-            messages[key] = f'# You chose {key.upper()}'
-        message = messages[str(select.values[0])]
+        message = main.commandsMessages[str(select.values[0])]
         if select.values[0] not in views.keys():
             await interaction.response.send_message(message, ephemeral=True, delete_after=60)
         else:
             view = views[str(select.values[0])]
             await interaction.response.send_message(message, view=view, ephemeral=True, delete_after=600)
+
+
+class MakeTransfersView(discord.ui.View):
+    def __init__(self, ctx: discord.ApplicationContext):
+        self.ctx = ctx
+        super().__init__()
+    
+
+    @discord.ui.button(
+        label='Yes',
+        style=discord.ButtonStyle.green
+    )
+    async def yes_button_callback(self, button: discord.Button, interaction: discord.Interaction):
+        self.disable_all_items()
+        message = await main.makeTransfers(self.ctx)
+        await interaction.response.edit_message(view=self)
+        await self.ctx.send_followup(message, ephemeral=True, delete_after=60)
+    
+    @discord.ui.button(
+        label='No',
+        style=discord.ButtonStyle.red
+    )
+    async def no_button_callback(self, button: discord.Button, interaction: discord.Interaction):
+        self.disable_all_items()
+        await interaction.response.edit_message(view=self)
+        await self.ctx.send_followup("OK, no transfers processed.", ephemeral=True, delete_after=60)
 
         
 class MembersCrewsView(discord.ui.View):

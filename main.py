@@ -14,7 +14,6 @@ configCollection = client.get_database("Fawkes").get_collection("configData")
 multipleAccountsCollection = client.get_database("Fawkes").get_collection("multipleAccountsData")
 movesCollection = client.get_database("Fawkes").get_collection("movesData")
 vacanciesCollection = client.get_database("Fawkes").get_collection("vacanciesData")
-commandsList = ['ban','cancel_transfer','current_season','kick','make_transfers','members','multiple','score','transfer','unban']
 
 
 def getDbField(mongoCollection: collection.Collection, key: str, subkey: str):
@@ -603,3 +602,18 @@ async def unregisterTransfer(ctx: discord.ApplicationContext, player: discord.Me
     await sendMessageToAdminChat(ctx, move['crew_from'], player, "cancel", "from", pingAdmin, move['season'],
                                  move['number_of_accounts'])
     return f"Cancelled transfer for {player.name}#{player.discriminator} from {crewFrom} to {crewTo}"
+
+
+commandsList = ['ban','cancel_transfer','current_season','kick','make_transfers','members','multiple','score','transfer','unban']
+commandsMessages={
+    'ban': '# Banning Time!\nSelect user to ban from the server below:',
+    'cancel_transfer': '# Cancel Transfer?\nIf you wish to cancel an input transfer, complete the following fields and submit:',
+    'current_season': f'# Current Season\nWe are currently in season {getCurrentSeason()}',
+    'kick': '# Booting Time!\nSelect user you would like to kick from the server below:',
+    'make_transfers': '# Make Transfers?\nUpon confirming, Fawkes will complete all crew transfers for the current season. Are you sure?',
+    'members': '# Member List Update\nChoose a crew from the list below to update its current members count:',
+    'multiple': '# Multi-Account Register\nChoose a user below to change how many accounts they have in a given crew:',
+    'score': '# Crew Score\nSelect a crew below to update its end of season score:',
+    'transfer': f'# Player Transfer\nComplete the below fields to register an upcoming player transfer (please note that current season is {getCurrentSeason()}):',
+    'unban': '# Undo Ban\nInput the discord name of a user you wish to lift a ban from:'
+}
