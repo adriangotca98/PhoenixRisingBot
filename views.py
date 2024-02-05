@@ -1,5 +1,4 @@
 import discord
-from numpy import place
 import main
 import buttons
 
