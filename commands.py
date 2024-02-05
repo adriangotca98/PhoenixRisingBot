@@ -27,7 +27,7 @@ async def getOptionStr(ctx: discord.ApplicationContext, option):
         if member.discriminator != 0:
             return f'{member.name}#{member.discriminator}'
         return f'{member.name}'
-    except discord.Forbidden or discord.HTTPException:
+    except discord.errors.Forbidden or discord.errors.HTTPException or discord.errors.NotFound:
         return str(option['value'])
     except ValueError:
         return str(option['value'])
@@ -76,6 +76,26 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     except RuntimeError:
         await ctx.send("Failed unexpectedly")
     raise error
+
+
+@bot.slash_command(name="fawkes", description="Gets all the commands Fawkes is able to run and a dropdown to select what you want to run",
+                   guild_ids=[main.risingServerId])
+@commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
+async def fawkes(ctx: discord.ApplicationContext):
+    message = """
+**COMMANDS THAT FAWKES KNOWS: **
+- **ban**: bans someone from the server
+- **cancel_transfer**: cancels an already registeres transfer
+- **current_season**: shows the season we're currently in
+- **kick**: kicks someone from the server
+- **make_transfers**: makes all the transfers in a season manually (gives roles, removes old roles, kicks if necessary)
+- **members**: refreshes the members list with the newly added transfers or canceled transfers
+- **multiple**: registers someone with a single account in Discord but multiple accounts in a single crew.
+- **score**: updates the leaderboard of the crew with the score given as input
+- **transfer**: register a transfer of a player either new to family, or out of family or between crews
+- **unban**: unbans someone from the server
+"""
+    await ctx.send_response(message, ephemeral=True, delete_after=600, view=views.FawkesView(ctx, bot))
 
 
 @bot.slash_command(name="new_members", description="Refresh the members list for a given crew",

@@ -14,6 +14,7 @@ configCollection = client.get_database("Fawkes").get_collection("configData")
 multipleAccountsCollection = client.get_database("Fawkes").get_collection("multipleAccountsData")
 movesCollection = client.get_database("Fawkes").get_collection("movesData")
 vacanciesCollection = client.get_database("Fawkes").get_collection("vacanciesData")
+commandsList = ['ban','cancel_transfer','current_season','kick','make_transfers','members','multiple','score','transfer','unban']
 
 
 def getDbField(mongoCollection: collection.Collection, key: str, subkey: str):

@@ -1,4 +1,5 @@
 import discord
+from numpy import place
 import main
 import buttons
 
@@ -11,6 +12,43 @@ def update_select(select: discord.ui.Select):
     return select
 
 
+class FawkesView(discord.ui.View):
+    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot):
+        self.ctx = ctx
+        self.bot = bot
+        super().__init__()
+    
+
+    @discord.ui.select(
+        placeholder="Pick an operation to be performed by Fawkes",
+        options=list(map(lambda name: discord.SelectOption(label=name), main.commandsList))
+    )
+    async def select_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+        
+        views = {
+            'ban': KickBanUnbanView(self.ctx, self.bot, 'ban'),
+            'cancel_transfer': CancelTransferView(self.ctx),
+            'kick': KickBanUnbanView(self.ctx, self.bot, 'kick'),
+            'members': MembersCrewsView(self.ctx),
+            'multiple': MultipleView(self.ctx),
+            'score': ScoreView(self.ctx),
+            'transfer': TransferView(self.ctx),
+            'unban': KickBanUnbanView(self.ctx, self.bot, 'unban')
+        }
+        messages = {
+            'current_season': main.getCurrentSeason(),
+            'make_transfers': await main.makeTransfers(self.ctx)
+        }
+        for key in views:
+            messages[key] = f'# You chose {key.upper()}'
+        message = messages[str(select.values[0])]
+        if select.values[0] not in views.keys():
+            await interaction.response.send_message(message, ephemeral=True, delete_after=60)
+        else:
+            view = views[str(select.values[0])]
+            await interaction.response.send_message(message, view=view, ephemeral=True, delete_after=600)
+
+        
 class MembersCrewsView(discord.ui.View):
     def __init__(self, ctx: discord.ApplicationContext):
         self.ctx = ctx
