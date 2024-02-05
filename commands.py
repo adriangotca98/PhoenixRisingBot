@@ -27,7 +27,7 @@ async def getOptionStr(ctx: discord.ApplicationContext, option):
         if member.discriminator != 0:
             return f'{member.name}#{member.discriminator}'
         return f'{member.name}'
-    except discord.errors.Forbidden or discord.errors.HTTPException or discord.errors.NotFound:
+    except (discord.errors.Forbidden, discord.errors.HTTPException, discord.errors.NotFound):
         return str(option['value'])
     except ValueError:
         return str(option['value'])
