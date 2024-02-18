@@ -66,8 +66,8 @@ class CancelTransferPingButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         if isinstance(self.view, discord.ui.View):
             self.view.disable_all_items()
-        message = await main.unregisterTransfer(self.ctx, self.user, self.crew_from, self.crew_to, self.ping)
         await interaction.response.edit_message(view=self.view)
+        message = await main.unregisterTransfer(self.ctx, self.user, self.crew_from, self.crew_to, self.ping)
         await self.ctx.send_followup(message, ephemeral=True, delete_after=60)
 
 

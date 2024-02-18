@@ -244,7 +244,8 @@ class TransferView(discord.ui.View):
         placeholder="Season",
         row=3,
         options=list(map(lambda name: discord.SelectOption(label=name, default=False),
-                         [str(main.getCurrentSeason() + 1), str(main.getCurrentSeason() + 2),
+                         [str(main.getCurrentSeason()), 
+                          str(main.getCurrentSeason() + 1), str(main.getCurrentSeason() + 2),
                           str(main.getCurrentSeason() + 3), str(main.getCurrentSeason() + 4)]))
     )
     async def season_select(self, select: discord.ui.Select, interaction: discord.Interaction):
@@ -262,6 +263,12 @@ class CancelTransferView(discord.ui.View):
         self.crew_from = None
         self.crew_to = None
         self.next_buttons = None
+        for idx1 in range(len(self.children)):
+            select = self.children[idx1]
+            if isinstance(select, discord.ui.Select):
+                for idx2 in range(len(select.options)):
+                    select.options[idx2].default = False
+                self.children[idx1] = select
 
     def maybe_add_button(self):
         if self.user is not None and self.crew_from is not None and self.crew_to is not None:
