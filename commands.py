@@ -1,4 +1,3 @@
-from asyncio import constants
 import discord
 from discord.ext import commands
 import main
@@ -46,9 +45,10 @@ async def on_application_command_completion(ctx: discord.ApplicationContext):
         discriminator = f"#{ctx.author.discriminator}" if ctx.author.discriminator != "0" else ""
         message = (f"**{ctx.author.name}{discriminator}** has sent the following command:"
                    f"**/{ctx.command.name} {args}**")
-        channel = await bot.fetch_channel(constants.loggingChannelId)
-        if isinstance(channel, discord.TextChannel):
-            await channel.send(message)
+        if isinstance(constants.loggingChannelId, int):
+            channel = await bot.fetch_channel(constants.loggingChannelId)
+            if isinstance(channel, discord.TextChannel):
+                await channel.send(message)
 
 
 @bot.event
@@ -70,9 +70,10 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
         discriminator = f"#{ctx.author.discriminator}" if ctx.author.discriminator != "0" else ""
         message = (f"**{ctx.author.name}{discriminator}** tried to send the following command: "
                    f"**/{ctx.command.name} {args}**, but it error out.")
-        channel = await bot.fetch_channel(constants.loggingChannelId)
-        if isinstance(channel, discord.TextChannel):
-            await channel.send(message)
+        if isinstance(constants.loggingChannelId, int):
+            channel = await bot.fetch_channel(constants.loggingChannelId)
+            if isinstance(channel, discord.TextChannel):
+                await channel.send(message)
     try:
         await ctx.send_followup(f"Failed unexpectedly", ephemeral=True)
     except RuntimeError:

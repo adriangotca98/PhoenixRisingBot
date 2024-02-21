@@ -20,7 +20,7 @@ loggingChannelId = utils.getDbField(configCollection, "IDs", 'logging_channel_id
 hallChannelId = utils.getDbField(configCollection, "IDs", 'hall_channel_id') or -1
 vacanciesChannelId = utils.getDbField(configCollection, "IDs", 'vacancies_channel_id') or -1
 vacanciesMessageId = utils.getDbField(configCollection, "IDs", 'vacancies_message_id') or -1
-communityMemberRoleName = utils.getDbField(configCollection, "IDs", 'community_member_role_name') or ""
+communityMemberRoleId = utils.getDbField(configCollection, "IDs", 'community_member_role_id') or ""
 commandsList = ['ban','cancel_transfer','current_season','kick','make_transfers','members','multiple','score','transfer','unban']
 commandsMessages={
     'add_crew_part_1': '# Add crew, part 1\nAdd category for the channels of the crew and region of the crew.',

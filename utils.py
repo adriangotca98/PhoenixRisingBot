@@ -3,7 +3,7 @@ import time
 import discord
 
 
-def computeScoreFromChannelName(name: str):
+def computeScoreFromChannelName(name: str) -> int:
     number = ''
     for char in name:
         if char.isnumeric():
@@ -11,7 +11,7 @@ def computeScoreFromChannelName(name: str):
     return int(number)
 
 
-def getScoreWithSeparator(intScore: int):
+def getScoreWithSeparator(intScore: int) -> str:
     scoreWithSeparator = ''
     while intScore > 0:
         number = str(intScore % 1000)
@@ -24,16 +24,13 @@ def getScoreWithSeparator(intScore: int):
     return scoreWithSeparator
 
 
-def getRole(ctx: discord.ApplicationContext, roleName: str):
+def getRole(ctx: discord.ApplicationContext, roleNameOrId: int) -> discord.Role | None:
     if ctx.guild is None:
         return None
-    for role in ctx.guild.roles:
-        if role.name == roleName:
-            return role
-    return None
+    return ctx.guild.get_role(roleNameOrId)
 
 
-def getDbField(mongoCollection: collection.Collection, key: str, subkey: str):
+def getDbField(mongoCollection: collection.Collection, key: str, subkey: str) -> str | int | list | dict | None:
     entry = mongoCollection.find_one({"key": key}, {"_id": 0, subkey: 1})
     if entry is None:
         return None
@@ -42,17 +39,25 @@ def getDbField(mongoCollection: collection.Collection, key: str, subkey: str):
     return entry[subkey]
 
 
-def getCrewNames(configCollection):
+def getCrewNames(configCollection) -> list:
     crewNames = getDbField(configCollection, "crews", "value")
     if crewNames is None:
+        return []
+    if not isinstance(crewNames, list):
         return []
     crewNames.sort()
     return crewNames
 
 
-def getCrewRegion(configCollection):
-    return getDbField(configCollection, "crew_region", "value") or {}
+def getCrewRegion(configCollection) -> dict:
+    entry = getDbField(configCollection, "crew_region", "value")
+    if not isinstance(entry, dict):
+        return {}
+    return entry
 
 
-def getCurrentSeason(configCollection):
-    return int((time.time() - (getDbField(configCollection, 'time', 'value') or 0)) / 60 / 60 / 24 / 7 / 2) + 166
+def getCurrentSeason(configCollection) -> int:
+    timestamp = getDbField(configCollection, 'time', 'value')
+    if not isinstance(timestamp, int):
+        timestamp = 0
+    return int((time.time() - (timestamp or 0)) / 60 / 60 / 24 / 7 / 2) + 166
