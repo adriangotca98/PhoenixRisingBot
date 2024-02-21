@@ -1,47 +1,7 @@
-from imp import new_module
 import discord
-from pymongo import MongoClient, collection
-import time
+import utils
+import constants
 
-configFile = open("config.txt", "r")
-config = configFile.read()
-username = config.split("\n")[0]
-mongo_password = config.split("\n")[1]
-client = MongoClient(f"mongodb+srv://{username}:{mongo_password}@phoenixrisingcluster.p2zno6x.mongodb.net"
-                     f"/?retryWrites=true"
-                     f"&w=majority")
-crewCollection = client.get_database("Fawkes").get_collection("crewData")
-configCollection = client.get_database("Fawkes").get_collection("configData")
-multipleAccountsCollection = client.get_database("Fawkes").get_collection("multipleAccountsData")
-movesCollection = client.get_database("Fawkes").get_collection("movesData")
-vacanciesCollection = client.get_database("Fawkes").get_collection("vacanciesData")
-
-
-def getDbField(mongoCollection: collection.Collection, key: str, subkey: str):
-    entry = mongoCollection.find_one({"key": key}, {"_id": 0, subkey: 1})
-    if entry is None:
-        return None
-    return entry[subkey]
-
-
-scores = {}
-crewRegionEntry = configCollection.find_one({"key": "crew_region"}, {"_id": 0, "value": 1})
-crewRegionEntry = crewRegionEntry if crewRegionEntry is not None else {}
-crewRegion = getDbField(configCollection, "crew_region", "value") or {}
-discord_bot_token = getDbField(configCollection, "discord_token", "value") or ""
-risingServerId = getDbField(configCollection, "IDs", 'rising_server_id') or -1
-loggingChannelId = getDbField(configCollection, "IDs", 'logging_channel_id') or -1
-hallChannelId = getDbField(configCollection, "IDs", 'hall_channel_id') or -1
-vacanciesChannelId = getDbField(configCollection, "IDs", 'vacancies_channel_id') or -1
-vacanciesMessageId = getDbField(configCollection, "IDs", 'vacancies_message_id') or -1
-communityMemberRoleName = getDbField(configCollection, "IDs", 'community_member_role_name') or ""
-
-def getCrewNames():
-    crewNames = getDbField(configCollection, "crews", "value")
-    if crewNames is None:
-        return []
-    crewNames.sort()
-    return crewNames
 
 class Member:
     def __init__(self, admin: bool, leader: bool, member_id: int, name: str, multiple: int):
@@ -61,75 +21,54 @@ def sortFunction(member: Member):
 
 
 async def init(bot: discord.Bot):
-    crewNames = getCrewNames()
+    crewNames = utils.getCrewNames(constants.configCollection)
     if crewNames is None:
         return
     for crew in crewNames:
-        channelId = getDbField(crewCollection, crew, 'leaderboard_id') or 0
+        channelId = utils.getDbField(constants.crewCollection, crew, 'leaderboard_id') or 0
         channel = await bot.fetch_channel(channelId)
         if not isinstance(channel, discord.TextChannel):
             continue
-        scores[crew] = computeScoreFromChannelName(channel.name)
-
-
-def computeScoreFromChannelName(name: str):
-    number = ''
-    for char in name:
-        if char.isnumeric():
-            number += char
-    return int(number)
-
-
-def getScoreWithSeparator(intScore: int):
-    scoreWithSeparator = ''
-    while intScore > 0:
-        number = str(intScore % 1000)
-        while len(number) < 3:
-            number = '0' + number
-        scoreWithSeparator = '’' + number + scoreWithSeparator
-        intScore //= 1000
-    while scoreWithSeparator[0] == '0' or scoreWithSeparator[0] == '’':
-        scoreWithSeparator = scoreWithSeparator[1:]
-    return scoreWithSeparator
+        constants.scores[crew] = utils.computeScoreFromChannelName(channel.name)
 
 
 async def addOrRemoveRoleAndUpdateMultiple(ctx: discord.ApplicationContext, player: discord.Member, transfer: dict, crewName: str, op: str):
     numberOfAccounts = transfer['number_of_accounts']
-    crewRoleName = str(getDbField(crewCollection, crewName, 'member'))
-    crewRole = getRole(ctx, crewRoleName)
+    crewRoleName = str(utils.getDbField(constants.crewCollection, crewName, 'member'))
+    crewRole = utils.getRole(ctx, crewRoleName)
     if crewRole is None:
         return
-    multipleEntry = multipleAccountsCollection.find_one({"key": crewName}) or {}
+    multipleEntry = constants.multipleAccountsCollection.find_one({"key": crewName}) or {}
     if op == 'ADD':
         currentMultiple = 0
         if player.get_role(crewRole.id):
             currentMultiple = multipleEntry[str(player.id)] or 1
         newMultiple = currentMultiple + numberOfAccounts
         if newMultiple > 1:
-            multipleAccountsCollection.update_one({"key": crewName}, {"$set": {str(player.id): newMultiple}}, upsert=True)
+            constants.multipleAccountsCollection.update_one({"key": crewName}, {"$set": {str(player.id): newMultiple}}, upsert=True)
         await player.add_roles(crewRole)
     else:
         currentMultiple = multipleEntry[str(player.id)] or 1
         if currentMultiple - numberOfAccounts <= 1:
-            multipleAccountsCollection.update_one({"key": crewName}, {"$unset": {str(player.id): ""}})
+            constants.multipleAccountsCollection.update_one({"key": crewName}, {"$unset": {str(player.id): ""}})
             if currentMultiple - numberOfAccounts == 0:
                 await player.remove_roles(crewRole)
         else:
-            multipleAccountsCollection.update_one({"key": crewName}, {"$set": {str(player.id): currentMultiple - numberOfAccounts}})
+            constants.multipleAccountsCollection.update_one({"key": crewName}, {"$set": {str(player.id): currentMultiple - numberOfAccounts}})
 
 
 async def makeTransfers(ctx: discord.ApplicationContext):
-    currentSeason = getCurrentSeason()
+    currentSeason = utils.getCurrentSeason(constants.configCollection)
     if ctx.guild is None:
         return "Something is terribly wrong. Contact server admins."
-    transfers = list(movesCollection.find({"season": currentSeason}))
+    transfers = list(constants.movesCollection.find({"season": currentSeason}))
     crewsToUpdateMembers = set()
     for transfer in transfers:
         print(f"Processing {transfer}")
         try:
             player = await ctx.guild.fetch_member(transfer['player'])
         except (discord.Forbidden, discord.HTTPException):
-            movesCollection.delete_many({"player": transfer['player']})
+            constants.movesCollection.delete_many({"player": transfer['player']})
             continue
         await addOrRemoveRoleAndUpdateMultiple(ctx, player, transfer, transfer['crew_from'], 'REMOVE')
         await addOrRemoveRoleAndUpdateMultiple(ctx, player, transfer, transfer['crew_to'], 'ADD')
@@ -138,10 +77,10 @@ async def makeTransfers(ctx: discord.ApplicationContext):
             if shouldKick:
                 await player.kick(reason="Kicked by Fawkes via transfer")
             else:
-                communityMemberRole = getRole(ctx, communityMemberRoleName)
+                communityMemberRole = utils.getRole(ctx, constants.communityMemberRoleName)
                 if communityMemberRole is not None:
                     await player.add_roles(communityMemberRole)
-        movesCollection.delete_one(transfer)
+        constants.movesCollection.delete_one(transfer)
         await deleteMovementFromMessage(ctx, transfer['crew_from'], "OUT")
         await deleteMovementFromMessage(ctx, transfer['crew_to'], "IN")
         crewsToUpdateMembers.add(transfer['crew_from'])
@@ -154,20 +93,20 @@ async def makeTransfers(ctx: discord.ApplicationContext):
 
 async def setScore(ctx: discord.ApplicationContext, crewName: str, score: str):
     print(f"Setting score {str(score)} for {crewName}")
-    channelId = getDbField(crewCollection, crewName, 'leaderboard_id') or -1
+    channelId = utils.getDbField(constants.crewCollection, crewName, 'leaderboard_id') or -1
     channel = await ctx.bot.fetch_channel(channelId)
     if not isinstance(channel, discord.TextChannel):
         return
     channelName = channel.name
-    newChannelName = channelName.strip("0123456789'`’") + getScoreWithSeparator(int(score))
+    newChannelName = channelName.strip("0123456789'`’") + utils.getScoreWithSeparator(int(score))
     await channel.edit(name=newChannelName)
-    scores[crewName] = int(score)
-    await reorderChannels(ctx, scores, crewName)
+    constants.scores[crewName] = int(score)
+    await reorderChannels(ctx, constants.scores, crewName)
 
 
 async def reorderChannels(ctx: discord.ApplicationContext, scoresDict: dict, crewName: str):
     sortedScores = dict(sorted(scoresDict.items(), key=lambda item: item[1], reverse=True))
-    channelId = getDbField(crewCollection, crewName, 'leaderboard_id') or -1
+    channelId = utils.getDbField(constants.crewCollection, crewName, 'leaderboard_id') or -1
     channel = await ctx.bot.fetch_channel(channelId)
     if list(sortedScores.keys())[0] == crewName:
         if isinstance(channel, discord.TextChannel):
@@ -176,7 +115,7 @@ async def reorderChannels(ctx: discord.ApplicationContext, scoresDict: dict, cre
     lastKey = ""
     for key in sortedScores:
         if key == crewName:
-            aboveChannelId = getDbField(crewCollection, lastKey, 'leaderboard_id')
+            aboveChannelId = utils.getDbField(constants.crewCollection, lastKey, 'leaderboard_id')
             if aboveChannelId is None:
                 continue
             aboveChannel = await ctx.bot.fetch_channel(aboveChannelId)
@@ -192,7 +131,7 @@ async def updateMessage(ctx: discord.ApplicationContext, crewData, keyToSet, ini
     channel = await ctx.bot.fetch_channel(channelId)
     if isinstance(channel, discord.TextChannel):
         message = await channel.send(initialMessage)
-        crewCollection.update_one({"key": key}, {"$set": {keyToSet: message.id}})
+        constants.crewCollection.update_one({"key": key}, {"$set": {keyToSet: message.id}})
         return message
     return None
 
@@ -230,23 +169,23 @@ def getMembers(guild: discord.Guild, crewName, adminRoleName, leaderRoleName, me
                     newMemberStruct = Member(False, False, member.id, member.display_name, i + 2)
                     response.append(newMemberStruct)
             else:
-                multipleAccountsCollection.update_one({"key": crewName}, {"$unset": {memberId: ""}})
+                constants.multipleAccountsCollection.update_one({"key": crewName}, {"$unset": {memberId: ""}})
     return response
 
 
 async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
-    multipleAccountsData = multipleAccountsCollection.find_one({"key": key}, {"_id": 0})
+    multipleAccountsData = constants.multipleAccountsCollection.find_one({"key": key}, {"_id": 0})
     if multipleAccountsData is not None:
         multipleAccountsIds = [key for key in multipleAccountsData if key != 'key']
     else:
         multipleAccountsIds = []
-    crewData = crewCollection.find_one({"key": key}, {"_id": 0}) or {}
-    crewName = getDbField(crewCollection, key, 'member') or ""
+    crewData = constants.crewCollection.find_one({"key": key}, {"_id": 0}) or {}
+    crewName = utils.getDbField(constants.crewCollection, key, 'member') or ""
     message = await getMessage(ctx, crewData, "message_id", "members_channel_id",
                                "**__Members for " + crewName.upper() + "__**")
-    memberRoleName = getDbField(crewCollection, key, 'member') or ""
-    adminRoleName = getDbField(crewCollection, key, 'admin') or ""
-    leaderRoleName = getDbField(crewCollection, key, 'leader') or ""
+    memberRoleName = utils.getDbField(constants.crewCollection, key, 'member') or ""
+    adminRoleName = utils.getDbField(constants.crewCollection, key, 'admin') or ""
+    leaderRoleName = utils.getDbField(constants.crewCollection, key, 'leader') or ""
     guild = ctx.guild
     if guild is None:
         return
@@ -280,9 +219,9 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
 
 
 async def updateVacancies(ctx: discord.ApplicationContext, crew_name: str, members_list: list = []):
-    currentSeason = getCurrentSeason()
+    currentSeason = utils.getCurrentSeason(constants.configCollection)
     currentSeasonCount = len(members_list)
-    vacanciesEntry = vacanciesCollection.find_one({}) or {}
+    vacanciesEntry = constants.vacanciesCollection.find_one({}) or {}
     if crew_name == 'New to family' or crew_name == 'Out of family':
         return
     if currentSeasonCount == 0:
@@ -291,15 +230,16 @@ async def updateVacancies(ctx: discord.ApplicationContext, crew_name: str, membe
         else:
             currentSeasonCount = 0
     nextSeasonCount = currentSeasonCount
-    for move in list(movesCollection.find({"crew_to": crew_name, "season": currentSeason + 1})):
+    for move in list(constants.movesCollection.find({"crew_to": crew_name, "season": currentSeason + 1})):
         nextSeasonCount += move['number_of_accounts']
-    for move in list(movesCollection.find({"crew_from": crew_name, "season": currentSeason + 1})):
+    for move in list(constants.movesCollection.find({"crew_from": crew_name, "season": currentSeason + 1})):
         nextSeasonCount -= move['number_of_accounts']
-    vacanciesCollection.update_one({}, {"$set": {crew_name: {"current": currentSeasonCount, "next": nextSeasonCount}}})
-    if crew_name in getCrewNames():
+    constants.vacanciesCollection.update_one({}, {"$set": {crew_name: {"current": currentSeasonCount, "next": nextSeasonCount}}})
+    if crew_name in utils.getCrewNames(constants.configCollection):
         vacanciesEntry[crew_name]['current'] = currentSeasonCount
         vacanciesEntry[crew_name]['next'] = nextSeasonCount
     messageContent = "**__Latest Crew Vacancies__**\n\n"
+    crewRegion = utils.getCrewRegion(constants.configCollection)
     for region in crewRegion.keys():
         messageContent += f"**__{region} Crews__**\n\n"
         for crew_name in crewRegion[region]:
@@ -310,22 +250,22 @@ async def updateVacancies(ctx: discord.ApplicationContext, crew_name: str, membe
         messageContent += "\n"
     guild = ctx.guild
     if guild is not None:
-        channel = await guild.fetch_channel(vacanciesChannelId)
+        channel = await guild.fetch_channel(constants.vacanciesChannelId)
         try:
-            if vacanciesMessageId is not None and isinstance(channel, discord.TextChannel):
-                message = await channel.fetch_message(vacanciesMessageId)
+            if constants.vacanciesMessageId is not None and isinstance(channel, discord.TextChannel):
+                message = await channel.fetch_message(constants.vacanciesMessageId)
                 await message.edit(content=messageContent)
             elif isinstance(channel, discord.TextChannel):
                 message = await channel.send(messageContent)
-                configCollection.update_one({"key": "IDs"}, {"$set": {"vacancies_message_id": message.id}})
+                constants.configCollection.update_one({"key": "IDs"}, {"$set": {"vacancies_message_id": message.id}})
         except discord.errors.NotFound:
             if isinstance(channel, discord.TextChannel):
                 message = await channel.send(messageContent)
-                configCollection.update_one({"key": "IDs"}, {"$set": {"vacancies_message_id": message.id}})
+                constants.configCollection.update_one({"key": "IDs"}, {"$set": {"vacancies_message_id": message.id}})
 
 
 async def deleteMovementFromMessage(ctx: discord.ApplicationContext, crewName: str, inOrOut: str):
-    crewData = crewCollection.find_one({"key": crewName})
+    crewData = constants.crewCollection.find_one({"key": crewName})
     if crewData is None:
         return
     if inOrOut == "IN":
@@ -340,7 +280,7 @@ async def deleteMovementFromMessage(ctx: discord.ApplicationContext, crewName: s
 
 async def kickOrBanOrUnban(user: discord.Member, op: str, bot: discord.Bot, reason: str | None = None):
     for guild in bot.guilds:
-        if guild.id == risingServerId:
+        if guild.id == constants.risingServerId:
             print("Doing " + op + " for user: " + user.name + " in the server named: " + guild.name)
             if op == 'kick':
                 await guild.kick(user, reason=reason)
@@ -351,7 +291,7 @@ async def kickOrBanOrUnban(user: discord.Member, op: str, bot: discord.Bot, reas
 
 
 def processMultiple(user: discord.Member, crewName: str, numberOfAccounts: int):
-    memberRoleName = getDbField(crewCollection, crewName, 'member')
+    memberRoleName = utils.getDbField(constants.crewCollection, crewName, 'member')
     roles = user.roles
     roleFound = False
     for role in roles:
@@ -362,24 +302,11 @@ def processMultiple(user: discord.Member, crewName: str, numberOfAccounts: int):
         return "User does not have crew role! Add crew role and try again."
     memberId = str(user.id)
     if numberOfAccounts != 1:
-        multipleAccountsCollection.find_one_and_update({"key": crewName}, {"$set": {memberId: numberOfAccounts}},
+        constants.multipleAccountsCollection.find_one_and_update({"key": crewName}, {"$set": {memberId: numberOfAccounts}},
                                                        upsert=True)
     else:
-        multipleAccountsCollection.find_one_and_update({"key": crewName}, {"$unset": {memberId: ""}})
+        constants.multipleAccountsCollection.find_one_and_update({"key": crewName}, {"$unset": {memberId: ""}})
     return "Multiple accounts recorded!"
-
-
-def getRole(ctx: discord.ApplicationContext, roleName: str):
-    if ctx.guild is None:
-        return None
-    for role in ctx.guild.roles:
-        if role.name == roleName:
-            return role
-    return None
-
-
-def getCurrentSeason():
-    return int((time.time() - (getDbField(configCollection, 'time', 'value') or 0)) / 60 / 60 / 24 / 7 / 2) + 166
 
 
 async def processTransfer(ctx: discord.ApplicationContext, player: discord.Member, crewFrom: str, crewTo: str,
@@ -390,32 +317,32 @@ async def processTransfer(ctx: discord.ApplicationContext, player: discord.Membe
         return "A move can't take place within the same crew."
     if crewTo == "Out of family" and shouldKick is None:
         return "Set should_kick for this kind of move."
-    if season < getCurrentSeason():
+    if season < utils.getCurrentSeason(constants.configCollection):
         return "Transfers can only happen in the future or in the current season"
     message = await processMovement(ctx, crewFrom, crewTo, player, numberOfAccounts, season, pingAdmin, shouldKick)
     return message
 
 
 def checkRole(ctx: discord.ApplicationContext, player: discord.Member, crewName: str):
-    crewData = crewCollection.find_one({"key": crewName}, {"_id": 0, "member": 1})
+    crewData = constants.crewCollection.find_one({"key": crewName}, {"_id": 0, "member": 1})
     if crewData is None:
         return False
     roleName = crewData['member']
-    role = getRole(ctx, roleName)
+    role = utils.getRole(ctx, roleName)
     if role is None or player.get_role(role.id) is None:
         return False
     return True
 
 
 def checkHistory(ctx: discord.ApplicationContext, player: discord.Member, crewName: str, season: int):
-    movesData = list(movesCollection.find({"player": player.id, "season": {"$lt": season}}))
+    movesData = list(constants.movesCollection.find({"player": player.id, "season": {"$lt": season}}))
     movesData.sort(key=lambda elem: elem['season'])
     if len(movesData) != 0:
         lastMove = movesData[-1]
         if lastMove['crew_to'] != crewName:
             return (False,
                     f"I looked at this player history of movements and from what I can see, he will NOT be in "
-                    f"**{getDbField(crewCollection, crewName, 'member')}** at the time of the transfer. "
+                    f"**{utils.getDbField(constants.crewCollection, crewName, 'member')}** at the time of the transfer. "
                     f"Last move is registered to {lastMove['crew_to']} in season {lastMove['season']}. "
                     f"If your move is before that you'll have to redo the path till then so we don't risk missing links"
                     f" between seasons. Talk with <@308561593858392065> about how to do this.")
@@ -427,15 +354,15 @@ def checkHistory(ctx: discord.ApplicationContext, player: discord.Member, crewNa
 
 
 def checkForNumberOfAccounts(player: discord.Member, crewName: str, season: int, numberOfAccountsToMoveNext: int):
-    multipleData = multipleAccountsCollection.find_one({"key": crewName}, {"_id": 0, str(player.id): 1})
+    multipleData = constants.multipleAccountsCollection.find_one({"key": crewName}, {"_id": 0, str(player.id): 1})
     if multipleData is None or str(player.id) not in multipleData.keys():
         numberOfAccountsAvailableToMove = 1
     else:
         numberOfAccountsAvailableToMove = multipleData[str(player.id)]
-    movesBeforeTheSeason = movesCollection.find({"player": player.id, "crew_from": crewName, "season": {"$lt": season}})
+    movesBeforeTheSeason = constants.movesCollection.find({"player": player.id, "crew_from": crewName, "season": {"$lt": season}})
     for move in movesBeforeTheSeason:
         numberOfAccountsAvailableToMove -= move['number_of_accounts'] or 1
-    existingMovesData = movesCollection.find({"player": player.id, "crew_from": crewName})
+    existingMovesData = constants.movesCollection.find({"player": player.id, "crew_from": crewName})
     for existingMove in existingMovesData:
         numAccounts = existingMove['number_of_accounts'] if 'number_of_accounts' in existingMove.keys() else 1
         numberOfAccountsAvailableToMove -= numAccounts
@@ -450,19 +377,19 @@ async def processMovement(ctx: discord.ApplicationContext, crewFrom: str, crewTo
     if not checkForNumberOfAccounts(player, crewFrom, season, numberOfAccounts):
         return ("The player has too many accounts registered to transfer with this transfer included. "
                 "Check the multiple or remove from the existing transfers for this player first.")
-    movementData = movesCollection.find_one({"player": player.id, "crew_from": crewFrom, "crew_to": crewTo})
+    movementData = constants.movesCollection.find_one({"player": player.id, "crew_from": crewFrom, "crew_to": crewTo})
     if movementData is not None:
-        movesCollection.delete_one({"player": player.id, "crew_from": crewFrom, "crew_to": crewTo})
+        constants.movesCollection.delete_one({"player": player.id, "crew_from": crewFrom, "crew_to": crewTo})
     objectToInsert = {"player": player.id, "crew_from": crewFrom, "crew_to": crewTo,
                       "number_of_accounts": numberOfAccounts, "season": season}
     if shouldKick is not None and crewTo == "Out of family":
         objectToInsert["should_kick"] = True
-    movesCollection.insert_one(objectToInsert)
-    crewFromData = crewCollection.find_one({"key": crewFrom}, {"_id": 0})
+    constants.movesCollection.insert_one(objectToInsert)
+    crewFromData = constants.crewCollection.find_one({"key": crewFrom}, {"_id": 0})
     if crewFromData is not None:
         outMessage = await getMessage(ctx, crewFromData, 'out_message_id', "members_channel_id", "**OUT:**")
         await updateMovementsMessage(ctx, outMessage, crewFrom, 'OUT')
-    crewToData = crewCollection.find_one({"key": crewTo}, {"_id": 0})
+    crewToData = constants.crewCollection.find_one({"key": crewTo}, {"_id": 0})
     if crewToData is not None:
         inMessage = await getMessage(ctx, crewToData, "in_message_id", "members_channel_id", "**IN:**")
         await updateMovementsMessage(ctx, inMessage, crewTo, "IN")
@@ -470,7 +397,7 @@ async def processMovement(ctx: discord.ApplicationContext, crewFrom: str, crewTo
     await updateVacancies(ctx, crewTo)
     await sendMessageToAdminChat(ctx, crewTo, player, "confirm", "to", pingAdmin, season, numberOfAccounts)
     await sendMessageToAdminChat(ctx, crewFrom, player, "confirm", "from", pingAdmin, season, numberOfAccounts)
-    if season == getCurrentSeason():
+    if season == utils.getCurrentSeason(constants.configCollection):
         await makeTransfers(ctx)
     return "Transfer processed successfully"
 
@@ -480,10 +407,10 @@ async def sendMessageToAdminChat(ctx: discord.ApplicationContext, crew: str, pla
                                  numberOfAccounts: int):
     if not pingAdmin:
         return
-    crewData = crewCollection.find_one({"key": crew}, {"admin_channel_id": 1, "admin": 1, "_id": 0})
+    crewData = constants.crewCollection.find_one({"key": crew}, {"admin_channel_id": 1, "admin": 1, "_id": 0})
     if crewData is None:
         return
-    adminRole = getRole(ctx, crewData['admin'])
+    adminRole = utils.getRole(ctx, crewData['admin'])
     if adminRole is None:
         return
     message = ""
@@ -504,10 +431,10 @@ async def updateMovementsMessage(ctx: discord.ApplicationContext, message, crewN
     newMessage = f"**Players {'Joining' if inOrOut == 'IN' else 'Leaving'}:**\n\n"
     movementsKey = "crew_from" if inOrOut == "OUT" else "crew_to"
     crewKey = "crew_to" if inOrOut == "OUT" else "crew_from"
-    movements = movesCollection.find({movementsKey: crewName}, {"_id": 0})
+    movements = constants.movesCollection.find({movementsKey: crewName}, {"_id": 0})
     idx = 1
     for move in movements:
-        crewData = crewCollection.find_one({"key": move[crewKey]}, {"_id": 0})
+        crewData = constants.crewCollection.find_one({"key": move[crewKey]}, {"_id": 0})
         try:
             guild = ctx.guild
             if guild is not None:
@@ -515,14 +442,14 @@ async def updateMovementsMessage(ctx: discord.ApplicationContext, message, crewN
             else:
                 member = None
         except discord.Forbidden or discord.HTTPException:
-            movesCollection.delete_many({"player": move['player']})
+            constants.movesCollection.delete_many({"player": move['player']})
             continue
         if member is not None:
             newMessage += f"{str(idx)}. {member.mention} "
         if crewData is None:
             newMessage += f"{move[crewKey]} in S{str(move['season'])}"
         else:
-            crewRole = getRole(ctx, crewData['member'])
+            crewRole = utils.getRole(ctx, crewData['member'])
             numberOfAccounts = move['number_of_accounts']
             newMessage += (f'{"from" if inOrOut == "IN" else "to"} {crewRole.mention if crewRole is not None else ""}'
                            f'{f" with {numberOfAccounts} accounts" if numberOfAccounts > 1 else ""} in '
@@ -538,15 +465,15 @@ async def unregisterTransfer(ctx: discord.ApplicationContext, player: discord.Me
     if crewTo == crewFrom and crewTo is not None:
         return "A movement can't be within the same crew, so I also can't unregister this kind of moves."
     if crewTo is None:
-        moves = list(movesCollection.find({"player": player.id}))
+        moves = list(constants.movesCollection.find({"player": player.id}))
         if len(moves) == 0:
             return "No moves found for this player."
         if len(moves) > 1:
             return "Too many moves found, add crew_from and crew_to and try again."
         move = moves[0]
     else:
-        move = list(movesCollection.find({"player": player.id, "crew_from": crewFrom, "crew_to": crewTo}))[0]
-    movesCollection.delete_one({"player": move['player']})
+        move = list(constants.movesCollection.find({"player": player.id, "crew_from": crewFrom, "crew_to": crewTo}))[0]
+    constants.movesCollection.delete_one({"player": move['player']})
     await deleteMovementFromMessage(ctx, move['crew_from'], "OUT")
     await deleteMovementFromMessage(ctx, move['crew_to'], "IN")
     await updateVacancies(ctx, move['crew_from'])
@@ -558,16 +485,5 @@ async def unregisterTransfer(ctx: discord.ApplicationContext, player: discord.Me
     return f"Cancelled transfer for {player.name} from {crewFrom} to {crewTo}"
 
 
-commandsList = ['ban','cancel_transfer','current_season','kick','make_transfers','members','multiple','score','transfer','unban']
-commandsMessages={
-    'ban': '# Banning Time!\nSelect user to ban from the server below:',
-    'cancel_transfer': '# Cancel Transfer?\nIf you wish to cancel an input transfer, complete the following fields and submit:',
-    'current_season': lambda: f'# Current Season\nWe are currently in season {getCurrentSeason()}',
-    'kick': '# Booting Time!\nSelect user you would like to kick from the server below:',
-    'make_transfers': '# Make Transfers?\nUpon confirming, Fawkes will complete all crew transfers for the current season. Are you sure?',
-    'members': '# Member List Update\nChoose a crew from the list below to update its current members count:',
-    'multiple': '# Multi-Account Register\nChoose a user below to change how many accounts they have in a given crew:',
-    'score': '# Crew Score\nSelect a crew below to update its end of season score:',
-    'transfer': lambda: f'# Player Transfer\nComplete the below fields to register an upcoming player transfer (please note that current season is {getCurrentSeason()}):',
-    'unban': '# Undo Ban\nInput the discord name of a user you wish to lift a ban from:'
-}
+async def addCrew(ctx: discord.ApplicationContext, category: discord.CategoryChannel, region: str, shortname: str):
+    pass

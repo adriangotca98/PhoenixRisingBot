@@ -1,6 +1,8 @@
+from asyncio import constants
 import discord
 from discord.ext import commands
 import main
+import constants
 import views
 
 description = '''Phoenix Rising family bot, Fawkes.'''
@@ -44,7 +46,7 @@ async def on_application_command_completion(ctx: discord.ApplicationContext):
         discriminator = f"#{ctx.author.discriminator}" if ctx.author.discriminator != "0" else ""
         message = (f"**{ctx.author.name}{discriminator}** has sent the following command:"
                    f"**/{ctx.command.name} {args}**")
-        channel = await bot.fetch_channel(main.loggingChannelId)
+        channel = await bot.fetch_channel(constants.loggingChannelId)
         if isinstance(channel, discord.TextChannel):
             await channel.send(message)
 
@@ -68,7 +70,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
         discriminator = f"#{ctx.author.discriminator}" if ctx.author.discriminator != "0" else ""
         message = (f"**{ctx.author.name}{discriminator}** tried to send the following command: "
                    f"**/{ctx.command.name} {args}**, but it error out.")
-        channel = await bot.fetch_channel(main.loggingChannelId)
+        channel = await bot.fetch_channel(constants.loggingChannelId)
         if isinstance(channel, discord.TextChannel):
             await channel.send(message)
     try:
@@ -78,8 +80,14 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     raise error
 
 
+@bot.slash_command(name="add_crew", description="Used to add another crew to Fawkes tracking", guild_ids=[constants.risingServerId])
+@commands.has_any_role("Server Moderator")
+async def addCrew(ctx: discord.ApplicationContext):
+    await ctx.send_response(constants.commandsMessages['add_crew_part_1'], view=views.AddCrewView(ctx), ephemeral=True, delete_after=600)
+
+
 @bot.slash_command(name="fawkes", description="Gets all the commands Fawkes is able to run and a dropdown to select what you want to run",
-                   guild_ids=[main.risingServerId])
+                   guild_ids=[constants.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def fawkes(ctx: discord.ApplicationContext):
     message = """
@@ -99,58 +107,58 @@ async def fawkes(ctx: discord.ApplicationContext):
 
 
 @bot.slash_command(name="members", description="Refresh the members list for a given crew",
-                   guild_ids=[main.risingServerId])
+                   guild_ids=[constants.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def members(ctx: discord.ApplicationContext):
-    await ctx.send_response(main.commandsMessages['members'], view=views.MembersCrewsView(ctx), ephemeral=True, delete_after=600)
+    await ctx.send_response(constants.commandsMessages['members'], view=views.MembersCrewsView(ctx), ephemeral=True, delete_after=600)
 
 
 @bot.slash_command(name="multiple", description="Register a player with multiple accounts in a single crew",
-                   guild_ids=[main.risingServerId])
+                   guild_ids=[constants.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def multiple(ctx: discord.ApplicationContext):
-    await ctx.send_response(main.commandsMessages['multiple'], view=views.MultipleView(ctx), ephemeral=True, delete_after=600)
+    await ctx.send_response(constants.commandsMessages['multiple'], view=views.MultipleView(ctx), ephemeral=True, delete_after=600)
 
 
-@bot.slash_command(name="score", description="Sets a score for the crew given", guild_ids=[main.risingServerId])
+@bot.slash_command(name="score", description="Sets a score for the crew given", guild_ids=[constants.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def score(ctx: discord.ApplicationContext):
-    await ctx.send_response(main.commandsMessages['score'], view=views.ScoreView(ctx), ephemeral=True, delete_after=600)
+    await ctx.send_response(constants.commandsMessages['score'], view=views.ScoreView(ctx), ephemeral=True, delete_after=600)
 
 
 @bot.slash_command(name="ban", description="Bans a user")
 @commands.has_permissions(ban_members=True)
 async def ban(ctx: discord.ApplicationContext):
-    await ctx.send_response(main.commandsMessages['ban'], view=views.KickBanUnbanView(ctx, bot, "ban"), ephemeral=True, delete_after=600)
+    await ctx.send_response(constants.commandsMessages['ban'], view=views.KickBanUnbanView(ctx, bot, "ban"), ephemeral=True, delete_after=600)
 
 
 @bot.slash_command(name="unban", description="Unbans a user")
 @commands.has_permissions(ban_members=True)
 async def unban(ctx: discord.ApplicationContext):
-    await ctx.send_response(main.commandsMessages['unban'], view=views.KickBanUnbanView(ctx, bot, "unban"), ephemeral=True, delete_after=600)
+    await ctx.send_response(constants.commandsMessages['unban'], view=views.KickBanUnbanView(ctx, bot, "unban"), ephemeral=True, delete_after=600)
 
 
 @bot.slash_command(name="kick", description="Kicks a user")
 @commands.has_permissions(kick_members=True)
 async def kick(ctx: discord.ApplicationContext):
-    await ctx.send_response(main.commandsMessages['kick'], view=views.KickBanUnbanView(ctx, bot, "kick"), ephemeral=True, delete_after=600)
+    await ctx.send_response(constants.commandsMessages['kick'], view=views.KickBanUnbanView(ctx, bot, "kick"), ephemeral=True, delete_after=600)
 
 
 @bot.slash_command(name="transfer", description="Used to register a transfer")
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def transfer(ctx: discord.ApplicationContext):
-    await ctx.send_response(main.commandsMessages['transfer'](), view=views.TransferView(ctx), ephemeral=True, delete_after=600)
+    await ctx.send_response(constants.commandsMessages['transfer'](), view=views.TransferView(ctx), ephemeral=True, delete_after=600)
 
 
 @bot.slash_command(name="cancel_transfer", description='Used to cancel a transfer')
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
-async def cancel_transfer(ctx: discord.ApplicationContext):
-    await ctx.send_response(main.commandsMessages['cancel_transfer'], view=views.CancelTransferView(ctx), ephemeral=True, delete_after=600)
+async def cancelTransfer(ctx: discord.ApplicationContext):
+    await ctx.send_response(constants.commandsMessages['cancel_transfer'], view=views.CancelTransferView(ctx), ephemeral=True, delete_after=600)
 
 
 @bot.slash_command(name="make_transfers",
                    description="Used to process all transfers from last season or a given season.",
-                   guild_ids=[main.risingServerId])
+                   guild_ids=[constants.risingServerId])
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def makeTransfers(ctx: discord.ApplicationContext):
     await ctx.defer(ephemeral=True)
@@ -159,10 +167,10 @@ async def makeTransfers(ctx: discord.ApplicationContext):
 
 
 @bot.slash_command(name='current_season', description="Gets the current season we're in",
-                   guild_ids=[main.risingServerId])
+                   guild_ids=[constants.risingServerId])
 @commands.has_role('Phoenix Rising')
 async def current_season(ctx: discord.ApplicationContext):
-    await ctx.send_response(main.commandsMessages['current_season'](), ephemeral=True, delete_after=60)
+    await ctx.send_response(constants.commandsMessages['current_season'](), ephemeral=True, delete_after=60)
 
 
-bot.run(main.discord_bot_token)
+bot.run(constants.discord_bot_token)

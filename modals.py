@@ -1,6 +1,7 @@
 import discord
 from discord.interactions import Interaction
 import main
+import constants
 
 
 class ScoreModal(discord.ui.Modal):
@@ -61,3 +62,21 @@ class TransferModal(discord.ui.Modal):
             message = await main.processTransfer(self.ctx, self.user, self.crew_from, self.crew_to, number_of_accounts,
                                                  self.season, self.ping, self.should_kick)
             await self.ctx.send_followup(message, ephemeral=True, delete_after=60)
+
+
+class AddCrewModal(discord.ui.Modal):
+    def __init__(self, ctx: discord.ApplicationContext, region: str, category: discord.CategoryChannel):
+        super().__init__(title=constants.commandsMessages['add_crew_part_2'])
+        self.ctx = ctx
+        self.region = region
+        self.category = category
+        self.shortname: str | None = None
+        self.add_item(discord.ui.InputText(label="Short name", style=discord.InputTextStyle.short))
+    
+    async def callback(self, interaction: discord.Interaction):
+        if isinstance(self.children[0].value, str):
+            self.shortname = self.children[0].value
+            message = await main.addCrew(self.ctx, self.category, self.region, self.shortname)
+        else:
+            message = None
+        await interaction.response.send_message(message, ephemeral=True, delete_after=60)
