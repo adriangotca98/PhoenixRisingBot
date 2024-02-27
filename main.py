@@ -1,4 +1,6 @@
 import discord
+from numpy import short
+import pymongo
 import utils
 import constants
 
@@ -81,10 +83,9 @@ async def makeTransfers(ctx: discord.ApplicationContext):
             if shouldKick:
                 await player.kick(reason="Kicked by Fawkes via transfer")
             else:
-                if isinstance(constants.communityMemberRoleId, int):
-                    communityMemberRole = utils.getRole(ctx, constants.communityMemberRoleId)
-                    if communityMemberRole is not None:
-                        await player.add_roles(communityMemberRole)
+                communityMemberRole = utils.getRole(ctx, constants.communityMemberRoleId)
+                if communityMemberRole is not None:
+                    await player.add_roles(communityMemberRole)
         constants.movesCollection.delete_one(transfer)
         await deleteMovementFromMessage(ctx, transfer['crew_from'], "OUT")
         await deleteMovementFromMessage(ctx, transfer['crew_to'], "IN")
@@ -258,15 +259,12 @@ async def updateVacancies(ctx: discord.ApplicationContext, crew_name: str, membe
                                f"\n{vacanciesEntry[crew_name]['next']}/30 Next Season\n")
         messageContent += "\n"
     guild = ctx.guild
-    if guild is not None and isinstance(constants.vacanciesChannelId, int) and isinstance(constants.vacanciesMessageId, int):
+    if guild is not None:
         channel = await guild.fetch_channel(constants.vacanciesChannelId)
         try:
-            if constants.vacanciesMessageId is not None and isinstance(channel, discord.TextChannel):
+            if isinstance(channel, discord.TextChannel):
                 message = await channel.fetch_message(constants.vacanciesMessageId)
                 await message.edit(content=messageContent)
-            elif isinstance(channel, discord.TextChannel):
-                message = await channel.send(messageContent)
-                constants.configCollection.update_one({"key": "IDs"}, {"$set": {"vacancies_message_id": message.id}})
         except discord.errors.NotFound:
             if isinstance(channel, discord.TextChannel):
                 message = await channel.send(messageContent)
@@ -332,9 +330,8 @@ def checkRole(ctx: discord.ApplicationContext, player: discord.Member, crewName:
     crewData = constants.crewCollection.find_one({"key": crewName}, {"_id": 0, "member": 1})
     if crewData is None:
         return False
-    roleName = crewData['member']
-    role = utils.getRole(ctx, roleName)
-    if role is None or player.get_role(role.id) is None:
+    roleId = crewData['member']
+    if player.get_role(roleId) is None:
         return False
     return True
 
@@ -490,5 +487,194 @@ async def unregisterTransfer(ctx: discord.ApplicationContext, player: discord.Me
     return f"Cancelled transfer for {player.name} from {crewFrom} to {crewTo}"
 
 
-async def addCrew(ctx: discord.ApplicationContext, category: discord.CategoryChannel, region: str, shortname: str):
-    pass
+def getOverwritesFromDust(ctx: discord.ApplicationContext, guild: discord.Guild, memberRole: discord.Role, channelOrCategory: str = "CATEGORY"):
+    dustData = constants.crewCollection.find_one({'key': 'dust'}) or {}
+    dustCategoryId = dustData.get('category_id',-1)
+    dustCategory = guild.get_channel(dustCategoryId)
+    dustMemberRole = utils.getRole(ctx, dustData.get('member',-1))
+    if not isinstance(dustCategory, discord.CategoryChannel) or dustMemberRole is None:
+        return {}
+    dustChatChannel = list(filter(lambda channel: channel.name.endswith("chat"), dustCategory.channels))[0]
+    categoryOverwrites = dustCategory.overwrites
+    categoryOverwrites[memberRole] = categoryOverwrites[dustMemberRole]
+    del categoryOverwrites[dustMemberRole]
+    channelOverwrites = dustChatChannel.overwrites
+    channelOverwrites[memberRole] = channelOverwrites[dustMemberRole]
+    del channelOverwrites[dustMemberRole]
+    if channelOrCategory == "CHANNEL":
+        return channelOverwrites
+    return categoryOverwrites
+
+
+def getBelowCrewData(shortname: str):
+    return constants.crewCollection.find_one({"$and": [{"key": {"$gt": shortname}}, {"key": {"$ne": "fire"}}, {"key": {"$ne": "ice"}}]}, sort={"key": pymongo.ASCENDING}) or {}
+
+
+async def addCategory(ctx: discord.ApplicationContext, region: str, shortname: str, memberRole: discord.Role):
+    guild = ctx.guild
+    if guild is None:
+        return
+    belowCrewData = getBelowCrewData(shortname)
+    prefixes = (utils.getDbField(constants.configCollection, "crew_region", "prefixes") or {})
+    categoryPrefixes = prefixes.get('category') if isinstance(prefixes, dict) else {}
+    belowCategoryChannel = guild.get_channel(belowCrewData['category_id'])
+    overwrites = getOverwritesFromDust(ctx, guild, memberRole)
+    if not isinstance(categoryPrefixes, dict) or belowCategoryChannel is None:
+        return
+    name = constants.categoryCommon + " ".join(shortname)
+    name = categoryPrefixes[region]+name
+    return await guild.create_category_channel(name, position = belowCategoryChannel.position-1, overwrites = overwrites)
+
+
+def getPermissionsAndPositions(ctx: discord.ApplicationContext) -> dict:
+    crewData = constants.crewCollection.find_one()
+    if not isinstance(crewData, dict):
+        return {
+            'permissions': None,
+            'positions': None
+        }
+    memberRoleId, adminRoleId, leaderRoleId = crewData['member'], crewData['admin'], crewData['leader']
+    memberRole, adminRole, leaderRole = utils.getRole(ctx, memberRoleId), utils.getRole(ctx, adminRoleId), utils.getRole(ctx, leaderRoleId)
+    if memberRole is None or adminRole is None or leaderRole is None:
+        return {
+            'permissions': None,
+            'positions': None
+        }
+    return {
+        'permissions': {
+            'member': memberRole.permissions,
+            'admin': adminRole.permissions,
+            'leader': leaderRole.permissions
+        },
+        'positions': {
+            'member': memberRole.position+1,
+            'admin': adminRole.position+1,
+            'leader': leaderRole.position+1
+        }
+    }
+
+
+async def createAndMoveRole(guild: discord.Guild, roleName: str, permissions: discord.Permissions, position: int):
+    memberRole = await guild.create_role(name=roleName, permissions=permissions, mentionable=True, hoist=True)
+    return await memberRole.edit(position=position)
+
+
+async def addRoles(ctx: discord.ApplicationContext, shortname: str):
+    memberRoleName = "Phoenix "+shortname.capitalize()
+    adminRoleName = shortname.capitalize()+" Admin"
+    leaderRoleName = shortname.capitalize()+" Leader"
+    guild = ctx.guild
+    permissions = getPermissionsAndPositions(ctx)['permissions']
+    positions = getPermissionsAndPositions(ctx)['positions']
+    if permissions is None or guild is None or positions is None:
+        return
+    memberRole = await createAndMoveRole(guild, memberRoleName, permissions['member'], positions['member'])
+    adminRole = await createAndMoveRole(guild, adminRoleName, permissions['admin'], positions['admin'])
+    leaderRole = await createAndMoveRole(guild, leaderRoleName, permissions['leader'], positions['leader'])
+    return memberRole, adminRole, leaderRole
+
+
+async def addChannels(ctx: discord.ApplicationContext, shortname: str, region: str, categoryChannel: discord.CategoryChannel, memberRole: discord.Role):
+    guild = ctx.guild
+    if guild is None:
+        return
+    overwrites = getOverwritesFromDust(ctx, guild, memberRole, "CHANNEL")
+    await guild.create_text_channel("🅒】"+shortname+"┃chat", category=categoryChannel, overwrites=overwrites)
+    membersChannel = await guild.create_text_channel("🅜】"+shortname+"┃members", category=categoryChannel)
+    await guild.create_text_channel("🅘】"+shortname+"┃info", category=categoryChannel)
+    await guild.create_text_channel("🅟】"+shortname+"┃polls", category=categoryChannel)
+    await guild.create_text_channel("🅡】"+shortname+"┃records", category=categoryChannel)
+    prefixes = utils.getDbField(constants.configCollection, "crew_region", "prefixes") or {}
+    channelPrefixes = (prefixes.get('channel') if isinstance(prefixes, dict) else {}) or {}
+    leaderboardPrefixes = (prefixes.get('leaderboard') if isinstance(prefixes, dict) else {}) or {}
+    leadershipCategoryId = utils.getDbField(constants.configCollection, 'IDs', 'leadership_category_id')
+    leadershipCategoryId = leadershipCategoryId if isinstance(leadershipCategoryId, int) else -1
+    leadershipCategory = guild.get_channel(leadershipCategoryId)
+    leaderboardCategoryId = utils.getDbField(constants.configCollection, 'IDs', 'leaderboards_category_id')
+    leaderboardCategoryId = leaderboardCategoryId if isinstance(leaderboardCategoryId, int) else -1
+    leaderboardCategory = guild.get_channel(leaderboardCategoryId)
+    belowCrewData = getBelowCrewData(shortname)
+    belowCrewAdminChannel = guild.get_channel(belowCrewData['admin_channel_id'])
+    if not isinstance(leadershipCategory, discord.CategoryChannel) or not isinstance(belowCrewAdminChannel, discord.TextChannel) or not isinstance(leaderboardCategory, discord.CategoryChannel):
+        return
+    adminChannel = await guild.create_text_channel(channelPrefixes[region]+shortname+"┃leadership", category=leadershipCategory, position=belowCrewAdminChannel.position-1)
+    leaderboardChannel = await guild.create_text_channel(leaderboardPrefixes[region]+"-"+shortname+"-0", category=leaderboardCategory)
+    return membersChannel, adminChannel, leaderboardChannel
+    
+
+async def addCrew(ctx: discord.ApplicationContext, region: str, shortname: str) -> str:
+    result = await addRoles(ctx, shortname)
+    if result is None:
+        return "Error in adding roles..."
+    memberRole, adminRole, leaderRole = result
+    if memberRole is None or adminRole is None or leaderRole is None:
+        return "Error in creating roles..."
+    categoryChannel = await addCategory(ctx, region, shortname, memberRole)
+    if categoryChannel is None:
+        return "Error in creating the category channel..."
+    result = await addChannels(ctx, shortname, region, categoryChannel, memberRole)
+    if result is None:
+        return "Error in adding channels..."
+    membersChannel, adminChannel, leaderboardChannel = result
+    constants.crewCollection.insert_one(
+        {
+            "key": shortname,
+            "admin": adminRole.id,
+            "member": memberRole.id,
+            "leader": leaderRole.id,
+            "leaderboard_id": leaderboardChannel.id,
+            "members_channel_id": membersChannel.id,
+            "admin_channel_id": adminChannel.id,
+            "category_id": categoryChannel.id
+        }
+    )
+    constants.configCollection.update_one({"key": "crews"}, {"$push": {"value": shortname}})
+    constants.configCollection.update_one({"key": "crews_region"}, {"$push": {f"value.{region}": shortname}})
+    return "test"
+
+
+async def deleteEntity(crewData: dict, key: str, getFunction):
+    id = crewData[key]
+    channelOrCategoryOrRole = getFunction(id)
+    if channelOrCategoryOrRole is None:
+        return
+    if isinstance(channelOrCategoryOrRole, discord.CategoryChannel):
+        for channel in channelOrCategoryOrRole.channels:
+            await channel.delete()
+    await channelOrCategoryOrRole.delete()
+
+
+async def deleteChannelsAndCategoryAndRoles(guild: discord.Guild, crewData: dict):
+    await deleteEntity(crewData, 'category_id', guild.get_channel)
+    await deleteEntity(crewData, 'leaderboard_id', guild.get_channel)
+    await deleteEntity(crewData, 'admin_channel_id', guild.get_channel)
+    await deleteEntity(crewData, 'admin', guild.get_role)
+    await deleteEntity(crewData, 'leader', guild.get_role)
+    await deleteEntity(crewData, 'member', guild.get_role)
+
+
+async def deleteMoves(ctx: discord.ApplicationContext, shortname: str):
+    moves = list(constants.movesCollection.find({"$or": [{"crew_from": shortname}, {"crew_to": shortname}]}))
+    constants.movesCollection.delete_many({"$or": [{"crew_from": shortname}, {"crew_to": shortname}]})
+    for move in moves:
+        if move['crew_from'] == shortname:
+            await deleteMovementFromMessage(ctx, move['crew_from'], "OUT")
+        else:
+            await deleteMovementFromMessage(ctx, move['crew_to'], "IN")
+        
+
+async def removeCrew(ctx: discord.ApplicationContext, shortname: str):
+    crewData = constants.crewCollection.find_one({"key": shortname})
+    if not isinstance(crewData, dict):
+        return "Crew not in the dn..."
+    guild = ctx.guild
+    if not isinstance(guild, discord.Guild):
+        return
+    await deleteChannelsAndCategoryAndRoles(guild, crewData)
+    await deleteMoves(ctx, shortname)
+    constants.vacanciesCollection.update_one({}, {"$unset": {shortname: ""}})
+    constants.multipleAccountsCollection.delete_one({"key": shortname})
+    constants.configCollection.update_one({"key": "crews"}, {"$pull": {"value": shortname}})
+    constants.configCollection.update_one({"key": "crew_region"}, {"$pull": {"value.EU": shortname, "value.US": shortname, "value.AUS/JPN": shortname}})
+    constants.crewCollection.delete_one({"key": shortname})
+    return f"All good. Crew {shortname} was deleted from DB, as well as channels and roles."

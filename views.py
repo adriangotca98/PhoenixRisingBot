@@ -7,12 +7,22 @@ import buttons
 import modals
 
 
-def update_select(select: discord.ui.Select):
+def updateSelect(select: discord.ui.Select):
     for idx in range(len(select.options)):
         select.options[idx].default = False
         if select.options[idx].label == select.values[0]:
             select.options[idx].default = True
     return select
+
+
+def resetChildren(children: list) -> list:
+    for idx1 in range(len(children)):
+        select = children[idx1]
+        if isinstance(select, discord.ui.Select):
+            for idx2 in range(len(select.options)):
+                select.options[idx2].default = False
+            children[idx1] = select
+    return children
 
 
 class FawkesView(discord.ui.View):
@@ -26,7 +36,7 @@ class FawkesView(discord.ui.View):
         placeholder="Pick an operation to be performed by Fawkes",
         options=list(map(lambda name: discord.SelectOption(label=name), constants.commandsList))
     )
-    async def select_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+    async def selectCallback(self, select: discord.ui.Select, interaction: discord.Interaction):
         
         views = {
             'ban': KickBanUnbanView(self.ctx, self.bot, 'ban'),
@@ -57,7 +67,7 @@ class MakeTransfersView(discord.ui.View):
         label='Yes',
         style=discord.ButtonStyle.green
     )
-    async def yes_button_callback(self, button: discord.Button, interaction: discord.Interaction):
+    async def yesButtonCallback(self, button: discord.Button, interaction: discord.Interaction):
         self.disable_all_items()
         message = await main.makeTransfers(self.ctx)
         await interaction.response.edit_message(view=self)
@@ -67,7 +77,7 @@ class MakeTransfersView(discord.ui.View):
         label='No',
         style=discord.ButtonStyle.red
     )
-    async def no_button_callback(self, button: discord.Button, interaction: discord.Interaction):
+    async def noButtonCallback(self, button: discord.Button, interaction: discord.Interaction):
         self.disable_all_items()
         await interaction.response.edit_message(view=self)
         await self.ctx.send_followup("OK, no transfers processed.", ephemeral=True, delete_after=60)
@@ -82,7 +92,7 @@ class MembersCrewsView(discord.ui.View):
         placeholder="Pick a crew to update members for!",
         options=list(map(lambda name: discord.SelectOption(label=name), utils.getCrewNames(constants.configCollection)))
     )
-    async def select_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+    async def selectCallback(self, select: discord.ui.Select, interaction: discord.Interaction):
         select.disabled = True
         await interaction.response.edit_message(view=self)
         message = await main.getPlayersResponse(self.ctx, str(select.values[0]))
@@ -98,7 +108,7 @@ class MultipleView(discord.ui.View):
         self.has_button = False
         super().__init__()
 
-    def maybe_add_button(self):
+    def maybeAddButton(self):
         if self.player is not None and self.crew is not None and self.number is not None and self.has_button is False:
             self.has_button = True
             self.add_item(buttons.MultipleButton(self.ctx, self.player, self.crew, self.number))
@@ -107,10 +117,10 @@ class MultipleView(discord.ui.View):
         placeholder="Choose a player",
         row=0
     )
-    async def user_select_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+    async def userSelectCallback(self, select: discord.ui.Select, interaction: discord.Interaction):
         if isinstance(select.values[0], discord.Member):
             self.player = select.values[0]
-        self.maybe_add_button()
+        self.maybeAddButton()
         await interaction.response.edit_message(view=self)
 
     @discord.ui.select(
@@ -118,10 +128,10 @@ class MultipleView(discord.ui.View):
         options=list(map(lambda name: discord.SelectOption(label=name, default=False), utils.getCrewNames(constants.configCollection))),
         row=1
     )
-    async def crew_select_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+    async def crewSelectCallback(self, select: discord.ui.Select, interaction: discord.Interaction):
         self.crew = str(select.values[0])
-        select = update_select(select)
-        self.maybe_add_button()
+        select = updateSelect(select)
+        self.maybeAddButton()
         await interaction.response.edit_message(view=self)
 
     @discord.ui.string_select(
@@ -129,10 +139,10 @@ class MultipleView(discord.ui.View):
         options=[discord.SelectOption(label=str(number), default=False) for number in range(1, 11)],
         row=2
     )
-    async def input_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+    async def inputCallback(self, select: discord.ui.Select, interaction: discord.Interaction):
         self.number = int(str(select.values[0]))
-        select = update_select(select)
-        self.maybe_add_button()
+        select = updateSelect(select)
+        self.maybeAddButton()
         await interaction.response.edit_message(view=self)
 
 
@@ -149,9 +159,9 @@ class ScoreView(discord.ui.View):
         options=list(map(lambda name: discord.SelectOption(label=name, default=False), utils.getCrewNames(constants.configCollection))),
         row=0
     )
-    async def select_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+    async def selectCallback(self, select: discord.ui.Select, interaction: discord.Interaction):
         select.disabled = True
-        select = update_select(select)
+        select = updateSelect(select)
         self.add_item(buttons.ScoreNextButton(self.ctx, str(select.values[0])))
         await interaction.response.edit_message(view=self)
 
@@ -185,14 +195,9 @@ class TransferView(discord.ui.View):
         self.ping = None
         self.next_buttons = None
         self.should_kick = False
-        for idx1 in range(len(self.children)):
-            select = self.children[idx1]
-            if isinstance(select, discord.ui.Select):
-                for idx2 in range(len(select.options)):
-                    select.options[idx2].default = False
-                self.children[idx1] = select
+        self.children = resetChildren(self.children)
 
-    def maybe_add_button(self):
+    def maybeAddButton(self):
         if (self.user is not None and self.crew_from is not None and self.crew_to is not None and
                 self.season is not None):
             if self.next_buttons:
@@ -210,10 +215,10 @@ class TransferView(discord.ui.View):
         placeholder="Select the user",
         row=0
     )
-    async def user_select_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+    async def userSelectCallback(self, select: discord.ui.Select, interaction: discord.Interaction):
         if isinstance(select.values[0], discord.Member):
             self.user = select.values[0]
-        self.maybe_add_button()
+        self.maybeAddButton()
         await interaction.response.edit_message(view=self)
 
     @discord.ui.string_select(
@@ -222,10 +227,10 @@ class TransferView(discord.ui.View):
         options=list(
             map(lambda name: discord.SelectOption(label=name, default=False), ["New to family"] + utils.getCrewNames(constants.configCollection)))
     )
-    async def crew_from_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+    async def crewFromCallback(self, select: discord.ui.Select, interaction: discord.Interaction):
         self.crew_from = str(select.values[0])
-        select = update_select(select)
-        self.maybe_add_button()
+        select = updateSelect(select)
+        self.maybeAddButton()
         await interaction.response.edit_message(view=self)
 
     @discord.ui.string_select(
@@ -234,14 +239,14 @@ class TransferView(discord.ui.View):
         options=list(map(lambda name: discord.SelectOption(label=name, default=False),
                          ["Out of family - kick", "Out of family - keep community"] + utils.getCrewNames(constants.configCollection)))
     )
-    async def crew_to_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+    async def crewToCallback(self, select: discord.ui.Select, interaction: discord.Interaction):
         self.crew_to = str(select.values[0])
         if self.crew_to.endswith("kick"):
             self.should_kick = True
         if self.crew_to.startswith("Out of family"):
             self.crew_to = "Out of family"
-        select = update_select(select)
-        self.maybe_add_button()
+        select = updateSelect(select)
+        self.maybeAddButton()
         await interaction.response.edit_message(view=self)
 
     @discord.ui.string_select(
@@ -252,10 +257,10 @@ class TransferView(discord.ui.View):
                           str(utils.getCurrentSeason(constants.configCollection) + 1), str(utils.getCurrentSeason(constants.configCollection) + 2),
                           str(utils.getCurrentSeason(constants.configCollection) + 3), str(utils.getCurrentSeason(constants.configCollection) + 4)]))
     )
-    async def season_select(self, select: discord.ui.Select, interaction: discord.Interaction):
+    async def seasonSelectCallback(self, select: discord.ui.Select, interaction: discord.Interaction):
         self.season = int(str(select.values[0]))
-        select = update_select(select)
-        self.maybe_add_button()
+        select = updateSelect(select)
+        self.maybeAddButton()
         await interaction.response.edit_message(view=self)
 
 
@@ -267,14 +272,10 @@ class CancelTransferView(discord.ui.View):
         self.crew_from = None
         self.crew_to = None
         self.next_buttons = None
-        for idx1 in range(len(self.children)):
-            select = self.children[idx1]
-            if isinstance(select, discord.ui.Select):
-                for idx2 in range(len(select.options)):
-                    select.options[idx2].default = False
-                self.children[idx1] = select
+        self.children = resetChildren(self.children)
 
-    def maybe_add_button(self):
+
+    def maybeAddButton(self):
         if self.user is not None and self.crew_from is not None and self.crew_to is not None:
             if self.next_buttons:
                 for next_button in self.next_buttons:
@@ -288,10 +289,10 @@ class CancelTransferView(discord.ui.View):
         placeholder="Select the user",
         row=0
     )
-    async def user_select_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+    async def userSelectCallback(self, select: discord.ui.Select, interaction: discord.Interaction):
         if isinstance(select.values[0], discord.Member):
             self.user = select.values[0]
-        self.maybe_add_button()
+        self.maybeAddButton()
         await interaction.response.edit_message(view=self)
 
     @discord.ui.string_select(
@@ -301,10 +302,10 @@ class CancelTransferView(discord.ui.View):
         options=list(
             map(lambda name: discord.SelectOption(label=name, default=False), ["New to family"] + utils.getCrewNames(constants.configCollection)))
     )
-    async def crew_from_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+    async def crewFromCallback(self, select: discord.ui.Select, interaction: discord.Interaction):
         self.crew_from = str(select.values[0])
-        select = update_select(select)
-        self.maybe_add_button()
+        select = updateSelect(select)
+        self.maybeAddButton()
         await interaction.response.edit_message(view=self)
 
     @discord.ui.string_select(
@@ -314,10 +315,10 @@ class CancelTransferView(discord.ui.View):
         options=list(
             map(lambda name: discord.SelectOption(label=name, default=False), ["Out of family"] + utils.getCrewNames(constants.configCollection)))
     )
-    async def crew_to_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+    async def crewToCallback(self, select: discord.ui.Select, interaction: discord.Interaction):
         self.crew_to = str(select.values[0])
-        select = update_select(select)
-        self.maybe_add_button()
+        select = updateSelect(select)
+        self.maybeAddButton()
         await interaction.response.edit_message(view=self)
 
 
@@ -326,12 +327,12 @@ class AddCrewView(discord.ui.View):
         super().__init__()
         self.ctx = ctx
         self.region = None
-        self.category = None
+        self.children = resetChildren(self.children)
     
 
-    async def maybe_send_modal(self, interaction: discord.Interaction):
-        if self.region is not None and self.category is not None:
-            await interaction.response.send_modal(modals.AddCrewModal(self.ctx, self.region, self.category))
+    async def maybeSendModal(self, interaction: discord.Interaction):
+        if self.region is not None:
+            await interaction.response.send_modal(modals.AddCrewModal(self.ctx, self.region, self))
         else:
             await interaction.response.edit_message(view=self)
 
@@ -340,19 +341,34 @@ class AddCrewView(discord.ui.View):
         placeholder="Region",
         options=list(map(lambda name: discord.SelectOption(label=name, default=False), ["EU","US","AUS/JPN"]))
     )
-    async def region_select_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+    async def regionSelectCallback(self, select: discord.ui.Select, interaction: discord.Interaction):
         if isinstance(select.values[0], str):
             self.region = select.values[0]
-        select = update_select(select)
-        await self.maybe_send_modal(interaction)
-        
+        select = updateSelect(select)
+        await self.maybeSendModal(interaction)
+
+
+class RemoveCrewView(discord.ui.View):
+    def __init__(self, ctx: discord.ApplicationContext):
+        super().__init__()
+        self.children = resetChildren(self.children)
+        self.ctx = ctx
+        self.crew = None
     
-    @discord.ui.channel_select(
-        placeholder="Category"
+
+    def maybeAddButton(self):
+        if isinstance(self.crew, str):
+            self.add_item(buttons.RemoveCrewButton(self.ctx, self.crew))
+
+
+    @discord.ui.string_select(
+        placeholder="Crew to delete",
+        options=list(
+            map(lambda name: discord.SelectOption(label=name, default=False), utils.getCrewNames(constants.configCollection))
+        )
     )
-    async def category_select_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
-        if isinstance(select.values[0], discord.CategoryChannel):
-            self.category = select.values[0]
-        else:
-            await self.ctx.send_followup("Please select a category channel, not a text or voice channel.", ephemeral=True, delete_after=60)
-        await self.maybe_send_modal(interaction)
+    async def crewSelectCallback(self, select: discord.ui.Select, interaction: discord.Interaction):
+        self.crew = select.values[0]
+        select = updateSelect(select)
+        self.maybeAddButton()
+        await interaction.response.edit_message(view=self)

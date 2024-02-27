@@ -45,10 +45,9 @@ async def on_application_command_completion(ctx: discord.ApplicationContext):
         discriminator = f"#{ctx.author.discriminator}" if ctx.author.discriminator != "0" else ""
         message = (f"**{ctx.author.name}{discriminator}** has sent the following command:"
                    f"**/{ctx.command.name} {args}**")
-        if isinstance(constants.loggingChannelId, int):
-            channel = await bot.fetch_channel(constants.loggingChannelId)
-            if isinstance(channel, discord.TextChannel):
-                await channel.send(message)
+        channel = await bot.fetch_channel(constants.loggingChannelId)
+        if isinstance(channel, discord.TextChannel):
+            await channel.send(message)
 
 
 @bot.event
@@ -70,10 +69,9 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
         discriminator = f"#{ctx.author.discriminator}" if ctx.author.discriminator != "0" else ""
         message = (f"**{ctx.author.name}{discriminator}** tried to send the following command: "
                    f"**/{ctx.command.name} {args}**, but it error out.")
-        if isinstance(constants.loggingChannelId, int):
-            channel = await bot.fetch_channel(constants.loggingChannelId)
-            if isinstance(channel, discord.TextChannel):
-                await channel.send(message)
+        channel = await bot.fetch_channel(constants.loggingChannelId)
+        if isinstance(channel, discord.TextChannel):
+            await channel.send(message)
     try:
         await ctx.send_followup(f"Failed unexpectedly", ephemeral=True)
     except RuntimeError:
@@ -85,6 +83,12 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
 @commands.has_any_role("Server Moderator")
 async def addCrew(ctx: discord.ApplicationContext):
     await ctx.send_response(constants.commandsMessages['add_crew_part_1'], view=views.AddCrewView(ctx), ephemeral=True, delete_after=600)
+
+
+@bot.slash_command(name='remove_crew', description="Used to remove a crew from Fawkes DB, as well as delete channels and roles related to it.", guild_ids=[constants.risingServerId])
+@commands.has_any_role("Server Moderator")
+async def removeCrew(ctx: discord.ApplicationContext):
+    await ctx.send_response(constants.commandsMessages['remove_crew'], view=views.RemoveCrewView(ctx), ephemeral=True, delete_after=600)
 
 
 @bot.slash_command(name="fawkes", description="Gets all the commands Fawkes is able to run and a dropdown to select what you want to run",

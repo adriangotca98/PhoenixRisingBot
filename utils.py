@@ -24,10 +24,10 @@ def getScoreWithSeparator(intScore: int) -> str:
     return scoreWithSeparator
 
 
-def getRole(ctx: discord.ApplicationContext, roleNameOrId: int) -> discord.Role | None:
+def getRole(ctx: discord.ApplicationContext, roleId: int) -> discord.Role | None:
     if ctx.guild is None:
         return None
-    return ctx.guild.get_role(roleNameOrId)
+    return ctx.guild.get_role(roleId)
 
 
 def getDbField(mongoCollection: collection.Collection, key: str, subkey: str) -> str | int | list | dict | None:
