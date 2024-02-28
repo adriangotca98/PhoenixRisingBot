@@ -520,7 +520,7 @@ async def addCategory(ctx: discord.ApplicationContext, region: str, shortname: s
     overwrites = getOverwritesFromDust(ctx, guild, memberRole)
     if not isinstance(categoryPrefixes, dict) or belowCategoryChannel is None:
         return
-    name = constants.categoryCommon + " ".join(shortname)
+    name = constants.categoryCommon + " ".join(shortname.upper())
     name = categoryPrefixes[region]+name
     return await guild.create_category_channel(name, position = belowCategoryChannel.position-1, overwrites = overwrites)
 
@@ -628,8 +628,10 @@ async def addCrew(ctx: discord.ApplicationContext, region: str, shortname: str) 
         }
     )
     constants.configCollection.update_one({"key": "crews"}, {"$push": {"value": shortname}})
-    constants.configCollection.update_one({"key": "crews_region"}, {"$push": {f"value.{region}": shortname}})
-    return "test"
+    constants.configCollection.update_one({"key": "crew_region"}, {"$push": {f"value.{region}": shortname}})
+    constants.vacanciesCollection.update_one({}, {"$set": {shortname: {"current": 0, "next": 0}}})
+    await updateVacancies(ctx, shortname)
+    return f"Crew {shortname.upper()} was successfully created, with entries in the DB, channels, category and roles. Feel free to use other commands on it from now on."
 
 
 async def deleteEntity(crewData: dict, key: str, getFunction):
@@ -655,11 +657,17 @@ async def deleteChannelsAndCategoryAndRoles(guild: discord.Guild, crewData: dict
 async def deleteMoves(ctx: discord.ApplicationContext, shortname: str):
     moves = list(constants.movesCollection.find({"$or": [{"crew_from": shortname}, {"crew_to": shortname}]}))
     constants.movesCollection.delete_many({"$or": [{"crew_from": shortname}, {"crew_to": shortname}]})
+    alteredCrews = set()
     for move in moves:
         if move['crew_from'] == shortname:
             await deleteMovementFromMessage(ctx, move['crew_from'], "OUT")
+            alteredCrews.add(move['crew_from'])
         else:
             await deleteMovementFromMessage(ctx, move['crew_to'], "IN")
+            alteredCrews.add(move['crew_to'])
+    for crew in alteredCrews:
+        await updateVacancies(ctx, crew)
+    await updateVacancies(ctx, utils.getCrewNames(constants.configCollection)[0])
         
 
 async def removeCrew(ctx: discord.ApplicationContext, shortname: str):
@@ -670,10 +678,10 @@ async def removeCrew(ctx: discord.ApplicationContext, shortname: str):
     if not isinstance(guild, discord.Guild):
         return
     await deleteChannelsAndCategoryAndRoles(guild, crewData)
-    await deleteMoves(ctx, shortname)
     constants.vacanciesCollection.update_one({}, {"$unset": {shortname: ""}})
     constants.multipleAccountsCollection.delete_one({"key": shortname})
     constants.configCollection.update_one({"key": "crews"}, {"$pull": {"value": shortname}})
     constants.configCollection.update_one({"key": "crew_region"}, {"$pull": {"value.EU": shortname, "value.US": shortname, "value.AUS/JPN": shortname}})
     constants.crewCollection.delete_one({"key": shortname})
+    await deleteMoves(ctx, shortname)
     return f"All good. Crew {shortname} was deleted from DB, as well as channels and roles."
