@@ -53,7 +53,7 @@ async def addOrRemoveRoleAndUpdateMultiple(ctx: discord.ApplicationContext, play
             constants.multipleAccountsCollection.update_one({"key": crewName}, {"$set": {str(player.id): newMultiple}}, upsert=True)
         await player.add_roles(crewRole)
     else:
-        currentMultiple = multipleEntry[str(player.id)] or 1
+        currentMultiple = multipleEntry.get(str(player.id)) or 1
         if currentMultiple - numberOfAccounts <= 1:
             constants.multipleAccountsCollection.update_one({"key": crewName}, {"$unset": {str(player.id): ""}})
             if currentMultiple - numberOfAccounts == 0:
