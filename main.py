@@ -327,6 +327,8 @@ async def processTransfer(ctx: discord.ApplicationContext, player: discord.Membe
 
 def checkRole(ctx: discord.ApplicationContext, player: discord.Member, crewName: str):
     crewData = constants.crewCollection.find_one({"key": crewName}, {"_id": 0, "member": 1})
+    if crewName == 'New to family':
+        return True
     if crewData is None:
         return False
     roleId = crewData['member']
