@@ -47,7 +47,7 @@ async def addOrRemoveRoleAndUpdateMultiple(ctx: discord.ApplicationContext, play
     if op == 'ADD':
         currentMultiple = 0
         if player.get_role(crewRole.id):
-            currentMultiple = multipleEntry[str(player.id)] or 1
+            currentMultiple = multipleEntry.get(str(player.id)) or 1
         newMultiple = currentMultiple + numberOfAccounts
         if newMultiple > 1:
             constants.multipleAccountsCollection.update_one({"key": crewName}, {"$set": {str(player.id): newMultiple}}, upsert=True)
@@ -331,7 +331,7 @@ def checkRole(ctx: discord.ApplicationContext, player: discord.Member, crewName:
         return True
     if crewData is None:
         return False
-    roleId = crewData['member']
+    roleId = crewData.get('member')
     if player.get_role(roleId) is None:
         return False
     return True
@@ -339,14 +339,14 @@ def checkRole(ctx: discord.ApplicationContext, player: discord.Member, crewName:
 
 def checkHistory(ctx: discord.ApplicationContext, player: discord.Member, crewName: str, season: int):
     movesData = list(constants.movesCollection.find({"player": player.id, "season": {"$lt": season}}))
-    movesData.sort(key=lambda elem: elem['season'])
+    movesData.sort(key=lambda elem: elem.get('season'))
     if len(movesData) != 0:
         lastMove = movesData[-1]
-        if lastMove['crew_to'] != crewName:
+        if lastMove.get('crew_to') != crewName:
             return (False,
                     f"I looked at this player history of movements and from what I can see, he will NOT be in "
                     f"**{crewName}** at the time of the transfer. "
-                    f"Last move is registered to {lastMove['crew_to']} in season {lastMove['season']}. "
+                    f"Last move is registered to {lastMove.get('crew_to')} in season {lastMove('season')}. "
                     f"If your move is before that you'll have to redo the path till then so we don't risk missing links"
                     f" between seasons. Talk with <@308561593858392065> about how to do this.")
         return True, "history"
@@ -364,10 +364,10 @@ def checkForNumberOfAccounts(player: discord.Member, crewName: str, season: int,
         numberOfAccountsAvailableToMove = multipleData[str(player.id)]
     movesBeforeTheSeason = constants.movesCollection.find({"player": player.id, "crew_from": crewName, "season": {"$lt": season}})
     for move in movesBeforeTheSeason:
-        numberOfAccountsAvailableToMove -= move['number_of_accounts'] or 1
+        numberOfAccountsAvailableToMove -= move.get('number_of_accounts') or 1
     existingMovesData = constants.movesCollection.find({"player": player.id, "crew_from": crewName})
     for existingMove in existingMovesData:
-        numAccounts = existingMove['number_of_accounts'] if 'number_of_accounts' in existingMove.keys() else 1
+        numAccounts = existingMove.get('number_of_accounts') or 1
         numberOfAccountsAvailableToMove -= numAccounts
     return numberOfAccountsAvailableToMove >= numberOfAccountsToMoveNext
 
@@ -413,7 +413,7 @@ async def sendMessageToAdminChat(ctx: discord.ApplicationContext, crew: str, pla
     crewData = constants.crewCollection.find_one({"key": crew}, {"admin_channel_id": 1, "admin": 1, "_id": 0})
     if crewData is None:
         return
-    adminRole = utils.getRole(ctx, crewData['admin'])
+    adminRole = utils.getRole(ctx, crewData.get('admin'))
     if adminRole is None:
         return
     message = ""
@@ -425,7 +425,7 @@ async def sendMessageToAdminChat(ctx: discord.ApplicationContext, crew: str, pla
         message = (f"{adminRole.mention},\n{ctx.author.mention} has just canceled a scheduled move of {player.mention} "
                    f"{toOrFrom} your crew in S{season} with {numberOfAccounts} account") + (
             "s." if numberOfAccounts > 1 else ".")
-    channel = await ctx.bot.fetch_channel(crewData['admin_channel_id'])
+    channel = await ctx.bot.fetch_channel(crewData.get('admin_channel_id') or -1)
     if isinstance(channel, discord.TextChannel):
         await channel.send(message)
 
@@ -441,11 +441,11 @@ async def updateMovementsMessage(ctx: discord.ApplicationContext, message, crewN
         try:
             guild = ctx.guild
             if guild is not None:
-                member = await guild.fetch_member(move['player'])
+                member = await guild.fetch_member(move.get('player'))
             else:
                 member = None
         except discord.Forbidden or discord.HTTPException:
-            constants.movesCollection.delete_many({"player": move['player']})
+            constants.movesCollection.delete_many({"player": move.get('player')})
             continue
         if member is not None:
             newMessage += f"{str(idx)}. {member.mention} "
