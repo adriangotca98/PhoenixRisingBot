@@ -4,7 +4,7 @@ import discord
 
 
 def computeScoreFromChannelName(name: str) -> int:
-    number = ''
+    number = ""
     for char in name:
         if char.isnumeric():
             number += char
@@ -12,14 +12,14 @@ def computeScoreFromChannelName(name: str) -> int:
 
 
 def getScoreWithSeparator(intScore: int) -> str:
-    scoreWithSeparator = ''
+    scoreWithSeparator = ""
     while intScore > 0:
         number = str(intScore % 1000)
         while len(number) < 3:
-            number = '0' + number
-        scoreWithSeparator = '’' + number + scoreWithSeparator
+            number = "0" + number
+        scoreWithSeparator = "’" + number + scoreWithSeparator
         intScore //= 1000
-    while scoreWithSeparator[0] == '0' or scoreWithSeparator[0] == '’':
+    while scoreWithSeparator[0] == "0" or scoreWithSeparator[0] == "’":
         scoreWithSeparator = scoreWithSeparator[1:]
     return scoreWithSeparator
 
@@ -30,7 +30,9 @@ def getRole(ctx: discord.ApplicationContext, roleId: int) -> discord.Role | None
     return ctx.guild.get_role(roleId)
 
 
-def getDbField(mongoCollection: collection.Collection, key: str, subkey: str) -> str | int | list | dict | None:
+def getDbField(
+    mongoCollection: collection.Collection, key: str, subkey: str
+) -> str | int | list | dict | None:
     entry = mongoCollection.find_one({"key": key}, {"_id": 0, subkey: 1})
     if entry is None:
         return None
@@ -57,7 +59,7 @@ def getCrewRegion(configCollection) -> dict:
 
 
 def getCurrentSeason(configCollection) -> int:
-    timestamp = getDbField(configCollection, 'time', 'value')
+    timestamp = getDbField(configCollection, "time", "value")
     if not isinstance(timestamp, int):
         timestamp = 0
     return int((time.time() - (timestamp or 0)) / 60 / 60 / 24 / 7 / 2) + 166

@@ -4,7 +4,13 @@ import main
 
 
 class MultipleButton(discord.ui.Button):
-    def __init__(self, ctx: discord.ApplicationContext, player: discord.Member, crew: str, number: int):
+    def __init__(
+        self,
+        ctx: discord.ApplicationContext,
+        player: discord.Member,
+        crew: str,
+        number: int,
+    ):
         super().__init__()
         self.row = 3
         self.ctx = ctx
@@ -36,24 +42,40 @@ class ScoreNextButton(discord.ui.Button):
 
 
 class KickBanUnbanButton(discord.ui.Button):
-    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, op: str, user: discord.Member):
+    def __init__(
+        self,
+        ctx: discord.ApplicationContext,
+        bot: discord.Bot,
+        op: str,
+        user: discord.Member,
+    ):
         super().__init__()
         self.ctx = ctx
         self.label = op
         self.op = op
         self.user = user
         self.bot = bot
-        self.style = discord.ButtonStyle.green if op == "unban" else discord.ButtonStyle.blurple
+        self.style = (
+            discord.ButtonStyle.green if op == "unban" else discord.ButtonStyle.blurple
+        )
 
     async def callback(self, interaction: discord.Interaction):
-        if self.op == 'unban':
+        if self.op == "unban":
             await main.kickOrBanOrUnban(self.user, self.op, self.bot)
         else:
-            await interaction.response.send_modal(modals.KickBanModal(self.user, self.op, self.bot))
+            await interaction.response.send_modal(
+                modals.KickBanModal(self.user, self.op, self.bot)
+            )
 
 
 class CancelTransferPingButton(discord.ui.Button):
-    def __init__(self, ctx: discord.ApplicationContext, user: discord.Member, crew_from: str, crew_to: str):
+    def __init__(
+        self,
+        ctx: discord.ApplicationContext,
+        user: discord.Member,
+        crew_from: str,
+        crew_to: str,
+    ):
         super().__init__()
         self.label = "Send with ping to admins!"
         self.style = discord.ButtonStyle.green
@@ -67,12 +89,20 @@ class CancelTransferPingButton(discord.ui.Button):
         if isinstance(self.view, discord.ui.View):
             self.view.disable_all_items()
         await interaction.response.edit_message(view=self.view)
-        message = await main.unregisterTransfer(self.ctx, self.user, self.crew_from, self.crew_to, self.ping)
+        message = await main.unregisterTransfer(
+            self.ctx, self.user, self.crew_from, self.crew_to, self.ping
+        )
         await self.ctx.send_followup(message, ephemeral=True, delete_after=60)
 
 
 class CancelTransferNoPingButton(CancelTransferPingButton):
-    def __init__(self, ctx: discord.ApplicationContext, user: discord.Member, crew_from: str, crew_to: str):
+    def __init__(
+        self,
+        ctx: discord.ApplicationContext,
+        user: discord.Member,
+        crew_from: str,
+        crew_to: str,
+    ):
         super().__init__(ctx, user, crew_from, crew_to)
         self.ping = False
         self.label = "Send with no ping to admins!"
@@ -80,8 +110,15 @@ class CancelTransferNoPingButton(CancelTransferPingButton):
 
 
 class TransferNoPingButton(CancelTransferNoPingButton):
-    def __init__(self, ctx: discord.ApplicationContext, user: discord.Member, crew_from: str, crew_to: str, season: int,
-                 should_kick: bool):
+    def __init__(
+        self,
+        ctx: discord.ApplicationContext,
+        user: discord.Member,
+        crew_from: str,
+        crew_to: str,
+        season: int,
+        should_kick: bool,
+    ):
         super().__init__(ctx, user, crew_from, crew_to)
         self.season = season
         self.should_kick = should_kick
@@ -90,13 +127,29 @@ class TransferNoPingButton(CancelTransferNoPingButton):
         if isinstance(self.view, discord.ui.View):
             self.view.disable_all_items()
             await interaction.response.send_modal(
-                modals.TransferModal(self.ctx, self.view, self.user, self.crew_from, self.crew_to, self.season,
-                                     self.ping, self.should_kick))
+                modals.TransferModal(
+                    self.ctx,
+                    self.view,
+                    self.user,
+                    self.crew_from,
+                    self.crew_to,
+                    self.season,
+                    self.ping,
+                    self.should_kick,
+                )
+            )
 
 
 class TransferPingButton(TransferNoPingButton):
-    def __init__(self, ctx: discord.ApplicationContext, user: discord.Member, crew_from: str, crew_to: str, season: int,
-                 should_kick: bool):
+    def __init__(
+        self,
+        ctx: discord.ApplicationContext,
+        user: discord.Member,
+        crew_from: str,
+        crew_to: str,
+        season: int,
+        should_kick: bool,
+    ):
         super().__init__(ctx, user, crew_from, crew_to, season, should_kick)
         self.ping = True
         self.label = "Send with ping to admins!"
@@ -110,7 +163,6 @@ class RemoveCrewButton(discord.ui.Button):
         self.label = f"I'm sure, delete {crew.upper()}!"
         self.ctx = ctx
         self.crew = crew
-
 
     async def callback(self, interaction: discord.Interaction):
         if self.view:
