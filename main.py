@@ -1,5 +1,4 @@
 import discord
-from numpy import number
 import pymongo
 import utils
 import constants
