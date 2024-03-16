@@ -66,7 +66,7 @@ class StartPushView(discord.ui.View):
         await self.maybeSendModal(interaction)
     
     @discord.ui.channel_select(
-        placeholder='Choose the members channel for the members list',
+        placeholder='Choose the chat channel',
     )
     async def chatChannelSelectCallback(self, select: discord.ui.Select, interaction: discord.Interaction):
         if isinstance(select.values[0], discord.TextChannel):
