@@ -108,7 +108,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
 async def startPush(ctx: discord.ApplicationContext):
     await ctx.send_response(
         constants.commandsMessages['start_push_part_1'],
-        views=views.StartPushView(ctx),
+        view=views.StartPushView(ctx),
         ephemeral=True,
         delete_after=600
     )
@@ -123,7 +123,7 @@ async def startPush(ctx: discord.ApplicationContext):
 async def endPush(ctx: discord.ApplicationContext):
     await ctx.send_response(
         constants.commandsMessages['end_push'],
-        views=views.EndPushView(ctx),
+        view=views.EndPushView(ctx),
         ephemeral=True,
         delete_after=600
     )
