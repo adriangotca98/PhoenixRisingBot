@@ -35,6 +35,9 @@ class StartPushModal(discord.ui.Modal):
         self.role = role
         self.members_channel = members_channel
         self.chat_channel = chat_channel
+        self.add_item(
+            discord.ui.InputText(label="Crew name", style=discord.InputTextStyle.short)
+        )
     
     async def callback(self, interaction: discord.Interaction):
         if isinstance(self.children[0].value, str):
