@@ -30,7 +30,7 @@ class ScoreModal(discord.ui.Modal):
 
 class StartPushModal(discord.ui.Modal):
     def __init__(self, ctx: discord.ApplicationContext, role: discord.Role, members_channel: discord.TextChannel, chat_channel: discord.TextChannel):
-        super().__init__(title=constants.commandsMessages['start_push_part2'])
+        super().__init__(title=constants.commandsMessages['start_push_part_2'])
         self.ctx = ctx
         self.role = role
         self.members_channel = members_channel
