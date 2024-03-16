@@ -11,6 +11,11 @@ def computeScoreFromChannelName(name: str) -> int:
     return int(number)
 
 
+def getPushCrewNames(crewCollection: collection.Collection) -> list[str]:
+    crews = list(map(lambda entry: entry.get("key"), crewCollection.find({"leaderboard_id": {"$exists": False}}, {"key": True})))
+    return crews
+
+
 def getScoreWithSeparator(intScore: int) -> str:
     scoreWithSeparator = ""
     while intScore > 0:
@@ -38,7 +43,7 @@ def getDbField(
         return None
     if subkey not in entry.keys():
         return None
-    return entry[subkey]
+    return entry.get(subkey)
 
 
 def getCrewNames(configCollection) -> list:

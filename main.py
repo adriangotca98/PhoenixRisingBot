@@ -1,4 +1,5 @@
 import discord
+from numpy import number
 import pymongo
 import utils
 import constants
@@ -29,14 +30,35 @@ async def init(bot: discord.Bot):
         return
     for crew in crewNames:
         channelId = (
-            utils.getDbField(constants.crewCollection, crew, "leaderboard_id") or 0
+            utils.getDbField(constants.crewCollection, crew, "leaderboard_id")
         )
         if not isinstance(channelId, int):
             continue
-        channel = await bot.fetch_channel(channelId)
+        channel = bot.get_channel(channelId)
         if not isinstance(channel, discord.TextChannel):
             continue
         constants.scores[crew] = utils.computeScoreFromChannelName(channel.name)
+
+
+def startPush(role: discord.Role, membersChannel: discord.TextChannel, chatChannel: discord.TextChannel, crewName: str):
+    constants.configCollection.update_one({"key": "crews"}, {"$push": {"value": crewName}})
+    constants.configCollection.update_one({"key": "crew_region"},  {"$push": {f"value.PUSH": crewName}})
+    constants.vacanciesCollection.update_one({}, {"$set": {crewName: {"current": 0, "next": 0}}})
+    constants.crewCollection.insert_one({
+        "member": role.id,
+        "key": crewName,
+        "members_channel_id": membersChannel.id,
+        "chat_channel_id": chatChannel.id
+    })
+    return "Push registered successfully."
+
+
+def endPush(crewName):
+    constants.configCollection.update_one({"key": "crews"}, {"$pull": {"value": crewName}})
+    constants.configCollection.update_one({"key": "crew_region"},  {"$pull": {f"value.PUSH": crewName}})
+    constants.vacanciesCollection.update_one({}, {"$unset": {crewName: ""}})
+    constants.crewCollection.delete_one({"key": crewName})
+    return "Push crew removed from tracking successfully."
 
 
 async def addOrRemoveRoleAndUpdateMultiple(
@@ -101,7 +123,7 @@ async def makeTransfers(ctx: discord.ApplicationContext):
             ctx, player, transfer, transfer["crew_to"], "ADD"
         )
         if transfer["crew_to"] == "Out of family":
-            shouldKick = transfer["should_kick"] or False
+            shouldKick = transfer.get("should_kick") or False
             if shouldKick:
                 await player.kick(reason="Kicked by Fawkes via transfer")
             else:
@@ -128,7 +150,7 @@ async def setScore(ctx: discord.ApplicationContext, crewName: str, score: str):
     )
     if not isinstance(channelId, int):
         return
-    channel = await ctx.bot.fetch_channel(channelId)
+    channel = ctx.bot.get_channel(channelId)
     if not isinstance(channel, discord.TextChannel):
         return
     channelName = channel.name
@@ -151,7 +173,7 @@ async def reorderChannels(
     )
     if not isinstance(channelId, int):
         return
-    channel = await ctx.bot.fetch_channel(channelId)
+    channel = ctx.bot.get_channel(channelId)
     if list(sortedScores.keys())[0] == crewName:
         if isinstance(channel, discord.TextChannel):
             await channel.move(beginning=True)
@@ -164,8 +186,8 @@ async def reorderChannels(
             )
             if aboveChannelId is None or not isinstance(aboveChannelId, int):
                 continue
-            aboveChannel = await ctx.bot.fetch_channel(aboveChannelId)
-            if isinstance(channel, discord.TextChannel):
+            aboveChannel = ctx.bot.get_channel(aboveChannelId)
+            if isinstance(channel, discord.TextChannel) and aboveChannel is not None:
                 await channel.move(after=aboveChannel)
             return
         lastKey = key
@@ -176,7 +198,7 @@ async def updateMessage(
 ):
     key = crewData["key"]
     channelId = crewData["members_channel_id"]
-    channel = await ctx.bot.fetch_channel(channelId)
+    channel = ctx.bot.get_channel(channelId)
     if isinstance(channel, discord.TextChannel):
         message = await channel.send(initialMessage)
         constants.crewCollection.update_one(
@@ -193,7 +215,7 @@ async def getMessage(
         message = await updateMessage(ctx, crewData, keyToGet, initialMessage)
     else:
         channelId = crewData[channelKey]
-        channel = await ctx.bot.fetch_channel(channelId)
+        channel = ctx.bot.get_channel(channelId)
         try:
             message = await channel.fetch_message(crewData[keyToGet])
         except discord.errors.NotFound:
@@ -205,8 +227,8 @@ async def getMessage(
 def getMembers(
     guild: discord.Guild,
     crewName: str,
-    adminRole: discord.Role,
-    leaderRole: discord.Role,
+    adminRole: discord.Role | None,
+    leaderRole: discord.Role | None,
     memberRole: discord.Role,
     multipleAccountsIds,
     multipleAccountsData,
@@ -216,9 +238,9 @@ def getMembers(
     for member in guild.members:
         memberStruct = Member(False, False, member.id, member.display_name, 0)
         memberId = str(member.id)
-        if member.get_role(adminRole.id):
+        if adminRole is not None and member.get_role(adminRole.id):
             memberStruct.admin = True
-        if member.get_role(leaderRole.id):
+        if leaderRole is not None and member.get_role(leaderRole.id):
             memberStruct.leader = True
         if member.get_role(memberRole.id):
             response.append(memberStruct)
@@ -245,9 +267,9 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
     else:
         multipleAccountsIds = []
     crewData = constants.crewCollection.find_one({"key": key}, {"_id": 0}) or {}
-    memberRoleId = utils.getDbField(constants.crewCollection, key, "member") or ""
-    adminRoleId = utils.getDbField(constants.crewCollection, key, "admin") or ""
-    leaderRoleId = utils.getDbField(constants.crewCollection, key, "leader") or ""
+    memberRoleId = utils.getDbField(constants.crewCollection, key, "member") or -1
+    adminRoleId = utils.getDbField(constants.crewCollection, key, "admin") or -1
+    leaderRoleId = utils.getDbField(constants.crewCollection, key, "leader") or -1
     if (
         not isinstance(memberRoleId, int)
         or not isinstance(adminRoleId, int)
@@ -257,7 +279,7 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
     memberRole = utils.getRole(ctx, memberRoleId)
     adminRole = utils.getRole(ctx, adminRoleId)
     leaderRole = utils.getRole(ctx, leaderRoleId)
-    if memberRole is None or adminRole is None or leaderRole is None:
+    if memberRole is None:
         return
     crewName = memberRole.name
     message = await getMessage(
@@ -346,7 +368,7 @@ async def updateVacancies(
         messageContent += "\n"
     guild = ctx.guild
     if guild is not None:
-        channel = await guild.fetch_channel(constants.vacanciesChannelId)
+        channel = guild.get_channel(constants.vacanciesChannelId)
         try:
             if isinstance(channel, discord.TextChannel):
                 message = await channel.fetch_message(constants.vacanciesMessageId)
@@ -568,6 +590,21 @@ async def processMovement(
     return "Transfer processed successfully"
 
 
+async def sendMessageInChat(ctx: discord.ApplicationContext, crew: str, player: discord.Member, confirmOrCancel: str, toOrFrom: str, numberOfAccounts: int):
+    if confirmOrCancel != "confirm" or toOrFrom == 'to':
+        return
+    crewData = constants.crewCollection.find_one({"key": crew})
+    if crewData is None:
+        return
+    message = (
+        f"Thanks for your interest in running in {crew}!"
+        f"You've been selected to run in {crew} with {numberOfAccounts} accounts, {player.mention}. Good luck!"
+    )
+    channel = ctx.bot.get_channel(crewData.get("chat_channel_id") or -1)
+    if isinstance(channel, discord.TextChannel):
+        await channel.send(message)
+
+
 async def sendMessageToAdminChat(
     ctx: discord.ApplicationContext,
     crew: str,
@@ -585,6 +622,9 @@ async def sendMessageToAdminChat(
     )
     if crewData is None:
         return
+    if crewData.get("admin") == None:
+        await sendMessageInChat(ctx, crew, player, confirmOrCancel, toOrFrom, numberOfAccounts)
+        return
     adminRole = utils.getRole(ctx, crewData.get("admin"))
     if adminRole is None:
         return
@@ -599,7 +639,7 @@ async def sendMessageToAdminChat(
             f"{adminRole.mention},\n{ctx.author.mention} has just canceled a scheduled move of {player.mention} "
             f"{toOrFrom} your crew in S{season} with {numberOfAccounts} account"
         ) + ("s." if numberOfAccounts > 1 else ".")
-    channel = await ctx.bot.fetch_channel(crewData.get("admin_channel_id") or -1)
+    channel = ctx.bot.get_channel(crewData.get("admin_channel_id") or -1)
     if isinstance(channel, discord.TextChannel):
         await channel.send(message)
 
