@@ -658,7 +658,7 @@ async def updateMovementsMessage(
                 member = await guild.fetch_member(move.get("player"))
             else:
                 member = None
-        except discord.Forbidden or discord.HTTPException:
+        except (discord.Forbidden, discord.HTTPException):
             constants.movesCollection.delete_many({"player": move.get("player")})
             continue
         if member is not None:
