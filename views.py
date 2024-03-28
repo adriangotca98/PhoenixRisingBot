@@ -417,8 +417,7 @@ class CancelTransferView(discord.ui.View):
             "crew_to": list(
                 map(
                     lambda name: discord.SelectOption(label=name, default=False),
-                    ["Out of family - kick", "Out of family - keep community"]
-                    + utils.getCrewNames(constants.configCollection),
+                    ["Out of family"] + utils.getCrewNames(constants.configCollection),
                 )
             ),
         }
