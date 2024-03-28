@@ -561,7 +561,7 @@ async def processMovement(
         "number_of_accounts": numberOfAccounts,
         "season": season,
     }
-    if shouldKick is not None and crewTo == "Out of family":
+    if shouldKick is True and crewTo == "Out of family":
         objectToInsert["should_kick"] = True
     constants.movesCollection.insert_one(objectToInsert)
     crewFromData = constants.crewCollection.find_one({"key": crewFrom}, {"_id": 0})
