@@ -414,7 +414,7 @@ async def kickOrBanOrUnban(
             if op == "kick":
                 await guild.kick(user, reason=reason)
             elif op == "ban":
-                await guild.ban(user, reason=reason, delete_message_days=0)
+                await guild.ban(user, reason=reason)
             elif op == "unban":
                 await guild.unban(user, reason=reason)
 
