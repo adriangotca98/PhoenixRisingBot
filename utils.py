@@ -3,6 +3,14 @@ import time
 import discord
 
 
+def updateSelect(select: discord.ui.Select):
+    for idx in range(len(select.options)):
+        select.options[idx].default = False
+        if select.options[idx].label == select.values[0]:
+            select.options[idx].default = True
+    return select
+
+
 def computeScoreFromChannelName(name: str) -> int:
     number = ""
     for char in name:

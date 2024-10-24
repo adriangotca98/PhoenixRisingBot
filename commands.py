@@ -2,7 +2,12 @@ import discord
 from discord.ext import commands
 import main
 import constants
-import views
+from crew.views import AddCrewView, RemoveCrewView
+from fawkes.views import FawkesView
+from members.views import MembersCrewsView, MultipleView, KickBanUnbanView
+from push.views import StartPushView, EndPushView
+from score.views import ScoreView
+from transfers.views import TransferView, CancelTransferView
 
 description = """Phoenix Rising family bot, Fawkes."""
 
@@ -108,7 +113,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
 async def startPush(ctx: discord.ApplicationContext):
     await ctx.send_response(
         constants.commandsMessages['start_push_part_1'],
-        view=views.StartPushView(ctx),
+        view=StartPushView(ctx),
         ephemeral=True,
         delete_after=600
     )
@@ -123,7 +128,7 @@ async def startPush(ctx: discord.ApplicationContext):
 async def endPush(ctx: discord.ApplicationContext):
     await ctx.send_response(
         constants.commandsMessages['end_push'],
-        view=views.EndPushView(ctx),
+        view=EndPushView(ctx),
         ephemeral=True,
         delete_after=600
     )
@@ -138,7 +143,7 @@ async def endPush(ctx: discord.ApplicationContext):
 async def addCrew(ctx: discord.ApplicationContext):
     await ctx.send_response(
         constants.commandsMessages["add_crew_part_1"],
-        view=views.AddCrewView(ctx),
+        view=AddCrewView(ctx),
         ephemeral=True,
         delete_after=600,
     )
@@ -153,7 +158,7 @@ async def addCrew(ctx: discord.ApplicationContext):
 async def removeCrew(ctx: discord.ApplicationContext):
     await ctx.send_response(
         constants.commandsMessages["remove_crew"],
-        view=views.RemoveCrewView(ctx),
+        view=RemoveCrewView(ctx),
         ephemeral=True,
         delete_after=600,
     )
@@ -180,7 +185,7 @@ async def fawkes(ctx: discord.ApplicationContext):
 - **unban**: unbans someone from the server
 """
     await ctx.send_response(
-        message, ephemeral=True, delete_after=600, view=views.FawkesView(ctx, bot)
+        message, ephemeral=True, delete_after=600, view=FawkesView(ctx, bot)
     )
 
 
@@ -193,7 +198,7 @@ async def fawkes(ctx: discord.ApplicationContext):
 async def members(ctx: discord.ApplicationContext):
     await ctx.send_response(
         constants.commandsMessages["members"],
-        view=views.MembersCrewsView(ctx),
+        view=MembersCrewsView(ctx),
         ephemeral=True,
         delete_after=600,
     )
@@ -208,7 +213,7 @@ async def members(ctx: discord.ApplicationContext):
 async def multiple(ctx: discord.ApplicationContext):
     await ctx.send_response(
         constants.commandsMessages["multiple"],
-        view=views.MultipleView(ctx),
+        view=MultipleView(ctx),
         ephemeral=True,
         delete_after=600,
     )
@@ -223,7 +228,7 @@ async def multiple(ctx: discord.ApplicationContext):
 async def score(ctx: discord.ApplicationContext):
     await ctx.send_response(
         constants.commandsMessages["score"],
-        view=views.ScoreView(ctx),
+        view=ScoreView(ctx),
         ephemeral=True,
         delete_after=600,
     )
@@ -234,7 +239,7 @@ async def score(ctx: discord.ApplicationContext):
 async def ban(ctx: discord.ApplicationContext):
     await ctx.send_response(
         constants.commandsMessages["ban"],
-        view=views.KickBanUnbanView(ctx, bot, "ban"),
+        view=KickBanUnbanView(ctx, bot, "ban"),
         ephemeral=True,
         delete_after=600,
     )
@@ -245,7 +250,7 @@ async def ban(ctx: discord.ApplicationContext):
 async def unban(ctx: discord.ApplicationContext):
     await ctx.send_response(
         constants.commandsMessages["unban"],
-        view=views.KickBanUnbanView(ctx, bot, "unban"),
+        view=KickBanUnbanView(ctx, bot, "unban"),
         ephemeral=True,
         delete_after=600,
     )
@@ -256,7 +261,7 @@ async def unban(ctx: discord.ApplicationContext):
 async def kick(ctx: discord.ApplicationContext):
     await ctx.send_response(
         constants.commandsMessages["kick"],
-        view=views.KickBanUnbanView(ctx, bot, "kick"),
+        view=KickBanUnbanView(ctx, bot, "kick"),
         ephemeral=True,
         delete_after=600,
     )
@@ -267,7 +272,7 @@ async def kick(ctx: discord.ApplicationContext):
 async def transfer(ctx: discord.ApplicationContext):
     await ctx.send_response(
         constants.commandsMessages["transfer"](),
-        view=views.TransferView(ctx),
+        view=TransferView(ctx),
         ephemeral=True,
         delete_after=600,
     )
@@ -278,7 +283,7 @@ async def transfer(ctx: discord.ApplicationContext):
 async def cancelTransfer(ctx: discord.ApplicationContext):
     await ctx.send_response(
         constants.commandsMessages["cancel_transfer"],
-        view=views.CancelTransferView(ctx),
+        view=CancelTransferView(ctx),
         ephemeral=True,
         delete_after=600,
     )
