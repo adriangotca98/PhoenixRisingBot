@@ -99,6 +99,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
             await channel.send(message)
     try:
         await ctx.send_followup(f"Failed unexpectedly", ephemeral=True)
+        print(error.with_traceback())
     except RuntimeError:
         await ctx.send("Failed unexpectedly")
     raise error
