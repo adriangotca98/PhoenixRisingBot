@@ -12,6 +12,7 @@ class ScoreView(discord.ui.View):
         super().__init__()
         options = set(utils.getCrewNames(constants.configCollection))
         options.difference_update(set(utils.getPushCrewNames(constants.configCollection)))
+        options = list(sorted(options))
         for child in self.children:
             if isinstance(child, discord.ui.Select):
                 child.options = list(
