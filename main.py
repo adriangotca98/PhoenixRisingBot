@@ -838,8 +838,8 @@ async def createAndMoveRole(
     return await memberRole.edit(position=position)
 
 
-async def addRoles(ctx: discord.ApplicationContext, shortname: str):
-    memberRoleName = "Phoenix " + shortname.capitalize()
+async def addRoles(ctx: discord.ApplicationContext, shortname: str, longname: str):
+    memberRoleName = longname.capitalize()
     adminRoleName = shortname.capitalize() + " Admin"
     leaderRoleName = shortname.capitalize() + " Leader"
     guild = ctx.guild
@@ -931,7 +931,9 @@ async def addChannels(
 async def addCrew(ctx: discord.ApplicationContext, region: str, shortname: str, longname: str) -> str:
     if constants.crewCollection.find_one({"key": shortname}) != None:
         return "A crew with the same shortname already exists. That needs to be unique. You can check the shortnames by using multiple other commands. If you don't find the shortname in there, contact AdrianG98RO to check the DB directly."
-    result = await addRoles(ctx, shortname)
+    if shortname.count(" ") != 0:
+        return "Shortname must not contain whispaces."
+    result = await addRoles(ctx, shortname, longname)
     if result is None:
         return "Error in adding roles..."
     memberRole, adminRole, leaderRole = result
