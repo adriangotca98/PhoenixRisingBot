@@ -928,7 +928,9 @@ async def addChannels(
     return membersChannel, adminChannel, leaderboardChannel
 
 
-async def addCrew(ctx: discord.ApplicationContext, region: str, shortname: str) -> str:
+async def addCrew(ctx: discord.ApplicationContext, region: str, shortname: str, longname: str) -> str:
+    if constants.crewCollection.find_one({"key": shortname}) != None:
+        return "A crew with the same shortname already exists. That needs to be unique. You can check the shortnames by using multiple other commands. If you don't find the shortname in there, contact AdrianG98RO to check the DB directly."
     result = await addRoles(ctx, shortname)
     if result is None:
         return "Error in adding roles..."
@@ -952,6 +954,7 @@ async def addCrew(ctx: discord.ApplicationContext, region: str, shortname: str) 
             "members_channel_id": membersChannel.id,
             "admin_channel_id": adminChannel.id,
             "category_id": categoryChannel.id,
+            "name": longname
         }
     )
     constants.configCollection.update_one(
@@ -964,7 +967,7 @@ async def addCrew(ctx: discord.ApplicationContext, region: str, shortname: str) 
         {}, {"$set": {shortname: {"current": 0, "next": 0}}}
     )
     await updateVacancies(ctx, shortname)
-    return f"Crew {shortname.upper()} was successfully created, with entries in the DB, channels, category and roles. Feel free to use other commands on it from now on."
+    return f"Crew with shortname={shortname} and longname={longname} was successfully created, with entries in the DB, channels, category and roles. Feel free to use other commands on it from now on."
 
 
 async def deleteEntity(crewData: dict, key: str, getFunction):

@@ -11,15 +11,20 @@ class AddCrewModal(discord.ui.Modal):
         self.view = view
         self.region = region
         self.shortname: str | None = None
+        self.longname: str | None = None
         self.add_item(
             discord.ui.InputText(label="Short name", style=discord.InputTextStyle.short)
+        )
+        self.add_item(
+            discord.ui.InputText(label="Long name", style=discord.InputTextStyle.long)
         )
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.edit_message(view=self.view)
-        if isinstance(self.children[0].value, str):
+        if isinstance(self.children[0].value, str) and isinstance(self.children[1].value, str):
             self.shortname = self.children[0].value
-            message = await main.addCrew(self.ctx, self.region, self.shortname)
+            self.longname = self.children[1].value
+            message = await main.addCrew(self.ctx, self.region, self.shortname, self.longname)
         else:
             message = None
-        await self.ctx.send_followup(message, ephemeral=True, delete_after=60)
+        await self.ctx.send_followup(message, ephemeral=True, delete_after=60) 
