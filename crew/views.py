@@ -9,14 +9,7 @@ class AddCrewView(discord.ui.View):
         super().__init__()
         self.ctx = ctx
         self.region = None
-        for child in self.children:
-            if isinstance(child, discord.ui.Select):
-                child.options = list(
-                    map(
-                        lambda name: discord.SelectOption(label=name, default=False),
-                        ["EU", "US", "AUS/JPN"],
-                    )
-                )
+        utils.resetSelect(self, ['EU','US','AUS/JPN'], constants.availableFieldsToEditInCrew)
 
     async def maybeSendModal(self, interaction: discord.Interaction):
         if self.region is not None:
@@ -40,14 +33,7 @@ class RemoveCrewView(discord.ui.View):
         super().__init__()
         self.ctx = ctx
         self.crew = None
-        for child in self.children:
-            if isinstance(child, discord.ui.Select):
-                child.options = list(
-                    map(
-                        lambda name: discord.SelectOption(label=name, default=False),
-                        utils.getCrewNames(constants.configCollection),
-                    )
-                )
+        utils.resetSelect(self, utils.getCrewNames(constants.configCollection))
 
     def maybeAddButton(self):
         if isinstance(self.crew, str):
@@ -61,3 +47,34 @@ class RemoveCrewView(discord.ui.View):
         select = utils.updateSelect(select)
         self.maybeAddButton()
         await interaction.response.edit_message(view=self)
+
+class EditCrewView(discord.ui.View):
+    def __init__(self, ctx: discord.ApplicationContext):
+        self.ctx = ctx
+        self.crew = None
+        self.fieldToEdit = None
+        utils.resetSelect(self, utils.getCrewNames(constants.configCollection))
+
+    @discord.ui.string_select(placeholder="Crew to edit")
+    async def crewSelectCallback(
+        self, select: discord.ui.Select, interaction: discord.Interaction
+    ):
+        self.crew = select.values[0]
+        select = utils.updateSelect(select)
+        await self.maybeSendModal(interaction)
+
+    @discord.ui.string_select(placeholder="Field to edit")
+    async def fieldToEditSelectCallback(
+        self, select: discord.ui.Select, interaction: discord.Interaction
+    ):
+        self.fieldToEdit = select.values[0]
+        select = utils.updateSelect(select)
+        await self.maybeSendModal(interaction)
+
+    async def maybeSendModal(self, interaction: discord.Interaction):
+        if isinstance(self.fieldToEdit, str) and isinstance(self.crew, str):
+            await interaction.response.send_modal(
+                modals.EditCrewModal(self.ctx, self.crew, self.fieldToEdit, self)
+            )
+        else:
+            await interaction.response.edit_message(view=self)

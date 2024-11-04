@@ -1040,3 +1040,6 @@ async def removeCrew(ctx: discord.ApplicationContext, shortname: str):
     constants.crewCollection.delete_one({"key": shortname})
     await deleteMoves(ctx, shortname)
     return f"All good. Crew {shortname} was deleted from DB, as well as channels and roles."
+
+async def editCrew(*args):
+    return "Not implemented yet."

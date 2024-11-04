@@ -2,6 +2,7 @@ from pymongo import collection
 import time
 import discord
 
+import constants
 
 def updateSelect(select: discord.ui.Select):
     for idx in range(len(select.options)):
@@ -10,6 +11,24 @@ def updateSelect(select: discord.ui.Select):
             select.options[idx].default = True
     return select
 
+def resetSelect(view: discord.ui.View, *args):
+    index = 0
+    for child in view.children:
+        if isinstance(child, discord.ui.Select):
+            child.options = list(
+                map(
+                    lambda name: discord.SelectOption(label=name, default=False),
+                    args[index]
+                )
+            )
+            index += 1
+
+def getCrewField(crew, editField):
+    dbField = "key" if editField is "Short crew name" else "name"
+    crewObj = constants.crewCollection.find_one({"key": crew})
+    if crewObj is None:
+        return None
+    return crewObj[dbField]
 
 def computeScoreFromChannelName(name: str) -> int:
     number = ""
@@ -18,11 +37,9 @@ def computeScoreFromChannelName(name: str) -> int:
             number += char
     return int(number)
 
-
 def getPushCrewNames(crewCollection: collection.Collection) -> list[str]:
     crews = list(map(lambda entry: entry.get("key"), crewCollection.find({"leaderboard_id": {"$exists": False}}, {"key": True})))
     return crews
-
 
 def getScoreWithSeparator(intScore: int) -> str:
     scoreWithSeparator = ""
@@ -36,12 +53,10 @@ def getScoreWithSeparator(intScore: int) -> str:
         scoreWithSeparator = scoreWithSeparator[1:]
     return scoreWithSeparator
 
-
 def getRole(ctx: discord.ApplicationContext, roleId: int) -> discord.Role | None:
     if ctx.guild is None:
         return None
     return ctx.guild.get_role(roleId)
-
 
 def getDbField(
     mongoCollection: collection.Collection, key: str, subkey: str
@@ -53,7 +68,6 @@ def getDbField(
         return None
     return entry.get(subkey)
 
-
 def getCrewNames(configCollection) -> list:
     crewNames = getDbField(configCollection, "crews", "value")
     if crewNames is None:
@@ -63,13 +77,11 @@ def getCrewNames(configCollection) -> list:
     crewNames.sort()
     return crewNames
 
-
 def getCrewRegion(configCollection) -> dict:
     entry = getDbField(configCollection, "crew_region", "value")
     if not isinstance(entry, dict):
         return {}
     return entry
-
 
 def getCurrentSeason(configCollection) -> int:
     timestamp = getDbField(configCollection, "time", "value")

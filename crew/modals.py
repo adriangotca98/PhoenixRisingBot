@@ -1,6 +1,8 @@
+from attr import field
 import discord
 import constants
 import main
+import utils
 
 class AddCrewModal(discord.ui.Modal):
     def __init__(
@@ -16,7 +18,7 @@ class AddCrewModal(discord.ui.Modal):
             discord.ui.InputText(label="Short name", style=discord.InputTextStyle.short)
         )
         self.add_item(
-            discord.ui.InputText(label="Long name", style=discord.InputTextStyle.long)
+            discord.ui.InputText(label="Long name", style=discord.InputTextStyle.short)
         )
 
     async def callback(self, interaction: discord.Interaction):
@@ -28,3 +30,27 @@ class AddCrewModal(discord.ui.Modal):
         else:
             message = None
         await self.ctx.send_followup(message, ephemeral=True, delete_after=60) 
+
+class EditCrewModal(discord.ui.Modal):
+    def __init__(
+        self, ctx: discord.ApplicationContext, crew: str, fieldToEdit: str, view: discord.ui.View
+    ):
+        oldValue = utils.getCrewField(crew, fieldToEdit)
+        super().__init__(title=constants.commandsMessages['edit_crew'](fieldToEdit, oldValue))
+        self.ctx = ctx
+        self.view = view
+        self.crew = crew
+        self.fieldToEdit = fieldToEdit
+        self.newValue: str | None = None
+        self.add_item(
+            discord.ui.InputText(label="New value", style=discord.InputTextStyle.short)
+        )
+    
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.edit_message(view=self.view)
+        if isinstance(self.children[0].value, str):
+            self.newValue = self.children[0].value
+            message = await main.editCrew(self.ctx, self.crew, self.fieldToEdit, self.newValue)
+        else:
+            message = None
+        await self.ctx.send_followup(message, ephemeral=True, delete_after=60)

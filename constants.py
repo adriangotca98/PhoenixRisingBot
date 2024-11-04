@@ -54,6 +54,7 @@ commandsMessages = {
     "ban": "# Banning Time!\nSelect user to ban from the server below:",
     "cancel_transfer": "# Cancel Transfer?\nIf you wish to cancel an input transfer, complete the following fields and submit:",
     "current_season": lambda: f"# Current Season\nWe are currently in season {utils.getCurrentSeason(configCollection)}",
+    "edit_crew": lambda fieldName, oldValue: f"Enter the new value for '{fieldName}'. Current value is '{oldValue}'",
     "end_push": "# End push\nEnds and stops tracking for a push crew. Does not delete channels or roles, nor modify people roles.",
     "kick": "# Booting Time!\nSelect user you would like to kick from the server below:",
     "make_transfers": "# Make Transfers?\nUpon confirming, Fawkes will complete all crew transfers for the current season. Are you sure?",
@@ -66,3 +67,7 @@ commandsMessages = {
     "transfer": lambda: f"# Player Transfer\nComplete the below fields to register an upcoming player transfer (please note that current season is {utils.getCurrentSeason(configCollection)}):",
     "unban": "# Undo Ban\nInput the discord name of a user you wish to lift a ban from:",
 }
+availableFieldsToEditInCrew = [
+    "Short crew name",
+    "Long crew name"
+]
