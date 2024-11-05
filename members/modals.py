@@ -1,5 +1,5 @@
 import discord
-import main
+import logic
 
 class KickBanModal(discord.ui.Modal):
     def __init__(self, user, op, bot):
@@ -12,7 +12,7 @@ class KickBanModal(discord.ui.Modal):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        await main.kickOrBanOrUnban(
+        await logic.kickOrBanOrUnban(
             self.user, self.op, self.bot, self.children[0].value
         )
         message = "User kicked." if self.op == "kick" else "User banned."

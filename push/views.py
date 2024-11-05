@@ -2,7 +2,7 @@ import discord
 import utils
 from push import modals
 import constants
-import main
+import logic
 
 class EndPushView(discord.ui.View):
     def __init__(self, ctx: discord.ApplicationContext):
@@ -21,7 +21,7 @@ class EndPushView(discord.ui.View):
     @discord.ui.string_select(placeholder="Push crew")
     async def callback(self, select: discord.ui.Select, interaction: discord.Interaction):
         if isinstance(select.values[0], str):
-            message = main.endPush(select.values[0])
+            message = logic.endPush(select.values[0])
             await interaction.response.send_message(message, ephemeral=True, delete_after=60)
 
 

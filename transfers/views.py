@@ -1,5 +1,5 @@
 import discord
-import main
+import logic
 from transfers import buttons
 import constants
 import utils
@@ -15,7 +15,7 @@ class MakeTransfersView(discord.ui.View):
         self, button: discord.Button, interaction: discord.Interaction
     ):
         self.disable_all_items()
-        message = await main.makeTransfers(self.ctx)
+        message = await logic.makeTransfers(self.ctx)
         await interaction.response.edit_message(view=self)
         await self.ctx.send_followup(message, ephemeral=True, delete_after=60)
 

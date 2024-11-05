@@ -1,6 +1,6 @@
 import discord
-import main
 from members import modals
+import logic
 
 class MultipleButton(discord.ui.Button):
     def __init__(
@@ -23,7 +23,7 @@ class MultipleButton(discord.ui.Button):
         if isinstance(self.view, discord.ui.View):
             self.view.disable_all_items()
         await interaction.response.edit_message(view=self.view)
-        message = main.processMultiple(self.player, self.crew, self.number)
+        message = logic.processMultiple(self.player, self.crew, self.number)
         await self.ctx.send_followup(message, ephemeral=True, delete_after=60)
 
 class KickBanUnbanButton(discord.ui.Button):
@@ -46,7 +46,7 @@ class KickBanUnbanButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         if self.op == "unban":
-            await main.kickOrBanOrUnban(self.user, self.op, self.bot)
+            await logic.kickOrBanOrUnban(self.user, self.op, self.bot)
         else:
             await interaction.response.send_modal(
                 modals.KickBanModal(self.user, self.op, self.bot)

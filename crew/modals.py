@@ -1,7 +1,7 @@
 from attr import field
 import discord
 import constants
-import main
+import logic
 import utils
 
 class AddCrewModal(discord.ui.Modal):
@@ -26,7 +26,7 @@ class AddCrewModal(discord.ui.Modal):
         if isinstance(self.children[0].value, str) and isinstance(self.children[1].value, str):
             self.shortname = self.children[0].value
             self.longname = self.children[1].value
-            message = await main.addCrew(self.ctx, self.region, self.shortname, self.longname)
+            message = await logic.addCrew(self.ctx, self.region, self.shortname, self.longname)
         else:
             message = None
         await self.ctx.send_followup(message, ephemeral=True, delete_after=60) 
@@ -50,7 +50,7 @@ class EditCrewModal(discord.ui.Modal):
         await interaction.response.edit_message(view=self.view)
         if isinstance(self.children[0].value, str):
             self.newValue = self.children[0].value
-            message = await main.editCrew(self.ctx, self.crew, self.fieldToEdit, self.newValue)
+            message = await logic.editCrew(self.ctx, self.crew, self.fieldToEdit, self.newValue)
         else:
             message = None
         await self.ctx.send_followup(message, ephemeral=True, delete_after=60)

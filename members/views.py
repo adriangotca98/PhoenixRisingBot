@@ -1,7 +1,7 @@
 import discord
 import utils
 import constants
-import main
+import logic
 from members import buttons
 import utils
 
@@ -24,7 +24,7 @@ class MembersCrewsView(discord.ui.View):
     ):
         select.disabled = True
         await interaction.response.edit_message(view=self)
-        message = await main.getPlayersResponse(self.ctx, str(select.values[0]))
+        message = await logic.getPlayersResponse(self.ctx, str(select.values[0]))
         await self.ctx.send_followup(message, ephemeral=True, delete_after=60)
 
 class MultipleView(discord.ui.View):

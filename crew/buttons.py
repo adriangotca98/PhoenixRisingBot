@@ -1,5 +1,5 @@
 import discord
-import main
+import logic
 
 class RemoveCrewButton(discord.ui.Button):
     def __init__(self, ctx: discord.ApplicationContext, crew: str):
@@ -13,5 +13,5 @@ class RemoveCrewButton(discord.ui.Button):
         if self.view:
             self.view.disable_all_items()
         await interaction.response.edit_message(view=self.view)
-        message = await main.removeCrew(self.ctx, self.crew)
+        message = await logic.removeCrew(self.ctx, self.crew)
         await self.ctx.send_followup(message, ephemeral=True, delete_after=60)

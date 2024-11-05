@@ -1,5 +1,5 @@
 import discord
-import main
+import logic
 
 class TransferModal(discord.ui.Modal):
     def __init__(
@@ -38,7 +38,7 @@ class TransferModal(discord.ui.Modal):
             number_of_accounts = 1
         finally:
             await interaction.response.edit_message(view=self.view)
-            message = await main.processTransfer(
+            message = await logic.processTransfer(
                 self.ctx,
                 self.user,
                 self.crew_from,

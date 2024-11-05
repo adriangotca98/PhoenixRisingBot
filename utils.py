@@ -1,8 +1,52 @@
 from pymongo import collection
 import time
 import discord
-
 import constants
+import utils
+
+async def init_bot(bot: discord.Bot):
+    crewNames = utils.getCrewNames(constants.configCollection)
+    if crewNames is None:
+        return
+    for crew in crewNames:
+        channelId = (
+            utils.getDbField(constants.crewCollection, crew, "leaderboard_id")
+        )
+        if not isinstance(channelId, int):
+            continue
+        channel = bot.get_channel(channelId)
+        if not isinstance(channel, discord.TextChannel):
+            continue
+        constants.scores[crew] = utils.computeScoreFromChannelName(channel.name)
+
+async def getMessage(
+    ctx, crewData: dict, keyToGet: str, channelKey: str, initialMessage: str
+):
+    if keyToGet not in crewData.keys():
+        message = await updateMessage(ctx, crewData, keyToGet, initialMessage)
+    else:
+        channelId = crewData[channelKey]
+        channel = ctx.bot.get_channel(channelId)
+        try:
+            message = await channel.fetch_message(crewData[keyToGet])
+        except discord.errors.NotFound:
+            print("Message not found. Creating another one :)")
+            message = await updateMessage(ctx, crewData, keyToGet, initialMessage)
+    return message
+
+async def updateMessage(
+    ctx: discord.ApplicationContext, crewData, keyToSet, initialMessage
+):
+    key = crewData["key"]
+    channelId = crewData["members_channel_id"]
+    channel = ctx.bot.get_channel(channelId)
+    if isinstance(channel, discord.TextChannel):
+        message = await channel.send(initialMessage)
+        constants.crewCollection.update_one(
+            {"key": key}, {"$set": {keyToSet: message.id}}
+        )
+        return message
+    return None
 
 def updateSelect(select: discord.ui.Select):
     for idx in range(len(select.options)):

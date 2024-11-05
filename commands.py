@@ -1,13 +1,14 @@
 import discord
 from discord.ext import commands
-import main
 import constants
+import utils
 from crew.views import AddCrewView, RemoveCrewView
 from fawkes.views import FawkesView
 from members.views import MembersCrewsView, MultipleView, KickBanUnbanView
 from push.views import StartPushView, EndPushView
 from score.views import ScoreView
 from transfers.views import TransferView, CancelTransferView
+from transfers import logic as transfers_logic
 
 description = """Phoenix Rising family bot, Fawkes."""
 
@@ -20,7 +21,7 @@ bot = discord.Bot(description=description, intents=intents)
 
 @bot.event
 async def on_ready():
-    await main.init(bot)
+    await utils.init_bot(bot)
     print(f"Logged in as {bot.user} (ID: {bot.user.id if bot.user is not None else 0})")
     print("------")
 
@@ -298,7 +299,7 @@ async def cancelTransfer(ctx: discord.ApplicationContext):
 @commands.has_any_role("Phoenix Family Leadership", "Fawkes Access")
 async def makeTransfers(ctx: discord.ApplicationContext):
     await ctx.defer(ephemeral=True)
-    message = await main.makeTransfers(ctx)
+    message = await transfers_logic.makeTransfers(ctx)
     await ctx.send_followup(message, ephemeral=True, delete_after=60)
 
 
