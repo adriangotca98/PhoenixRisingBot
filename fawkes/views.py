@@ -3,18 +3,22 @@ import constants
 from members.views import KickBanUnbanView, MembersCrewsView, MultipleView
 from transfers.views import CancelTransferView, MakeTransfersView, TransferView
 from score.views import ScoreView
+import utils
+
 
 class FawkesView(discord.ui.View):
     def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot):
         self.ctx = ctx
         self.bot = bot
         super().__init__()
+        utils.resetSelect(self, {"operation": constants.commandsList})
 
     @discord.ui.select(
         placeholder="Pick an operation to be performed by Fawkes",
         options=list(
             map(lambda name: discord.SelectOption(label=name), constants.commandsList)
         ),
+        custom_id="operation",
     )
     async def selectCallback(
         self, select: discord.ui.Select, interaction: discord.Interaction
@@ -40,4 +44,3 @@ class FawkesView(discord.ui.View):
             await interaction.response.send_message(
                 message, view=view, ephemeral=True, delete_after=600
             )
-

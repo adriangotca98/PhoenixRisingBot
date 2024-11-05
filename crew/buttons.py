@@ -1,5 +1,6 @@
 import discord
-import logic
+from crew import logic
+
 
 class RemoveCrewButton(discord.ui.Button):
     def __init__(self, ctx: discord.ApplicationContext, crew: str):

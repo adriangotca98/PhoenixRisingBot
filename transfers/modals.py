@@ -1,5 +1,6 @@
 import discord
-import logic
+from transfers import logic
+
 
 class TransferModal(discord.ui.Modal):
     def __init__(
@@ -49,4 +50,3 @@ class TransferModal(discord.ui.Modal):
                 self.should_kick,
             )
             await self.ctx.send_followup(message, ephemeral=True, delete_after=60)
-

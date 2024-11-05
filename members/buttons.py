@@ -1,6 +1,6 @@
 import discord
-from members import modals
-import logic
+from members import modals, logic
+
 
 class MultipleButton(discord.ui.Button):
     def __init__(
@@ -25,6 +25,7 @@ class MultipleButton(discord.ui.Button):
         await interaction.response.edit_message(view=self.view)
         message = logic.processMultiple(self.player, self.crew, self.number)
         await self.ctx.send_followup(message, ephemeral=True, delete_after=60)
+
 
 class KickBanUnbanButton(discord.ui.Button):
     def __init__(

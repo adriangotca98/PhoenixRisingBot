@@ -2,6 +2,7 @@ import discord
 import utils
 import constants
 
+
 async def setScore(ctx: discord.ApplicationContext, crewName: str, score: str):
     print(f"Setting score {str(score)} for {crewName}")
     channelId = (
@@ -19,6 +20,7 @@ async def setScore(ctx: discord.ApplicationContext, crewName: str, score: str):
     await channel.edit(name=newChannelName)
     constants.scores[crewName] = int(score)
     await reorderChannels(ctx, constants.scores, crewName)
+
 
 async def reorderChannels(
     ctx: discord.ApplicationContext, scoresDict: dict, crewName: str

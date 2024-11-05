@@ -1,8 +1,9 @@
 from attr import field
 import discord
 import constants
-import logic
+from crew import logic
 import utils
+
 
 class AddCrewModal(discord.ui.Modal):
     def __init__(
@@ -23,34 +24,49 @@ class AddCrewModal(discord.ui.Modal):
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.edit_message(view=self.view)
-        if isinstance(self.children[0].value, str) and isinstance(self.children[1].value, str):
+        if isinstance(self.children[0].value, str) and isinstance(
+            self.children[1].value, str
+        ):
             self.shortname = self.children[0].value
             self.longname = self.children[1].value
-            message = await logic.addCrew(self.ctx, self.region, self.shortname, self.longname)
+            message = await logic.addCrew(
+                self.ctx, self.region, self.shortname, self.longname
+            )
         else:
             message = None
-        await self.ctx.send_followup(message, ephemeral=True, delete_after=60) 
+        await self.ctx.send_followup(message, ephemeral=True, delete_after=60)
+
 
 class EditCrewModal(discord.ui.Modal):
     def __init__(
-        self, ctx: discord.ApplicationContext, crew: str, fieldToEdit: str, view: discord.ui.View
+        self,
+        ctx: discord.ApplicationContext,
+        crew: str,
+        fieldToEdit: str,
+        view: discord.ui.View,
     ):
         oldValue = utils.getCrewField(crew, fieldToEdit)
-        super().__init__(title=constants.commandsMessages['edit_crew'](fieldToEdit, oldValue))
+        super().__init__(
+            title=constants.commandsMessages["edit_crew_part_2"](fieldToEdit)
+        )
         self.ctx = ctx
         self.view = view
         self.crew = crew
         self.fieldToEdit = fieldToEdit
         self.newValue: str | None = None
         self.add_item(
-            discord.ui.InputText(label="New value", style=discord.InputTextStyle.short)
+            discord.ui.InputText(
+                label=f'Old value was "{oldValue}"', style=discord.InputTextStyle.short
+            )
         )
-    
+
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.edit_message(view=self.view)
         if isinstance(self.children[0].value, str):
             self.newValue = self.children[0].value
-            message = await logic.editCrew(self.ctx, self.crew, self.fieldToEdit, self.newValue)
+            message = await logic.editCrew(
+                self.ctx, self.crew, self.fieldToEdit, self.newValue
+            )
         else:
             message = None
         await self.ctx.send_followup(message, ephemeral=True, delete_after=60)

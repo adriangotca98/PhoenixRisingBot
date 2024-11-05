@@ -1,6 +1,7 @@
 import discord
 from score import modals
 
+
 class ScoreNextButton(discord.ui.Button):
     def __init__(self, ctx: discord.ApplicationContext, crew: str):
         super().__init__()

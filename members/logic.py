@@ -3,6 +3,7 @@ import constants
 import utils
 from transfers import logic as transfers_logic
 
+
 class Member:
     def __init__(
         self, admin: bool, leader: bool, member_id: int, name: str, multiple: int
@@ -13,12 +14,14 @@ class Member:
         self.name = name
         self.multiple = multiple
 
+
 def sortFunction(member: Member):
     if member.leader:
         return "0 " + member.name
     if member.admin:
         return "1 " + member.name
     return "2 " + member.name
+
 
 async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
     multipleAccountsData = constants.multipleAccountsCollection.find_one(
@@ -82,6 +85,7 @@ async def getPlayersResponse(ctx: discord.ApplicationContext, key: str):
         await message.edit(content=stringResponse)
     return "OK, all good."
 
+
 def getMembers(
     guild: discord.Guild,
     crewName: str,
@@ -115,6 +119,7 @@ def getMembers(
                 )
     return response
 
+
 async def kickOrBanOrUnban(
     user: discord.Member, op: str, bot: discord.Bot, reason: str | None = None
 ):
@@ -134,6 +139,7 @@ async def kickOrBanOrUnban(
                 await guild.ban(user, reason=reason)
             elif op == "unban":
                 await guild.unban(user, reason=reason)
+
 
 def processMultiple(user: discord.Member, crewName: str, numberOfAccounts: int):
     memberRoleId = utils.getDbField(constants.crewCollection, crewName, "member")

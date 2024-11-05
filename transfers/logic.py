@@ -3,6 +3,7 @@ import constants
 import utils
 from members import logic as members_logic
 
+
 async def unregisterTransfer(
     ctx: discord.ApplicationContext,
     player: discord.Member,
@@ -56,6 +57,7 @@ async def unregisterTransfer(
     )
     return f"Cancelled transfer for {player.name} from {crewFrom} to {crewTo}"
 
+
 async def updateMovementsMessage(
     ctx: discord.ApplicationContext, message, crewName, inOrOut
 ):
@@ -91,6 +93,7 @@ async def updateMovementsMessage(
         idx += 1
     await message.edit(newMessage)
 
+
 async def sendMessageToAdminChat(
     ctx: discord.ApplicationContext,
     crew: str,
@@ -109,7 +112,9 @@ async def sendMessageToAdminChat(
     if crewData is None:
         return
     if crewData.get("admin") == None:
-        await sendMessageInChat(ctx, crew, player, confirmOrCancel, toOrFrom, numberOfAccounts)
+        await sendMessageInChat(
+            ctx, crew, player, confirmOrCancel, toOrFrom, numberOfAccounts
+        )
         return
     adminRole = utils.getRole(ctx, crewData.get("admin"))
     if adminRole is None:
@@ -129,8 +134,16 @@ async def sendMessageToAdminChat(
     if isinstance(channel, discord.TextChannel):
         await channel.send(message)
 
-async def sendMessageInChat(ctx: discord.ApplicationContext, crew: str, player: discord.Member, confirmOrCancel: str, toOrFrom: str, numberOfAccounts: int):
-    if confirmOrCancel != "confirm" or toOrFrom == 'to':
+
+async def sendMessageInChat(
+    ctx: discord.ApplicationContext,
+    crew: str,
+    player: discord.Member,
+    confirmOrCancel: str,
+    toOrFrom: str,
+    numberOfAccounts: int,
+):
+    if confirmOrCancel != "confirm" or toOrFrom == "to":
         return
     crewData = constants.crewCollection.find_one({"key": crew})
     if crewData is None:
@@ -142,6 +155,7 @@ async def sendMessageInChat(ctx: discord.ApplicationContext, crew: str, player: 
     channel = ctx.bot.get_channel(crewData.get("chat_channel_id") or -1)
     if isinstance(channel, discord.TextChannel):
         await channel.send(message)
+
 
 async def deleteMovementFromMessage(
     ctx: discord.ApplicationContext, crewName: str, inOrOut: str
@@ -159,6 +173,7 @@ async def deleteMovementFromMessage(
         ctx, crewData, messageIdKey, "members_channel_id", initialMessage
     )
     await updateMovementsMessage(ctx, message, crewName, inOrOut)
+
 
 async def updateVacancies(
     ctx: discord.ApplicationContext, crew_name: str, members_list: list = []
@@ -219,6 +234,7 @@ async def updateVacancies(
                     {"key": "IDs"}, {"$set": {"vacancies_message_id": message.id}}
                 )
 
+
 async def processTransfer(
     ctx: discord.ApplicationContext,
     player: discord.Member,
@@ -243,6 +259,7 @@ async def processTransfer(
         ctx, crewFrom, crewTo, player, numberOfAccounts, season, pingAdmin, shouldKick
     )
     return message
+
 
 async def processMovement(
     ctx: discord.ApplicationContext,
@@ -275,7 +292,7 @@ async def processMovement(
         "crew_to": crewTo,
         "number_of_accounts": numberOfAccounts,
         "season": season,
-        "should_kick": shouldKick
+        "should_kick": shouldKick,
     }
     constants.movesCollection.insert_one(objectToInsert)
     crewFromData = constants.crewCollection.find_one({"key": crewFrom}, {"_id": 0})
@@ -301,6 +318,7 @@ async def processMovement(
     if season == utils.getCurrentSeason(constants.configCollection):
         await makeTransfers(ctx)
     return "Transfer processed successfully"
+
 
 async def makeTransfers(ctx: discord.ApplicationContext):
     currentSeason = utils.getCurrentSeason(constants.configCollection)
@@ -340,6 +358,7 @@ async def makeTransfers(ctx: discord.ApplicationContext):
         if crew not in ["New to family", "Out of family"]:
             await members_logic.getPlayersResponse(ctx, crew)
     return "All good"
+
 
 async def addOrRemoveRoleAndUpdateMultiple(
     ctx: discord.ApplicationContext,
@@ -382,6 +401,7 @@ async def addOrRemoveRoleAndUpdateMultiple(
                 {"$set": {str(player.id): currentMultiple - numberOfAccounts}},
             )
 
+
 def checkHistory(
     ctx: discord.ApplicationContext, player: discord.Member, crewName: str, season: int
 ):
@@ -409,6 +429,7 @@ def checkHistory(
         )
     return True, "crew_role"
 
+
 def checkForNumberOfAccounts(
     player: discord.Member, crewName: str, season: int, numberOfAccountsToMoveNext: int
 ):
@@ -431,6 +452,7 @@ def checkForNumberOfAccounts(
         numAccounts = existingMove.get("number_of_accounts") or 1
         numberOfAccountsAvailableToMove -= numAccounts
     return numberOfAccountsAvailableToMove >= numberOfAccountsToMoveNext
+
 
 def checkRole(ctx: discord.ApplicationContext, player: discord.Member, crewName: str):
     crewData = constants.crewCollection.find_one(

@@ -4,20 +4,20 @@ import discord
 import constants
 import utils
 
+
 async def init_bot(bot: discord.Bot):
     crewNames = utils.getCrewNames(constants.configCollection)
     if crewNames is None:
         return
     for crew in crewNames:
-        channelId = (
-            utils.getDbField(constants.crewCollection, crew, "leaderboard_id")
-        )
+        channelId = utils.getDbField(constants.crewCollection, crew, "leaderboard_id")
         if not isinstance(channelId, int):
             continue
         channel = bot.get_channel(channelId)
         if not isinstance(channel, discord.TextChannel):
             continue
         constants.scores[crew] = utils.computeScoreFromChannelName(channel.name)
+
 
 async def getMessage(
     ctx, crewData: dict, keyToGet: str, channelKey: str, initialMessage: str
@@ -34,6 +34,7 @@ async def getMessage(
             message = await updateMessage(ctx, crewData, keyToGet, initialMessage)
     return message
 
+
 async def updateMessage(
     ctx: discord.ApplicationContext, crewData, keyToSet, initialMessage
 ):
@@ -48,6 +49,7 @@ async def updateMessage(
         return message
     return None
 
+
 def updateSelect(select: discord.ui.Select):
     for idx in range(len(select.options)):
         select.options[idx].default = False
@@ -55,24 +57,27 @@ def updateSelect(select: discord.ui.Select):
             select.options[idx].default = True
     return select
 
-def resetSelect(view: discord.ui.View, *args):
+
+def resetSelect(view: discord.ui.View, optionsMap):
     index = 0
     for child in view.children:
-        if isinstance(child, discord.ui.Select):
+        if isinstance(child, discord.ui.Select) and child.custom_id in optionsMap:
             child.options = list(
                 map(
                     lambda name: discord.SelectOption(label=name, default=False),
-                    args[index]
+                    optionsMap[child.custom_id],
                 )
             )
             index += 1
 
+
 def getCrewField(crew, editField):
-    dbField = "key" if editField is "Short crew name" else "name"
+    dbField = "key" if editField == "Short crew name" else "name"
     crewObj = constants.crewCollection.find_one({"key": crew})
     if crewObj is None:
         return None
     return crewObj[dbField]
+
 
 def computeScoreFromChannelName(name: str) -> int:
     number = ""
@@ -81,9 +86,16 @@ def computeScoreFromChannelName(name: str) -> int:
             number += char
     return int(number)
 
+
 def getPushCrewNames(crewCollection: collection.Collection) -> list[str]:
-    crews = list(map(lambda entry: entry.get("key"), crewCollection.find({"leaderboard_id": {"$exists": False}}, {"key": True})))
+    crews = list(
+        map(
+            lambda entry: entry.get("key"),
+            crewCollection.find({"leaderboard_id": {"$exists": False}}, {"key": True}),
+        )
+    )
     return crews
+
 
 def getScoreWithSeparator(intScore: int) -> str:
     scoreWithSeparator = ""
@@ -97,10 +109,12 @@ def getScoreWithSeparator(intScore: int) -> str:
         scoreWithSeparator = scoreWithSeparator[1:]
     return scoreWithSeparator
 
+
 def getRole(ctx: discord.ApplicationContext, roleId: int) -> discord.Role | None:
     if ctx.guild is None:
         return None
     return ctx.guild.get_role(roleId)
+
 
 def getDbField(
     mongoCollection: collection.Collection, key: str, subkey: str
@@ -112,6 +126,7 @@ def getDbField(
         return None
     return entry.get(subkey)
 
+
 def getCrewNames(configCollection) -> list:
     crewNames = getDbField(configCollection, "crews", "value")
     if crewNames is None:
@@ -121,11 +136,13 @@ def getCrewNames(configCollection) -> list:
     crewNames.sort()
     return crewNames
 
+
 def getCrewRegion(configCollection) -> dict:
     entry = getDbField(configCollection, "crew_region", "value")
     if not isinstance(entry, dict):
         return {}
     return entry
+
 
 def getCurrentSeason(configCollection) -> int:
     timestamp = getDbField(configCollection, "time", "value")

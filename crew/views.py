@@ -4,12 +4,14 @@ import constants
 import utils
 from crew import buttons
 
+
 class AddCrewView(discord.ui.View):
     def __init__(self, ctx: discord.ApplicationContext):
         super().__init__()
         self.ctx = ctx
         self.region = None
-        utils.resetSelect(self, ['EU','US','AUS/JPN'], constants.availableFieldsToEditInCrew)
+
+        utils.resetSelect(self, {"region": ["EU", "US", "AUS/JPN"]})
 
     async def maybeSendModal(self, interaction: discord.Interaction):
         if self.region is not None:
@@ -19,7 +21,7 @@ class AddCrewView(discord.ui.View):
         else:
             await interaction.response.edit_message(view=self)
 
-    @discord.ui.string_select(placeholder="Region")
+    @discord.ui.string_select(placeholder="Region", custom_id="region")
     async def regionSelectCallback(
         self, select: discord.ui.Select, interaction: discord.Interaction
     ):
@@ -28,18 +30,21 @@ class AddCrewView(discord.ui.View):
         select = utils.updateSelect(select)
         await self.maybeSendModal(interaction)
 
+
 class RemoveCrewView(discord.ui.View):
     def __init__(self, ctx: discord.ApplicationContext):
         super().__init__()
         self.ctx = ctx
         self.crew = None
-        utils.resetSelect(self, utils.getCrewNames(constants.configCollection))
+        utils.resetSelect(
+            self, {"crew": utils.getCrewNames(constants.configCollection)}
+        )
 
     def maybeAddButton(self):
         if isinstance(self.crew, str):
             self.add_item(buttons.RemoveCrewButton(self.ctx, self.crew))
 
-    @discord.ui.string_select(placeholder="Crew to delete")
+    @discord.ui.string_select(placeholder="Crew to delete", custom_id="crew")
     async def crewSelectCallback(
         self, select: discord.ui.Select, interaction: discord.Interaction
     ):
@@ -48,14 +53,22 @@ class RemoveCrewView(discord.ui.View):
         self.maybeAddButton()
         await interaction.response.edit_message(view=self)
 
+
 class EditCrewView(discord.ui.View):
     def __init__(self, ctx: discord.ApplicationContext):
         self.ctx = ctx
         self.crew = None
         self.fieldToEdit = None
-        utils.resetSelect(self, utils.getCrewNames(constants.configCollection))
+        super().__init__()
+        utils.resetSelect(
+            self,
+            {
+                "crew": utils.getCrewNames(constants.configCollection),
+                "field": constants.availableFieldsToEditInCrew,
+            },
+        )
 
-    @discord.ui.string_select(placeholder="Crew to edit")
+    @discord.ui.string_select(placeholder="Crew to edit", custom_id="crew")
     async def crewSelectCallback(
         self, select: discord.ui.Select, interaction: discord.Interaction
     ):
@@ -63,7 +76,7 @@ class EditCrewView(discord.ui.View):
         select = utils.updateSelect(select)
         await self.maybeSendModal(interaction)
 
-    @discord.ui.string_select(placeholder="Field to edit")
+    @discord.ui.string_select(placeholder="Field to edit", custom_id="field")
     async def fieldToEditSelectCallback(
         self, select: discord.ui.Select, interaction: discord.Interaction
     ):

@@ -1,5 +1,6 @@
 import discord
-import logic
+from members import logic
+
 
 class KickBanModal(discord.ui.Modal):
     def __init__(self, user, op, bot):

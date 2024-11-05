@@ -4,7 +4,10 @@ import utils
 import pymongo
 from transfers import logic as transfers_logic
 
-async def addCrew(ctx: discord.ApplicationContext, region: str, shortname: str, longname: str) -> str:
+
+async def addCrew(
+    ctx: discord.ApplicationContext, region: str, shortname: str, longname: str
+) -> str:
     if constants.crewCollection.find_one({"key": shortname}) != None:
         return "A crew with the same shortname already exists. That needs to be unique. You can check the shortnames by using multiple other commands. If you don't find the shortname in there, contact AdrianG98RO to check the DB directly."
     if shortname.count(" ") != 0:
@@ -32,7 +35,7 @@ async def addCrew(ctx: discord.ApplicationContext, region: str, shortname: str, 
             "members_channel_id": membersChannel.id,
             "admin_channel_id": adminChannel.id,
             "category_id": categoryChannel.id,
-            "name": longname
+            "name": longname,
         }
     )
     constants.configCollection.update_one(
@@ -47,6 +50,7 @@ async def addCrew(ctx: discord.ApplicationContext, region: str, shortname: str, 
     await transfers_logic.updateVacancies(ctx, shortname)
     return f"Crew with shortname={shortname} and longname={longname} was successfully created, with entries in the DB, channels, category and roles. Feel free to use other commands on it from now on."
 
+
 async def deleteEntity(crewData: dict, key: str, getFunction):
     id = crewData[key]
     channelOrCategoryOrRole = getFunction(id)
@@ -57,6 +61,7 @@ async def deleteEntity(crewData: dict, key: str, getFunction):
             await channel.delete()
     await channelOrCategoryOrRole.delete()
 
+
 async def deleteChannelsAndCategoryAndRoles(guild: discord.Guild, crewData: dict):
     await deleteEntity(crewData, "category_id", guild.get_channel)
     await deleteEntity(crewData, "leaderboard_id", guild.get_channel)
@@ -64,6 +69,7 @@ async def deleteChannelsAndCategoryAndRoles(guild: discord.Guild, crewData: dict
     await deleteEntity(crewData, "admin", guild.get_role)
     await deleteEntity(crewData, "leader", guild.get_role)
     await deleteEntity(crewData, "member", guild.get_role)
+
 
 async def deleteMoves(ctx: discord.ApplicationContext, shortname: str):
     moves = list(
@@ -77,14 +83,19 @@ async def deleteMoves(ctx: discord.ApplicationContext, shortname: str):
     alteredCrews = set()
     for move in moves:
         if move["crew_from"] == shortname:
-            await transfers_logic.deleteMovementFromMessage(ctx, move["crew_from"], "OUT")
+            await transfers_logic.deleteMovementFromMessage(
+                ctx, move["crew_from"], "OUT"
+            )
             alteredCrews.add(move["crew_from"])
         else:
             await transfers_logic.deleteMovementFromMessage(ctx, move["crew_to"], "IN")
             alteredCrews.add(move["crew_to"])
     for crew in alteredCrews:
         await transfers_logic.updateVacancies(ctx, crew)
-    await transfers_logic.updateVacancies(ctx, utils.getCrewNames(constants.configCollection)[0])
+    await transfers_logic.updateVacancies(
+        ctx, utils.getCrewNames(constants.configCollection)[0]
+    )
+
 
 async def removeCrew(ctx: discord.ApplicationContext, shortname: str):
     crewData = constants.crewCollection.find_one({"key": shortname})
@@ -113,8 +124,10 @@ async def removeCrew(ctx: discord.ApplicationContext, shortname: str):
     await deleteMoves(ctx, shortname)
     return f"All good. Crew {shortname} was deleted from DB, as well as channels and roles."
 
+
 async def editCrew(*args):
     return "Not implemented yet."
+
 
 async def addRoles(ctx: discord.ApplicationContext, shortname: str, longname: str):
     memberRoleName = longname.capitalize()
@@ -135,6 +148,7 @@ async def addRoles(ctx: discord.ApplicationContext, shortname: str, longname: st
         guild, leaderRoleName, permissions["leader"], positions["leader"]
     )
     return memberRole, adminRole, leaderRole
+
 
 async def addCategory(
     ctx: discord.ApplicationContext,
@@ -159,6 +173,7 @@ async def addCategory(
     return await guild.create_category_channel(
         name, position=belowCategoryChannel.position - 1, overwrites=overwrites
     )
+
 
 async def addChannels(
     ctx: discord.ApplicationContext,
@@ -228,6 +243,7 @@ async def addChannels(
     )
     return membersChannel, adminChannel, leaderboardChannel
 
+
 def getOverwritesFromDust(
     ctx: discord.ApplicationContext,
     guild: discord.Guild,
@@ -268,6 +284,7 @@ def getBelowCrewData(shortname: str):
         )
         or {}
     )
+
 
 def getPermissionsAndPositions(ctx: discord.ApplicationContext) -> dict:
     crewData = constants.crewCollection.find_one()

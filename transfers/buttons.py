@@ -1,6 +1,6 @@
 import discord
-import logic
-from transfers import modals
+from transfers import modals, logic
+
 
 class CancelTransferPingButton(discord.ui.Button):
     def __init__(
@@ -28,6 +28,7 @@ class CancelTransferPingButton(discord.ui.Button):
         )
         await self.ctx.send_followup(message, ephemeral=True, delete_after=60)
 
+
 class CancelTransferNoPingButton(CancelTransferPingButton):
     def __init__(
         self,
@@ -40,6 +41,7 @@ class CancelTransferNoPingButton(CancelTransferPingButton):
         self.ping = False
         self.label = "Send with no ping to admins!"
         self.style = discord.ButtonStyle.red
+
 
 class TransferNoPingButton(CancelTransferNoPingButton):
     def __init__(
@@ -70,6 +72,7 @@ class TransferNoPingButton(CancelTransferNoPingButton):
                     self.should_kick,
                 )
             )
+
 
 class TransferPingButton(TransferNoPingButton):
     def __init__(

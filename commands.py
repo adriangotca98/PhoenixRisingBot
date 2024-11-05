@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import constants
 import utils
-from crew.views import AddCrewView, RemoveCrewView
+from crew.views import AddCrewView, EditCrewView, RemoveCrewView
 from fawkes.views import FawkesView
 from members.views import MembersCrewsView, MultipleView, KickBanUnbanView
 from push.views import StartPushView, EndPushView
@@ -107,32 +107,32 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
 
 
 @bot.slash_command(
-    name='start_push',
-    description='Starts a push tracking in Fawkes.',
-    guild_ids=[constants.risingServerId]
+    name="start_push",
+    description="Starts a push tracking in Fawkes.",
+    guild_ids=[constants.risingServerId],
 )
 @commands.has_any_role("Server Moderator")
 async def startPush(ctx: discord.ApplicationContext):
     await ctx.send_response(
-        constants.commandsMessages['start_push_part_1'],
+        constants.commandsMessages["start_push_part_1"],
         view=StartPushView(ctx),
         ephemeral=True,
-        delete_after=600
+        delete_after=600,
     )
 
 
 @bot.slash_command(
-    name='end_push',
-    description='Ends a push tracking for a push crew in Fawkes.',
-    guild_ids=[constants.risingServerId]
+    name="end_push",
+    description="Ends a push tracking for a push crew in Fawkes.",
+    guild_ids=[constants.risingServerId],
 )
 @commands.has_any_role("Server Moderator")
 async def endPush(ctx: discord.ApplicationContext):
     await ctx.send_response(
-        constants.commandsMessages['end_push'],
+        constants.commandsMessages["end_push"],
         view=EndPushView(ctx),
         ephemeral=True,
-        delete_after=600
+        delete_after=600,
     )
 
 
@@ -161,6 +161,21 @@ async def removeCrew(ctx: discord.ApplicationContext):
     await ctx.send_response(
         constants.commandsMessages["remove_crew"],
         view=RemoveCrewView(ctx),
+        ephemeral=True,
+        delete_after=600,
+    )
+
+
+@bot.slash_command(
+    name="edit_crew",
+    description="Edits short or long crew name and associated fields for each",
+    guild_ids=[constants.risingServerId],
+)
+@commands.has_any_role("Server Moderator")
+async def edit_crew(ctx: discord.ApplicationContext):
+    await ctx.send_response(
+        constants.commandsMessages["edit_crew"],
+        view=EditCrewView(ctx),
         ephemeral=True,
         delete_after=600,
     )

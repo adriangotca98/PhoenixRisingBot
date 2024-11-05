@@ -1,6 +1,5 @@
 import discord
-import logic
-from transfers import buttons
+from transfers import buttons, logic
 import constants
 import utils
 
@@ -29,6 +28,7 @@ class MakeTransfersView(discord.ui.View):
             "OK, no transfers processed.", ephemeral=True, delete_after=60
         )
 
+
 class TransferView(discord.ui.View):
     def __init__(self, ctx: discord.ApplicationContext):
         super().__init__()
@@ -40,36 +40,20 @@ class TransferView(discord.ui.View):
         self.ping = None
         self.next_buttons = None
         self.should_kick = False
-        optionsMap = {
-            "crew_from": list(
-                map(
-                    lambda name: discord.SelectOption(label=name, default=False),
-                    ["New to family"] + utils.getCrewNames(constants.configCollection),
-                )
-            ),
-            "crew_to": list(
-                map(
-                    lambda name: discord.SelectOption(label=name, default=False),
-                    ["Out of family - kick", "Out of family - keep community"]
-                    + utils.getCrewNames(constants.configCollection),
-                )
-            ),
-            "season": list(
-                map(
-                    lambda name: discord.SelectOption(label=name, default=False),
-                    [
-                        str(utils.getCurrentSeason(constants.configCollection)),
-                        str(utils.getCurrentSeason(constants.configCollection) + 1),
-                        str(utils.getCurrentSeason(constants.configCollection) + 2),
-                        str(utils.getCurrentSeason(constants.configCollection) + 3),
-                        str(utils.getCurrentSeason(constants.configCollection) + 4),
-                    ],
-                )
-            ),
-        }
-        for child in self.children:
-            if isinstance(child, discord.ui.Select) and child.custom_id in optionsMap:
-                child.options = optionsMap[child.custom_id]
+        currentSeason = utils.getCurrentSeason(constants.configCollection)
+        seasonOptions = []
+        for i in range(5):
+            seasonOptions.append(str(currentSeason + i))
+        utils.resetSelect(
+            self,
+            {
+                "crew_from": ["New to family"]
+                + utils.getCrewNames(constants.configCollection),
+                "crew_to": ["Out of family - kick", "Out of family - keep community"]
+                + utils.getCrewNames(constants.configCollection),
+                "season": seasonOptions,
+            },
+        )
 
     def maybeAddButton(self):
         if (
@@ -146,6 +130,7 @@ class TransferView(discord.ui.View):
         self.maybeAddButton()
         await interaction.response.edit_message(view=self)
 
+
 class CancelTransferView(discord.ui.View):
     def __init__(self, ctx: discord.ApplicationContext):
         super().__init__()
@@ -154,23 +139,15 @@ class CancelTransferView(discord.ui.View):
         self.crew_from = None
         self.crew_to = None
         self.next_buttons = None
-        optionsMap = {
-            "crew_from": list(
-                map(
-                    lambda name: discord.SelectOption(label=name, default=False),
-                    ["New to family"] + utils.getCrewNames(constants.configCollection),
-                )
-            ),
-            "crew_to": list(
-                map(
-                    lambda name: discord.SelectOption(label=name, default=False),
-                    ["Out of family"] + utils.getCrewNames(constants.configCollection),
-                )
-            ),
-        }
-        for child in self.children:
-            if isinstance(child, discord.ui.Select) and child.custom_id in optionsMap:
-                child.options = optionsMap[child.custom_id]
+        utils.resetSelect(
+            self,
+            {
+                "crew_from": ["New to family"]
+                + utils.getCrewNames(constants.configCollection),
+                "crew_to": ["Out of family"]
+                + utils.getCrewNames(constants.configCollection),
+            },
+        )
 
     def maybeAddButton(self):
         if (

@@ -1,5 +1,6 @@
 import discord
-import logic
+from score import logic
+
 
 class ScoreModal(discord.ui.Modal):
     def __init__(self, ctx: discord.ApplicationContext, crew: str):

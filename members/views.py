@@ -1,24 +1,21 @@
 import discord
 import utils
 import constants
-import logic
-from members import buttons
+from members import buttons, logic
 import utils
+
 
 class MembersCrewsView(discord.ui.View):
     def __init__(self, ctx: discord.ApplicationContext):
         self.ctx = ctx
         super().__init__()
-        for child in self.children:
-            if isinstance(child, discord.ui.Select):
-                child.options = list(
-                    map(
-                        lambda name: discord.SelectOption(label=name, default=False),
-                        utils.getCrewNames(constants.configCollection),
-                    )
-                )
+        utils.resetSelect(
+            self, {"crew": utils.getCrewNames(constants.configCollection)}
+        )
 
-    @discord.ui.select(placeholder="Pick a crew to update members for!")
+    @discord.ui.select(
+        placeholder="Pick a crew to update members for!", custom_id="crew"
+    )
     async def selectCallback(
         self, select: discord.ui.Select, interaction: discord.Interaction
     ):
@@ -26,6 +23,7 @@ class MembersCrewsView(discord.ui.View):
         await interaction.response.edit_message(view=self)
         message = await logic.getPlayersResponse(self.ctx, str(select.values[0]))
         await self.ctx.send_followup(message, ephemeral=True, delete_after=60)
+
 
 class MultipleView(discord.ui.View):
     def __init__(self, ctx: discord.ApplicationContext):
@@ -35,21 +33,13 @@ class MultipleView(discord.ui.View):
         self.number = None
         self.has_button = False
         super().__init__()
-        optionsMap = {
-            "crew": list(
-                map(
-                    lambda name: discord.SelectOption(label=name, default=False),
-                    utils.getCrewNames(constants.configCollection),
-                )
-            ),
-            "number_of_accounts": [
-                discord.SelectOption(label=str(number), default=False)
-                for number in range(1, 11)
-            ],
-        }
-        for child in self.children:
-            if isinstance(child, discord.ui.Select) and child.custom_id in optionsMap:
-                child.options = optionsMap[child.custom_id]
+        utils.resetSelect(
+            self,
+            {
+                "crew": utils.getCrewNames(constants.configCollection),
+                "number_of_accounts": list(range(1, 11)),
+            },
+        )
 
     def maybeAddButton(self):
         if (
@@ -97,6 +87,7 @@ class MultipleView(discord.ui.View):
         select = utils.updateSelect(select)
         self.maybeAddButton()
         await interaction.response.edit_message(view=self)
+
 
 class KickBanUnbanView(discord.ui.View):
     def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, op: str):
