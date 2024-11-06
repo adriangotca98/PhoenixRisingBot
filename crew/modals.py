@@ -1,6 +1,6 @@
-from attr import field
 import discord
 import constants
+from crew.logic import AddCrewLogic, EditCrewLogic
 from crew import logic
 import utils
 
@@ -29,9 +29,12 @@ class AddCrewModal(discord.ui.Modal):
         ):
             self.shortname = self.children[0].value
             self.longname = self.children[1].value
-            message = await logic.addCrew(
-                self.ctx, self.region, self.shortname, self.longname
-            )
+            try:
+                message = await AddCrewLogic(
+                    self.ctx, self.region, self.shortname, self.longname
+                ).doWork()
+            except (ValueError, RuntimeError) as e:
+                message = str(e)
         else:
             message = None
         await self.ctx.send_followup(message, ephemeral=True, delete_after=60)
@@ -64,9 +67,12 @@ class EditCrewModal(discord.ui.Modal):
         await interaction.response.edit_message(view=self.view)
         if isinstance(self.children[0].value, str):
             self.newValue = self.children[0].value
-            message = await logic.editCrew(
-                self.ctx, self.crew, self.fieldToEdit, self.newValue
-            )
+            try:
+                message = await EditCrewLogic(
+                    self.ctx, self.crew, self.fieldToEdit, self.newValue
+                ).doWork()
+            except ValueError as e:
+                message = str(e)
         else:
             message = None
         await self.ctx.send_followup(message, ephemeral=True, delete_after=60)

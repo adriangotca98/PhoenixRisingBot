@@ -149,3 +149,15 @@ def getCurrentSeason(configCollection) -> int:
     if not isinstance(timestamp, int):
         timestamp = 0
     return int((time.time() - (timestamp or 0)) / 60 / 60 / 24 / 7 / 2) + 166
+
+
+def getRegionKey(crew):
+    region = constants.configCollection.find_one({"key": "crew_region"})["crew_region"][
+        "value"
+    ]
+    if crew in region["EU"]:
+        return "EU"
+    if crew in region["US"]:
+        return "US"
+    if crew in region["AUS/JPN"]:
+        return "AUS/JPN"
