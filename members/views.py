@@ -1,5 +1,4 @@
 import discord
-from numpy import number
 import utils
 import constants
 from members import buttons, logic
@@ -35,7 +34,7 @@ class MultipleView(discord.ui.View):
         self.has_button = False
         super().__init__()
         numberOfAccountsList = []
-        for i in range(1,11):
+        for i in range(1, 11):
             numberOfAccountsList.append(str(i))
         utils.resetSelect(
             self,

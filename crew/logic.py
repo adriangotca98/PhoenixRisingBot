@@ -368,7 +368,7 @@ class EditCrewLogic:
             raise ValueError(
                 "A crew with the same shortname already exists. That needs to be unique. You can check the shortnames by using multiple other commands. If you don't find the shortname in there, contact AdrianG98RO to check the DB directly."
             )
-        regionKey = f"value.{self.crewData['region']}"
+        regionKey = f"value.{utils.getRegionKey(self.crew)}"
         self.__updateCrewData()
         self.__updateConfigData(regionKey)
         await self.__updateMovesAndVacancies()
@@ -383,6 +383,9 @@ class EditCrewLogic:
         )
         constants.movesCollection.update_many(
             {"crew_to": self.crew}, {"$set": {"crew_to": self.newValue}}
+        )
+        constants.vacanciesCollection.update_one(
+            {}, {"$rename": {self.crew: self.newValue}}
         )
         await transfers_logic.updateVacancies(
             self.ctx, utils.getCrewNames(constants.configCollection)[0]

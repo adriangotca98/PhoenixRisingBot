@@ -152,9 +152,7 @@ def getCurrentSeason(configCollection) -> int:
 
 
 def getRegionKey(crew):
-    region = constants.configCollection.find_one({"key": "crew_region"})["crew_region"][
-        "value"
-    ]
+    region = constants.configCollection.find_one({"key": "crew_region"})["value"]
     if crew in region["EU"]:
         return "EU"
     if crew in region["US"]:
