@@ -113,6 +113,6 @@ class GetCrewView(discord.ui.View):
         self.crew = select.values[0]
         select = utils.updateSelect(select)
         self.disable_all_items()
-        message = await GetCrewLogic(self.ctx, self.crew).doWork()
         await interaction.response.edit_message(view=self)
+        message = await GetCrewLogic(self.ctx, self.crew).doWork()
         await self.ctx.send_followup(message)
