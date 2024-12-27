@@ -3,6 +3,7 @@ from crew import modals
 import constants
 import utils
 from crew import buttons
+from crew.logic import GetCrewLogic
 
 
 class AddCrewView(discord.ui.View):
@@ -91,3 +92,27 @@ class EditCrewView(discord.ui.View):
             )
         else:
             await interaction.response.edit_message(view=self)
+
+
+class GetCrewView(discord.ui.View):
+    def __init__(self, ctx: discord.ApplicationContext):
+        self.ctx = ctx
+        self.crew = None
+        super().__init__()
+        utils.resetSelect(
+            self,
+            {
+                "crew": utils.getCrewNames(constants.configCollection) + ["all"],
+            },
+        )
+
+    @discord.ui.string_select(placeholder="Crew name", custom_id="crew")
+    async def crewSelectCallback(
+        self, select: discord.ui.Select, interaction: discord.Interaction
+    ):
+        self.crew = select.values[0]
+        select = utils.updateSelect(select)
+        self.disable_all_items()
+        message = await GetCrewLogic(self.ctx, self.crew).doWork()
+        await interaction.response.edit_message(view=self)
+        await self.ctx.send_followup(message)

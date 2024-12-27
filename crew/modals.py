@@ -48,7 +48,9 @@ class EditCrewModal(discord.ui.Modal):
         fieldToEdit: str,
         view: discord.ui.View,
     ):
-        oldValue = utils.getCrewField(crew, fieldToEdit)
+        oldValue = utils.getDbField(
+            constants.crewCollection, crew, constants.editFieldToDbField[fieldToEdit]
+        )
         super().__init__(
             title=constants.commandsMessages["edit_crew_part_2"](fieldToEdit)
         )

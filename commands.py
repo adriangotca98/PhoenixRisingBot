@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import constants
 import utils
-from crew.views import AddCrewView, EditCrewView, RemoveCrewView
+from crew.views import AddCrewView, EditCrewView, RemoveCrewView, GetCrewView
 from fawkes.views import FawkesView
 from members.views import MembersCrewsView, MultipleView, KickBanUnbanView
 from push.views import StartPushView, EndPushView
@@ -161,6 +161,21 @@ async def removeCrew(ctx: discord.ApplicationContext):
     await ctx.send_response(
         constants.commandsMessages["remove_crew"],
         view=RemoveCrewView(ctx),
+        ephemeral=True,
+        delete_after=600,
+    )
+
+
+@bot.slash_command(
+    name="get_crew",
+    description="Used to get current crew data for a specific crew or for all crews.",
+    guild_ids=[constants.risingServerId],
+)
+@commands.has_any_role("Phoenix Family Leadership", "Server Moderator", "Fawkes Access")
+async def getCrew(ctx: discord.ApplicationContext):
+    await ctx.send_response(
+        constants.commandsMessages["get_crew"],
+        view=GetCrewView(ctx),
         ephemeral=True,
         delete_after=600,
     )

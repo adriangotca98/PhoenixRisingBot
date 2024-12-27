@@ -357,9 +357,23 @@ class EditCrewLogic:
     async def doWork(self):
         if self.fieldToEdit == "Short crew name":
             await self.__editShortName()
-        if self.fieldToEdit == "Long crew name":
+        elif self.fieldToEdit == "Long crew name":
             self.__editLongName()
-        return f"All good. Crew {self.crew} was edited in the DB, as well as the appropriate entities on the db."
+        elif self.fieldToEdit == "Wildcard schedule link":
+            self.__editWildcardScheduleLink()
+        elif self.fieldToEdit == "Min RP":
+            self.__editMinRP()
+        return f"All good. Crew {self.crew} was edited in the DB, as well as the appropriate entities on the server, if needed."
+
+    def __editWildcardScheduleLink(self):
+        constants.crewCollection.update_one(
+            {"key": self.crew}, {"$set": {"wildcard": self.newValue}}
+        )
+
+    def __editMinRP(self):
+        constants.crewCollection.update_one(
+            {"key": self.crew}, {"$set": {"min_rp": self.newValue}}
+        )
 
     async def __editShortName(self):
         if self.newValue.count(" ") != 0:
@@ -442,3 +456,54 @@ class EditCrewLogic:
         constants.crewCollection.update_one(
             {"key": self.crew}, {"$set": {"name": self.newValue}}
         )
+
+
+class GetCrewLogic:
+    def __init__(self, ctx: discord.ApplicationContext, crew: str):
+        self.ctx = ctx
+        self.crew = crew
+
+    async def doWork(self):
+        message = ""
+        if self.crew in utils.getCrewNames(constants.configCollection):
+            return self.__getMessageForSingleCrew(True)
+        else:
+            regions = utils.getCrewRegion(constants.configCollection)
+            for region in regions.keys():
+                message += f"# __{region.upper()} Crews__\n\n"
+                for crew in regions[region]:
+                    self.crew = crew
+                    message += self.__getMessageForSingleCrew(False)
+            return message
+
+    def __getMessageForSingleCrew(self, addLeadership):
+        return f"""## {utils.getDbField(constants.crewCollection, self.crew, "name")}
+{self.__maybeAddLeadership(addLeadership)}
+- Wildcard Link: {self.__getWildcardLink()}
+- RP Min: {self.__getMinRP()}
+"""
+
+    def __maybeAddLeadership(self, addLeadership):
+        if addLeadership:
+            return f"""- Leader: {self.__getLeader()}
+- Admins: 
+{self.__getAdmins()}"""
+        return ""
+
+    def __getLeader(self):
+        leaderRole = utils.getRole(
+            self.ctx, utils.getDbField(constants.crewCollection, self.crew, "leader")
+        )
+        return f"<@{leaderRole.members[0].id}>"
+
+    def __getAdmins(self):
+        adminRole = utils.getRole(
+            self.ctx, utils.getDbField(constants.crewCollection, self.crew, "admin")
+        )
+        return "\n".join(map(lambda member: f"  - <@{member.id}>", adminRole.members))
+
+    def __getWildcardLink(self):
+        return utils.getDbField(constants.crewCollection, self.crew, "wildcard") or "-"
+
+    def __getMinRP(self):
+        return utils.getDbField(constants.crewCollection, self.crew, "min_rp") or "-"

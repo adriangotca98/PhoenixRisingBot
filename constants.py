@@ -54,9 +54,10 @@ commandsMessages = {
     "ban": "# Banning Time!\nSelect user to ban from the server below:",
     "cancel_transfer": "# Cancel Transfer?\nIf you wish to cancel an input transfer, complete the following fields and submit:",
     "current_season": lambda: f"# Current Season\nWe are currently in season {utils.getCurrentSeason(configCollection)}",
-    "edit_crew": "# Edit crew\nYou can edit short or long crew names. Effects:\n- editing short crew name edits also the names of the channels of the associated crew\n- editing long names edits all messages where the long name of the crew appears.",
+    "edit_crew": "# Edit crew\nYou can edit short or long crew names. Effects:\n- editing short crew name edits also the names of the channels of the associated crew\n- editing long names edits all messages where the long name of the crew appears.\n- editing wildcard schedule link will edit the output of `/get_crew` command.\n- editing min RP will edit the output of `/get_crew` command.",
     "edit_crew_part_2": lambda fieldName: f"New value for '{fieldName}'",
     "end_push": "# End push\nEnds and stops tracking for a push crew. Does not delete channels or roles, nor modify people roles.",
+    "get_crew": "# Get crew\nGets crew data for all crews or for a specific crew. Data for all crews doesn't contain the leadership team.",
     "kick": "# Booting Time!\nSelect user you would like to kick from the server below:",
     "make_transfers": "# Make Transfers?\nUpon confirming, Fawkes will complete all crew transfers for the current season. Are you sure?",
     "members": "# Member List Update\nChoose a crew from the list below to update its current members count:",
@@ -68,4 +69,15 @@ commandsMessages = {
     "transfer": lambda: f"# Player Transfer\nComplete the below fields to register an upcoming player transfer (please note that current season is {utils.getCurrentSeason(configCollection)}):",
     "unban": "# Undo Ban\nInput the discord name of a user you wish to lift a ban from:",
 }
-availableFieldsToEditInCrew = ["Short crew name", "Long crew name"]
+availableFieldsToEditInCrew = [
+    "Short crew name",
+    "Long crew name",
+    "Wildcard Schedule Link",
+    "Min RP",
+]
+editFieldToDbField = {
+    "Short crew name": "key",
+    "Long crew name": "name",
+    "Wildcard Schedule Link": "wildcard",
+    "Min RP": "min_rp",
+}

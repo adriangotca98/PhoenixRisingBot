@@ -71,14 +71,6 @@ def resetSelect(view: discord.ui.View, optionsMap):
             index += 1
 
 
-def getCrewField(crew, editField):
-    dbField = "key" if editField == "Short crew name" else "name"
-    crewObj = constants.crewCollection.find_one({"key": crew})
-    if crewObj is None:
-        return None
-    return crewObj[dbField]
-
-
 def computeScoreFromChannelName(name: str) -> int:
     number = ""
     for char in name:
